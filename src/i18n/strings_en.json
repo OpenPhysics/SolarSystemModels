@@ -1,0 +1,35 @@
+{
+  "title": "Solar System Models",
+  "screens": {
+    "ptolemaic": "Ptolemaic System",
+    "configurations": "Planetary Configurations"
+  },
+  "a11y": {
+    "ptolemaic": {
+      "screenSummary": {
+        "playArea": "The play area shows the Ptolemaic, Earth-centered model: a planet on an epicycle whose center rides a deferent around the Earth, alongside the resulting view from Earth.",
+        "controlArea": "The control area has controls for the planet and the sizes and rates of its deferent and epicycle, plus a Reset All button that returns the screen to its starting state.",
+        "interactionHint": "Adjust the deferent and epicycle to see how the planet appears to move as seen from Earth."
+      },
+      "currentDetails": "The screen is in its initial state.",
+      "controls": {
+        "exampleControl": "Example control"
+      }
+    },
+    "configurations": {
+      "screenSummary": {
+        "playArea": "The play area shows the Sun-centered solar system with the Earth and another planet, and the configuration, such as opposition or conjunction, that they form.",
+        "controlArea": "The control area has controls for choosing a planet and its orbit and for animating the orbits, plus a Reset All button that returns the screen to its starting state.",
+        "interactionHint": "Choose a planet and animate the orbits to see the planetary configurations form."
+      },
+      "currentDetails": "The screen is in its initial state.",
+      "controls": {
+        "exampleControl": "Example control"
+      }
+    }
+  },
+  "preferences": {
+    "title": "Simulation",
+    "exampleToggle": "Example Toggle"
+  }
+}

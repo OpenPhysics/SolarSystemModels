@@ -1,0 +1,35 @@
+{
+  "title": "Modelos del sistema solar",
+  "screens": {
+    "ptolemaic": "Sistema ptolemaico",
+    "configurations": "Configuraciones planetarias"
+  },
+  "a11y": {
+    "ptolemaic": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra el modelo ptolemaico, centrado en la Tierra: un planeta sobre un epiciclo cuyo centro recorre un deferente alrededor de la Tierra, junto con la vista resultante desde la Tierra.",
+        "controlArea": "El área de control tiene controles para el planeta y para los tamaños y velocidades de su deferente y su epiciclo, además de un botón Restablecer todo que devuelve la pantalla a su estado inicial.",
+        "interactionHint": "Ajusta el deferente y el epiciclo para ver cómo parece moverse el planeta visto desde la Tierra."
+      },
+      "currentDetails": "La pantalla está en su estado inicial.",
+      "controls": {
+        "exampleControl": "Control de ejemplo"
+      }
+    },
+    "configurations": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra el sistema solar centrado en el Sol con la Tierra y otro planeta, y la configuración, como la oposición o la conjunción, que forman.",
+        "controlArea": "El área de control tiene controles para elegir un planeta y su órbita y para animar las órbitas, además de un botón Restablecer todo que devuelve la pantalla a su estado inicial.",
+        "interactionHint": "Elige un planeta y anima las órbitas para ver cómo se forman las configuraciones planetarias."
+      },
+      "currentDetails": "La pantalla está en su estado inicial.",
+      "controls": {
+        "exampleControl": "Control de ejemplo"
+      }
+    }
+  },
+  "preferences": {
+    "title": "Simulación",
+    "exampleToggle": "Ejemplo de alternancia"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "title": "Modèles du système solaire",
+  "screens": {
+    "ptolemaic": "Système ptolémaïque",
+    "configurations": "Configurations planétaires"
+  },
+  "a11y": {
+    "ptolemaic": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre le modèle ptolémaïque, centré sur la Terre : une planète sur un épicycle dont le centre suit un déférent autour de la Terre, ainsi que la vue obtenue depuis la Terre.",
+        "controlArea": "La zone de contrôle comporte des commandes pour la planète et pour les tailles et vitesses de son déférent et de son épicycle, ainsi qu'un bouton Tout réinitialiser qui ramène l'écran à son état initial.",
+        "interactionHint": "Ajustez le déférent et l'épicycle pour voir comment la planète semble se déplacer vue depuis la Terre."
+      },
+      "currentDetails": "L'écran est dans son état initial.",
+      "controls": {
+        "exampleControl": "Contrôle d'exemple"
+      }
+    },
+    "configurations": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre le système solaire centré sur le Soleil avec la Terre et une autre planète, et la configuration, comme l'opposition ou la conjonction, qu'elles forment.",
+        "controlArea": "La zone de contrôle comporte des commandes pour choisir une planète et son orbite et pour animer les orbites, ainsi qu'un bouton Tout réinitialiser qui ramène l'écran à son état initial.",
+        "interactionHint": "Choisissez une planète et animez les orbites pour voir se former les configurations planétaires."
+      },
+      "currentDetails": "L'écran est dans son état initial.",
+      "controls": {
+        "exampleControl": "Contrôle d'exemple"
+      }
+    }
+  },
+  "preferences": {
+    "title": "Simulation",
+    "exampleToggle": "Exemple de bascule"
+  }
+}
