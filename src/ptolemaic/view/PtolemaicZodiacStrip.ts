@@ -1,12 +1,12 @@
-import { Circle, Node, Rectangle, Text } from "scenerystack/scenery";
+import { Shape } from "scenerystack/kite";
+import { Circle, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
+import { ECLIPTIC_CONSTELLATIONS } from "../../common/ZodiacConstellationsData.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { ZODIAC_STRIP_HEIGHT, ZODIAC_STRIP_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 
 const TWO_PI = 2 * Math.PI;
-
-// AS factor: strip width / 2π ≈ 600/2π ≈ 95.49
 const LONGITUDE_TO_X = ZODIAC_STRIP_WIDTH / TWO_PI;
 
 const SIGN_NAMES = [
@@ -24,10 +24,57 @@ const SIGN_NAMES = [
   "Aries",
 ];
 
-function longitudeToX(lon: number): number {
-  // Wrap longitude to [0, 2π) then map to strip x
-  const wrapped = ((lon % TWO_PI) + TWO_PI) % TWO_PI;
-  return wrapped * LONGITUDE_TO_X;
+/** Map ecliptic longitude to strip x — AS convention: x = (−λ · width/2π) mod width. */
+function lonToX(lon: number): number {
+  return (((-lon * LONGITUDE_TO_X) % ZODIAC_STRIP_WIDTH) + ZODIAC_STRIP_WIDTH) % ZODIAC_STRIP_WIDTH;
+}
+
+/** Map ecliptic latitude to vertical offset from strip midline (positive = up). */
+function latToY(lat: number): number {
+  return -lat * LONGITUDE_TO_X;
+}
+
+/**
+ * Build a single Path shape containing all constellation stick-figure lines
+ * plus star dots for the strip.  Three copies are drawn at x-offsets of 0,
+ * STRIP_WIDTH, and 2·STRIP_WIDTH so the pattern wraps seamlessly.
+ */
+function buildConstellationShape(width: number, height: number): Shape {
+  const shape = new Shape();
+
+  for (let copy = 0; copy < 3; copy++) {
+    const xOff = copy * width;
+
+    for (const constel of ECLIPTIC_CONSTELLATIONS) {
+      // Polylines
+      for (const poly of constel.polylines) {
+        let first = true;
+        for (const idx of poly) {
+          const star = constel.eclipticStars[idx];
+          if (star === undefined) {
+            continue;
+          }
+          const sx = lonToX(star.lon) + xOff;
+          const sy = height / 2 + latToY(star.lat);
+          if (first) {
+            shape.moveTo(sx, sy);
+            first = false;
+          } else {
+            shape.lineTo(sx, sy);
+          }
+        }
+      }
+
+      // Dots
+      for (const star of constel.eclipticStars) {
+        const cx = lonToX(star.lon) + xOff;
+        const cy = height / 2 + latToY(star.lat);
+        shape.circle(cx, cy, 1.2);
+      }
+    }
+  }
+
+  return shape;
 }
 
 export class PtolemaicZodiacStrip extends Node {
@@ -42,7 +89,20 @@ export class PtolemaicZodiacStrip extends Node {
     });
     this.addChild(band);
 
-    // Dividers and sign labels
+    // ── Constellation stick figures ──────────────────────────────────────
+    const constelShape = buildConstellationShape(ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT);
+    // Clip to the strip
+    const clipRect = new Rectangle(0, 0, ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT);
+    const constelPath = new Path(constelShape, {
+      fill: null,
+      stroke: "#446688",
+      lineWidth: 0.5,
+      opacity: 0.5,
+      clipArea: clipRect.shape,
+    });
+    this.addChild(constelPath);
+
+    // ── Dividers and sign labels ──────────────────────────────────────────
     const segW = ZODIAC_STRIP_WIDTH / 12;
     for (let i = 0; i < 12; i++) {
       const x = i * segW;
@@ -51,7 +111,6 @@ export class PtolemaicZodiacStrip extends Node {
       });
       this.addChild(divider);
 
-      // Label at sign center (AS convention: reverses zodiac order so Aries = right, Pisces = left)
       const label = new Text(SIGN_NAMES[i] ?? "", {
         font: new PhetFont(9),
         fill: SolarSystemModelsColors.textColorProperty,
@@ -62,28 +121,28 @@ export class PtolemaicZodiacStrip extends Node {
       this.addChild(label);
     }
 
-    // Sun marker (yellow circle)
+    // ── Sun marker (yellow circle) ──────────────────────────────────────
     const sunMarker = new Circle(7, {
       fill: SolarSystemModelsColors.sunColorProperty,
       centerY: ZODIAC_STRIP_HEIGHT / 2 + 10,
     });
     this.addChild(sunMarker);
 
-    // Planet marker (orange circle)
+    // ── Planet marker (orange circle) ───────────────────────────────────
     const planetMarker = new Circle(5, {
       fill: SolarSystemModelsColors.planetColorProperty,
       centerY: ZODIAC_STRIP_HEIGHT / 2 - 10,
     });
     this.addChild(planetMarker);
 
-    // Link sun: AS uses -sunAngle for strip positioning
+    // Link sun
     model.sunAngleProperty.link((sunAngle) => {
-      sunMarker.centerX = longitudeToX(-sunAngle);
+      sunMarker.centerX = lonToX(-sunAngle);
     });
 
     // Link planet ecliptic longitude
     model.eclipticLongitudeProperty.link((lon) => {
-      planetMarker.centerX = longitudeToX(lon);
+      planetMarker.centerX = lonToX(lon);
     });
   }
 }

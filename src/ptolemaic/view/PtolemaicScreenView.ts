@@ -8,6 +8,7 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import {
@@ -77,6 +78,10 @@ export class PtolemaicScreenView extends ScreenView {
       fill: "#0a0a18",
     });
     this.addChild(orbitAreaBg);
+
+    // ── Zodiac constellation star field ──────────────────────────────────
+    const constellationNode = new ZodiacConstellationNode(ORBIT_VIEW_CENTER_X, ORBIT_VIEW_CENTER_Y);
+    this.addChild(constellationNode);
 
     // ── Zodiac sign border tick marks at sign boundaries ─────────────────
     const tickInnerR = 250;

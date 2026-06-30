@@ -8,6 +8,7 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import {
@@ -65,6 +66,10 @@ export class ConfigurationsScreenView extends ScreenView {
       fill: "#060d1a",
     });
     this.addChild(orbitAreaBg);
+
+    // ── Zodiac constellation star field ─────────────────────────────────────
+    const constellationNode = new ZodiacConstellationNode(CONFIGURATIONS_ORBIT_CENTER_X, CONFIGURATIONS_ORBIT_CENTER_Y);
+    this.addChild(constellationNode);
 
     // ── Orbit circles ───────────────────────────────────────────────────────
     const orbit1Circle = new Path(null, {
