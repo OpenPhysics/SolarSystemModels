@@ -16,7 +16,7 @@ const ZODIAC_SIGNS = [
   "Leo",
   "Virgo",
   "Libra",
-  "Scorpio",
+  "Scorpius",
   "Sagittarius",
   "Capricorn",
   "Aquarius",

@@ -14,7 +14,7 @@ const SIGN_NAMES = [
   "Aquarius",
   "Capricorn",
   "Sagittarius",
-  "Scorpio",
+  "Scorpius",
   "Libra",
   "Virgo",
   "Leo",
