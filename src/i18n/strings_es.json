@@ -4,6 +4,33 @@
     "ptolemaic": "Sistema ptolemaico",
     "configurations": "Configuraciones planetarias"
   },
+  "ptolemaic": {
+    "planet": "Planeta",
+    "venus": "Venus",
+    "mars": "Marte",
+    "jupiter": "Júpiter",
+    "saturn": "Saturno",
+    "epicycleSize": "Tamaño del epiciclo",
+    "eccentricity": "Excentricidad",
+    "motionRate": "Velocidad angular",
+    "apogeeAngle": "Ángulo de apogeo",
+    "superior": "Superior",
+    "inferior": "Inferior",
+    "setPreset": "Aplicar",
+    "memoryStore": "Guardar",
+    "memoryRecall": "Recuperar",
+    "deferent": "Deferente",
+    "epicycle": "Epiciclo",
+    "planetVector": "Vector planeta",
+    "equantVector": "Vector ecuante",
+    "earthSunLine": "Línea Tierra–Sol",
+    "epicyclePlanetLine": "Línea epiciclo–planeta",
+    "animationRate": "Velocidad de animación",
+    "pathDuration": "Duración del trayecto (año)",
+    "resetTime": "Reiniciar tiempo",
+    "years": "año",
+    "days": "d"
+  },
   "a11y": {
     "ptolemaic": {
       "screenSummary": {
@@ -13,7 +40,25 @@
       },
       "currentDetails": "La pantalla está en su estado inicial.",
       "controls": {
-        "exampleControl": "Control de ejemplo"
+        "exampleControl": "Control de ejemplo",
+        "sunDrag": "Sol — arrastrar para establecer el ángulo",
+        "planetPreset": "Preset de planeta",
+        "epicycleSize": "Tamaño del epiciclo",
+        "eccentricity": "Excentricidad",
+        "motionRate": "Velocidad angular",
+        "apogeeAngle": "Ángulo de apogeo",
+        "planetType": "Tipo de planeta",
+        "memoryStore": "Guardar parámetros actuales",
+        "memoryRecall": "Recuperar parámetros guardados",
+        "animationRate": "Velocidad de animación",
+        "pathDuration": "Duración del trayecto",
+        "resetTime": "Reiniciar tiempo",
+        "deferent": "Mostrar deferente",
+        "epicycle": "Mostrar epiciclo",
+        "planetVector": "Mostrar vector planeta",
+        "equantVector": "Mostrar vector ecuante",
+        "earthSunLine": "Mostrar línea Tierra–Sol",
+        "epicyclePlanetLine": "Mostrar línea epiciclo–planeta"
       }
     },
     "configurations": {

@@ -4,6 +4,33 @@
     "ptolemaic": "Système ptolémaïque",
     "configurations": "Configurations planétaires"
   },
+  "ptolemaic": {
+    "planet": "Planète",
+    "venus": "Vénus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturne",
+    "epicycleSize": "Taille de l'épicycle",
+    "eccentricity": "Excentricité",
+    "motionRate": "Vitesse angulaire",
+    "apogeeAngle": "Angle d'apogée",
+    "superior": "Supérieure",
+    "inferior": "Inférieure",
+    "setPreset": "Appliquer",
+    "memoryStore": "Mémoriser",
+    "memoryRecall": "Rappeler",
+    "deferent": "Déférent",
+    "epicycle": "Épicycle",
+    "planetVector": "Vecteur planète",
+    "equantVector": "Vecteur équant",
+    "earthSunLine": "Ligne Terre–Soleil",
+    "epicyclePlanetLine": "Ligne épicycle–planète",
+    "animationRate": "Vitesse d'animation",
+    "pathDuration": "Durée du tracé (an)",
+    "resetTime": "Réinitialiser le temps",
+    "years": "an",
+    "days": "j"
+  },
   "a11y": {
     "ptolemaic": {
       "screenSummary": {
@@ -13,7 +40,25 @@
       },
       "currentDetails": "L'écran est dans son état initial.",
       "controls": {
-        "exampleControl": "Contrôle d'exemple"
+        "exampleControl": "Contrôle d'exemple",
+        "sunDrag": "Soleil — faire glisser pour régler l'angle",
+        "planetPreset": "Préréglage de planète",
+        "epicycleSize": "Taille de l'épicycle",
+        "eccentricity": "Excentricité",
+        "motionRate": "Vitesse angulaire",
+        "apogeeAngle": "Angle d'apogée",
+        "planetType": "Type de planète",
+        "memoryStore": "Mémoriser les paramètres actuels",
+        "memoryRecall": "Rappeler les paramètres mémorisés",
+        "animationRate": "Vitesse d'animation",
+        "pathDuration": "Durée du tracé",
+        "resetTime": "Réinitialiser le temps",
+        "deferent": "Afficher le déférent",
+        "epicycle": "Afficher l'épicycle",
+        "planetVector": "Afficher le vecteur planète",
+        "equantVector": "Afficher le vecteur équant",
+        "earthSunLine": "Afficher la ligne Terre–Soleil",
+        "epicyclePlanetLine": "Afficher la ligne épicycle–planète"
       }
     },
     "configurations": {

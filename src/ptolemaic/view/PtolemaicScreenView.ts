@@ -1,80 +1,284 @@
-/**
- * PtolemaicScreenView.ts
- *
- * The top-level view for the simulation screen.
- *
- * All visual nodes are added here. Follow these conventions:
- *   - Use this.layoutBounds for positioning (never magic pixel values)
- *   - Keep a ResetAllButton that calls model.reset() and this.reset()
- *   - Override step(dt) for frame-by-frame animation
- *
- * ── Adding content ────────────────────────────────────────────────────────────
- * 1. Create Node subclasses in separate files (e.g. SimControlPanel.ts)
- * 2. Instantiate them here and call this.addChild(...)
- * 3. Link them to model properties:
- *      model.isRunningProperty.link( isRunning => { ... } );
- *
- * ── Layout bounds ─────────────────────────────────────────────────────────────
- * SceneryStack uses a virtual 1024×618 coordinate space by default.
- * this.layoutBounds gives you the full rectangle; use it for alignment:
- *   center, minX, maxX, minY, maxY, width, height
- */
-
-import { Node, Rectangle, Text } from "scenerystack/scenery";
-import { ResetAllButton } from "scenerystack/scenery-phet";
+import { Multilink } from "scenerystack/axon";
+import { Vector2 } from "scenerystack/dot";
+import { Shape } from "scenerystack/kite";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
+import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { ArrowNode, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
+import { Tandem } from "scenerystack/tandem";
+import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { SCREEN_VIEW_MARGIN } from "../../SolarSystemModelsConstants.js";
+import {
+  ORBIT_VIEW_CENTER_X,
+  ORBIT_VIEW_CENTER_Y,
+  ORBIT_VIEW_SCALE,
+  PTOLEMAIC_DEFERENT_RADIUS,
+  PTOLEMAIC_SUN_ORBIT_RADIUS,
+  SCREEN_VIEW_MARGIN,
+  ZODIAC_LABEL_RADIUS,
+} from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
+import { PtolemaicControlPanel } from "./PtolemaicControlPanel.js";
+import { PtolemaicDisplayPanel } from "./PtolemaicDisplayPanel.js";
+import { PtolemaicPathTrail } from "./PtolemaicPathTrail.js";
 import { PtolemaicScreenSummaryContent } from "./PtolemaicScreenSummaryContent.js";
+import { PtolemaicTimeControls } from "./PtolemaicTimeControls.js";
+import { PtolemaicTimeReadout } from "./PtolemaicTimeReadout.js";
+import { PtolemaicZodiacStrip } from "./PtolemaicZodiacStrip.js";
+
+const ZODIAC_SIGNS = [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces",
+];
 
 export class PtolemaicScreenView extends ScreenView {
+  private readonly pathTrail: PtolemaicPathTrail;
+  private readonly model: PtolemaicModel;
+  private readonly mvt: ModelViewTransform2;
+
   public constructor(model: PtolemaicModel, options?: ScreenViewOptions) {
-    // ── Accessibility: screen summary ───────────────────────────────────────────
-    // The screen summary is the first thing a screen-reader user encounters. It
-    // is registered here, in the ScreenView's super() options, so every sim wires
-    // it the same way. See PtolemaicScreenSummaryContent for the four content regions.
     super({
       screenSummaryContent: new PtolemaicScreenSummaryContent(model),
       ...options,
     });
 
-    // ── Background ────────────────────────────────────────────────────────────
-    // A full-screen rectangle that follows the active color profile.
-    // Replace or remove once you add real content.
-    const backgroundRect = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
+    this.model = model;
+
+    // ── Model–view transform ───────────────────────────────────────────────
+    // Earth at model origin → view center-left; y inverted (Flash screen-y down)
+    this.mvt = ModelViewTransform2.createSinglePointScaleInvertedYMapping(
+      Vector2.ZERO,
+      new Vector2(ORBIT_VIEW_CENTER_X, ORBIT_VIEW_CENTER_Y),
+      ORBIT_VIEW_SCALE,
+    );
+
+    const mvt = this.mvt;
+
+    // ── Background ─────────────────────────────────────────────────────────
+    const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
       fill: SolarSystemModelsColors.backgroundColorProperty,
     });
-    this.addChild(backgroundRect);
+    this.addChild(background);
 
-    // ── Placeholder label ─────────────────────────────────────────────────────
-    // Replace this with your actual simulation content.
-    const placeholderText = new Text("Ptolemaic System", {
-      font: "bold 36px sans-serif",
-      fill: SolarSystemModelsColors.textColorProperty,
-      center: this.layoutBounds.center,
+    // ── Orbital area background ────────────────────────────────────────────
+    const orbitAreaBg = new Rectangle(0, 0, ORBIT_VIEW_CENTER_X * 2 + 20, this.layoutBounds.height, {
+      fill: "#0a0a18",
     });
-    this.addChild(placeholderText);
+    this.addChild(orbitAreaBg);
 
-    // ── Accessibility: per-control names ────────────────────────────────────────
-    // EVERY interactive node must carry an `accessibleName` (and an
-    // `accessibleHelpText` where useful), sourced from the StringManager `a11y`
-    // string group — never a hard-coded English literal. Sun/scenery-phet controls
-    // (NumberControl, Checkbox, ComboBox, AquaRadioButtonGroup, …) accept it as an
-    // option; a draggable plain Node needs `tagName: "div", focusable: true` too.
-    // Example (uncomment and adapt when you add a real control):
-    //
-    //   const a11y = StringManager.getInstance().getPtolemaicA11yStrings();
-    //   const exampleButton = new RectangularPushButton({
-    //     content: someIcon,
-    //     listener: () => model.doSomething(),
-    //     accessibleName: a11y.controls.exampleControlStringProperty,
-    //   });
-    //   this.addChild(exampleButton);
+    // ── Zodiac sign labels around the rim ─────────────────────────────────
+    for (let i = 0; i < 12; i++) {
+      const angle = (i * Math.PI) / 6; // 0, 30°, 60°, ...
+      const vx = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_LABEL_RADIUS;
+      // Inverted Y: positive y in model = up in view, so negate for angle
+      const vy = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_LABEL_RADIUS;
+      const label = new Text(ZODIAC_SIGNS[i] ?? "", {
+        font: new PhetFont(10),
+        fill: "#aabbcc",
+        centerX: vx,
+        centerY: vy,
+        maxWidth: 55,
+      });
+      this.addChild(label);
+    }
 
-    // ── Reset All button ──────────────────────────────────────────────────────
-    // Always position at bottom-right (PhET convention).
+    // ── Path trail (behind orbit circles) ─────────────────────────────────
+    this.pathTrail = new PtolemaicPathTrail(model, mvt);
+    this.addChild(this.pathTrail);
+
+    // ── Deferent circle ────────────────────────────────────────────────────
+    const deferentCircle = new Path(null, {
+      stroke: SolarSystemModelsColors.deferentColorProperty,
+      lineWidth: 1.5,
+      visibleProperty: model.showDeferentProperty,
+    });
+    this.addChild(deferentCircle);
+
+    model.deferentCenterProperty.link((center) => {
+      const vc = mvt.modelToViewPosition(center);
+      const vr = ORBIT_VIEW_SCALE * PTOLEMAIC_DEFERENT_RADIUS;
+      deferentCircle.shape = Shape.circle(vc.x, vc.y, vr);
+    });
+
+    // ── Epicycle circle ────────────────────────────────────────────────────
+    const epicycleCircle = new Path(null, {
+      stroke: SolarSystemModelsColors.epicycleColorProperty,
+      lineWidth: 1.5,
+      visibleProperty: model.showEpicycleProperty,
+    });
+    this.addChild(epicycleCircle);
+
+    Multilink.multilink([model.epicycleCenterProperty, model.epicycleSizeProperty], (center, size) => {
+      const vc = mvt.modelToViewPosition(center);
+      const vr = ORBIT_VIEW_SCALE * size;
+      epicycleCircle.shape = Shape.circle(vc.x, vc.y, vr);
+    });
+
+    // ── Sun orbit reference circle (faint) ────────────────────────────────
+    const sunOrbitVr = ORBIT_VIEW_SCALE * PTOLEMAIC_SUN_ORBIT_RADIUS;
+    const sunOrbitViewCenter = mvt.modelToViewPosition(Vector2.ZERO);
+    const sunOrbitCircle = new Path(Shape.circle(sunOrbitViewCenter.x, sunOrbitViewCenter.y, sunOrbitVr), {
+      stroke: "#333355",
+      lineWidth: 1,
+    });
+    this.addChild(sunOrbitCircle);
+
+    // ── Equant crosshair ───────────────────────────────────────────────────
+    const equantCross = new Path(null, {
+      stroke: SolarSystemModelsColors.equantColorProperty,
+      lineWidth: 1.5,
+      visibleProperty: model.showEquantVectorProperty,
+    });
+    this.addChild(equantCross);
+
+    model.equantPositionProperty.link((eq) => {
+      const ve = mvt.modelToViewPosition(eq);
+      const arm = 6;
+      equantCross.shape = new Shape()
+        .moveTo(ve.x - arm, ve.y)
+        .lineTo(ve.x + arm, ve.y)
+        .moveTo(ve.x, ve.y - arm)
+        .lineTo(ve.x, ve.y + arm);
+    });
+
+    // ── Eccentric (deferent) center dot ────────────────────────────────────
+    const eccentricDot = new Circle(4, {
+      fill: SolarSystemModelsColors.eccentricColorProperty,
+    });
+    this.addChild(eccentricDot);
+    model.deferentCenterProperty.link((center) => {
+      const vc = mvt.modelToViewPosition(center);
+      eccentricDot.translation = vc;
+    });
+
+    // ── Earth–Sun arrow (optional) ─────────────────────────────────────────
+    const earthSunArrow = new ArrowNode(0, 0, 1, 0, {
+      stroke: null,
+      fill: SolarSystemModelsColors.vectorColorProperty,
+      headWidth: 8,
+      headHeight: 6,
+      tailWidth: 2,
+      visibleProperty: model.showEarthSunLineProperty,
+    });
+    this.addChild(earthSunArrow);
+
+    model.sunPositionProperty.link((sunPos) => {
+      const vs = mvt.modelToViewPosition(sunPos);
+      const vEarth = mvt.modelToViewPosition(Vector2.ZERO);
+      earthSunArrow.setTailAndTip(vEarth.x, vEarth.y, vs.x, vs.y);
+    });
+
+    // ── Epicycle–planet arrow (optional) ──────────────────────────────────
+    const epicyclePlanetArrow = new ArrowNode(0, 0, 1, 0, {
+      stroke: null,
+      fill: SolarSystemModelsColors.vectorColorProperty,
+      headWidth: 8,
+      headHeight: 6,
+      tailWidth: 2,
+      visibleProperty: model.showEpicyclePlanetLineProperty,
+    });
+    this.addChild(epicyclePlanetArrow);
+
+    Multilink.multilink([model.epicycleCenterProperty, model.planetPositionProperty], (epiCenter, planet) => {
+      const ve = mvt.modelToViewPosition(epiCenter);
+      const vp = mvt.modelToViewPosition(planet);
+      epicyclePlanetArrow.setTailAndTip(ve.x, ve.y, vp.x, vp.y);
+    });
+
+    // ── Planet vector arrow (Earth→planet) ────────────────────────────────
+    const planetVectorArrow = new ArrowNode(0, 0, 1, 0, {
+      stroke: null,
+      fill: SolarSystemModelsColors.vectorColorProperty,
+      headWidth: 10,
+      headHeight: 8,
+      tailWidth: 2,
+      visibleProperty: model.showPlanetVectorProperty,
+    });
+    this.addChild(planetVectorArrow);
+
+    model.planetPositionProperty.link((planet) => {
+      const vEarth = mvt.modelToViewPosition(Vector2.ZERO);
+      const vp = mvt.modelToViewPosition(planet);
+      planetVectorArrow.setTailAndTip(vEarth.x, vEarth.y, vp.x, vp.y);
+    });
+
+    // ── Earth at origin (static) ───────────────────────────────────────────
+    const earthViewPos = mvt.modelToViewPosition(Vector2.ZERO);
+    const earthNode = new Circle(9, {
+      fill: SolarSystemModelsColors.earthColorProperty,
+      centerX: earthViewPos.x,
+      centerY: earthViewPos.y,
+    });
+    this.addChild(earthNode);
+
+    // ── Sun node (draggable) ───────────────────────────────────────────────
+    const sunNode = new CelestialBodyNode(model.sunPositionProperty, mvt, {
+      radius: 11,
+      fill: SolarSystemModelsColors.sunColorProperty,
+      cursor: "pointer",
+      tagName: "div",
+      focusable: true,
+      accessibleName: StringManager.getInstance().getPtolemaicA11yStrings().controls.sunDragStringProperty,
+    });
+    this.addChild(sunNode);
+
+    sunNode.addInputListener(
+      new DragListener({
+        tandem: Tandem.OPT_OUT,
+        drag: (_event, listener) => {
+          const modelPos = mvt.viewToModelPosition(listener.modelPoint);
+          model.setSunAngle(Math.atan2(modelPos.y, modelPos.x));
+        },
+      }),
+    );
+
+    // ── Planet node ────────────────────────────────────────────────────────
+    const planetNode = new CelestialBodyNode(model.planetPositionProperty, mvt, {
+      radius: 7,
+      fill: SolarSystemModelsColors.planetColorProperty,
+    });
+    this.addChild(planetNode);
+
+    // ── Zodiac strip (below orbit area) ───────────────────────────────────
+    const zodiacStrip = new PtolemaicZodiacStrip(model);
+    zodiacStrip.left = 0;
+    zodiacStrip.bottom = this.layoutBounds.maxY - SCREEN_VIEW_MARGIN;
+    this.addChild(zodiacStrip);
+
+    // ── Right-side panels ──────────────────────────────────────────────────
+    const controlPanel = new PtolemaicControlPanel(model, this);
+    controlPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    controlPanel.top = SCREEN_VIEW_MARGIN;
+    this.addChild(controlPanel);
+
+    const displayPanel = new PtolemaicDisplayPanel(model);
+    displayPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    displayPanel.top = controlPanel.bottom + 8;
+    this.addChild(displayPanel);
+
+    const timeControls = new PtolemaicTimeControls(model);
+    timeControls.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    timeControls.top = displayPanel.bottom + 8;
+    this.addChild(timeControls);
+
+    const timeReadout = new PtolemaicTimeReadout(model);
+    timeReadout.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    timeReadout.top = timeControls.bottom + 8;
+    this.addChild(timeReadout);
+
+    // ── Reset All button ───────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
       listener: () => {
         model.reset();
@@ -85,35 +289,22 @@ export class PtolemaicScreenView extends ScreenView {
     });
     this.addChild(resetAllButton);
 
-    // ── Accessibility: keyboard / reading traversal order ───────────────────────
-    // Make the parallel DOM (Tab order and screen-reader reading order)
-    // deterministic and independent of child z-order. ScreenView throws if you
-    // set pdomOrder on itself, so add a lightweight wrapper Node that "borrows"
-    // the interactive nodes in the order a user should reach them — Reset All
-    // last. Non-interactive decoration (background, placeholder) is omitted.
+    // ── pdomOrder (Tab order) ──────────────────────────────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [
-          // TODO: add the sim's interactive nodes here, in traversal order
-          resetAllButton,
-        ],
+        pdomOrder: [controlPanel, displayPanel, timeControls, resetAllButton],
       }),
     );
   }
 
-  /**
-   * Resets view-side state (animations, panel visibility, etc.).
-   * Called by the Reset All button listener.
-   */
   public reset(): void {
-    // TODO: reset any view-side state here
+    // Path trail clears automatically via model param change listeners
   }
 
-  /**
-   * Steps the view forward by dt seconds for animation.
-   * @param _dt - elapsed time in seconds
-   */
-  public override step(_dt: number): void {
-    // TODO: implement animation updates here
+  public override step(dt: number): void {
+    this.model.step(dt);
+    if (this.model.timer.isPlayingProperty.value) {
+      this.pathTrail.addPoint(this.model.planetPositionProperty.value, this.model);
+    }
   }
 }

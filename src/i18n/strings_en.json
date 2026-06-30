@@ -4,6 +4,33 @@
     "ptolemaic": "Ptolemaic System",
     "configurations": "Planetary Configurations"
   },
+  "ptolemaic": {
+    "planet": "Planet",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn",
+    "epicycleSize": "Epicycle Size",
+    "eccentricity": "Eccentricity",
+    "motionRate": "Motion Rate",
+    "apogeeAngle": "Apogee Angle",
+    "superior": "Superior",
+    "inferior": "Inferior",
+    "setPreset": "Set Preset",
+    "memoryStore": "Store",
+    "memoryRecall": "Recall",
+    "deferent": "Deferent",
+    "epicycle": "Epicycle",
+    "planetVector": "Planet Vector",
+    "equantVector": "Equant Vector",
+    "earthSunLine": "Earth–Sun Line",
+    "epicyclePlanetLine": "Epicycle–Planet Line",
+    "animationRate": "Animation Rate",
+    "pathDuration": "Path Duration (yr)",
+    "resetTime": "Reset Time",
+    "years": "yr",
+    "days": "d"
+  },
   "a11y": {
     "ptolemaic": {
       "screenSummary": {
@@ -13,7 +40,25 @@
       },
       "currentDetails": "The screen is in its initial state.",
       "controls": {
-        "exampleControl": "Example control"
+        "exampleControl": "Example control",
+        "sunDrag": "Sun — drag to set angle",
+        "planetPreset": "Planet preset",
+        "epicycleSize": "Epicycle size",
+        "eccentricity": "Eccentricity",
+        "motionRate": "Motion rate",
+        "apogeeAngle": "Apogee angle",
+        "planetType": "Planet type",
+        "memoryStore": "Store current parameters",
+        "memoryRecall": "Recall stored parameters",
+        "animationRate": "Animation rate",
+        "pathDuration": "Path duration",
+        "resetTime": "Reset time",
+        "deferent": "Show deferent",
+        "epicycle": "Show epicycle",
+        "planetVector": "Show planet vector",
+        "equantVector": "Show equant vector",
+        "earthSunLine": "Show Earth–Sun line",
+        "epicyclePlanetLine": "Show epicycle–planet line"
       }
     },
     "configurations": {
