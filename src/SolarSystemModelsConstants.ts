@@ -32,6 +32,14 @@ export const APOGEE_ANGLE_RANGE = { min: 0, max: 360 } as const; // degrees
 export const ANIMATION_RATE_RANGE = { min: 0.1, max: 5 } as const;
 export const PATH_DURATION_RANGE = { min: 0.5, max: 5 } as const; // years
 
+// ── Configurations orbital view layout ────────────────────────────────────────
+
+export const CONFIGURATIONS_ORBIT_CENTER_X = 285; // px — Sun maps here (x)
+export const CONFIGURATIONS_ORBIT_CENTER_Y = 285; // px — Sun maps here (y)
+export const CONFIGURATIONS_ORBIT_MARGIN = 60; // px — margin around orbit area
+export const CONFIGURATIONS_TIMELINE_WIDTH = 210; // px
+export const CONFIGURATIONS_TIMELINE_HEIGHT = 350; // px
+
 // ── Configurations preset orbital radii (AU) ───────────────────────────────────
 
 export const PRESET_RADII = {
@@ -58,6 +66,11 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   DAYS_PER_YEAR,
   PTOLEMAIC_DAYS_PER_SECOND,
   CONFIGURATIONS_YEARS_PER_SECOND,
+  CONFIGURATIONS_ORBIT_CENTER_X,
+  CONFIGURATIONS_ORBIT_CENTER_Y,
+  CONFIGURATIONS_ORBIT_MARGIN,
+  CONFIGURATIONS_TIMELINE_WIDTH,
+  CONFIGURATIONS_TIMELINE_HEIGHT,
   EPICYCLE_SIZE_RANGE,
   ECCENTRICITY_RANGE,
   MOTION_RATE_RANGE,

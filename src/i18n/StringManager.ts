@@ -45,6 +45,10 @@ export class StringManager {
     return stringProperties.ptolemaic;
   }
 
+  public getConfigurationsStrings() {
+    return stringProperties.configurations;
+  }
+
   public getPtolemaicA11yStrings() {
     return stringProperties.a11y.ptolemaic;
   }

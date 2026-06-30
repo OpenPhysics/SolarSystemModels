@@ -1,80 +1,222 @@
-/**
- * ConfigurationsScreenView.ts
- *
- * The top-level view for the simulation screen.
- *
- * All visual nodes are added here. Follow these conventions:
- *   - Use this.layoutBounds for positioning (never magic pixel values)
- *   - Keep a ResetAllButton that calls model.reset() and this.reset()
- *   - Override step(dt) for frame-by-frame animation
- *
- * ── Adding content ────────────────────────────────────────────────────────────
- * 1. Create Node subclasses in separate files (e.g. SimControlPanel.ts)
- * 2. Instantiate them here and call this.addChild(...)
- * 3. Link them to model properties:
- *      model.isRunningProperty.link( isRunning => { ... } );
- *
- * ── Layout bounds ─────────────────────────────────────────────────────────────
- * SceneryStack uses a virtual 1024×618 coordinate space by default.
- * this.layoutBounds gives you the full rectangle; use it for alignment:
- *   center, minX, maxX, minY, maxY, width, height
- */
-
-import { Node, Rectangle, Text } from "scenerystack/scenery";
-import { ResetAllButton } from "scenerystack/scenery-phet";
+import { Multilink } from "scenerystack/axon";
+import { Vector2 } from "scenerystack/dot";
+import { Shape } from "scenerystack/kite";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
+import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
+import { Tandem } from "scenerystack/tandem";
+import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { SCREEN_VIEW_MARGIN } from "../../SolarSystemModelsConstants.js";
+import {
+  CONFIGURATIONS_ORBIT_CENTER_X,
+  CONFIGURATIONS_ORBIT_CENTER_Y,
+  CONFIGURATIONS_ORBIT_MARGIN,
+  SCREEN_VIEW_MARGIN,
+} from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
+import { ConfigurationsControlPanel } from "./ConfigurationsControlPanel.js";
+import { ConfigurationsDisplayPanel } from "./ConfigurationsDisplayPanel.js";
+import { ConfigurationsElongationIndicator } from "./ConfigurationsElongationIndicator.js";
 import { ConfigurationsScreenSummaryContent } from "./ConfigurationsScreenSummaryContent.js";
+import { ConfigurationsTimeline } from "./ConfigurationsTimeline.js";
+import { ConfigurationsTimeReadout } from "./ConfigurationsTimeReadout.js";
+import { ConfigurationsZodiacStrip } from "./ConfigurationsZodiacStrip.js";
+
+const ORBIT_AREA_SIZE = CONFIGURATIONS_ORBIT_CENTER_X * 2 + 20;
+
+function buildMvt(a1: number, a2: number): ModelViewTransform2 {
+  const maxA = Math.max(a1, a2);
+  // scale so that maxA AU fits within the orbit area minus margin
+  const scale = (CONFIGURATIONS_ORBIT_CENTER_X - CONFIGURATIONS_ORBIT_MARGIN) / maxA;
+  return ModelViewTransform2.createSinglePointScaleInvertedYMapping(
+    Vector2.ZERO,
+    new Vector2(CONFIGURATIONS_ORBIT_CENTER_X, CONFIGURATIONS_ORBIT_CENTER_Y),
+    scale,
+  );
+}
 
 export class ConfigurationsScreenView extends ScreenView {
+  private readonly model: ConfigurationsModel;
+  // mvt changes when orbital radii change
+  private mvt: ModelViewTransform2;
+
   public constructor(model: ConfigurationsModel, options?: ScreenViewOptions) {
-    // ── Accessibility: screen summary ───────────────────────────────────────────
-    // The screen summary is the first thing a screen-reader user encounters. It
-    // is registered here, in the ScreenView's super() options, so every sim wires
-    // it the same way. See ConfigurationsScreenSummaryContent for the four content regions.
     super({
       screenSummaryContent: new ConfigurationsScreenSummaryContent(model),
       ...options,
     });
 
-    // ── Background ────────────────────────────────────────────────────────────
-    // A full-screen rectangle that follows the active color profile.
-    // Replace or remove once you add real content.
-    const backgroundRect = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
+    this.model = model;
+    this.mvt = buildMvt(model.semimajorAxis1Property.value, model.semimajorAxis2Property.value);
+
+    const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
+
+    // ── Background ──────────────────────────────────────────────────────────
+    const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
       fill: SolarSystemModelsColors.backgroundColorProperty,
     });
-    this.addChild(backgroundRect);
+    this.addChild(background);
 
-    // ── Placeholder label ─────────────────────────────────────────────────────
-    // Replace this with your actual simulation content.
-    const placeholderText = new Text("Planetary Configurations", {
-      font: "bold 36px sans-serif",
-      fill: SolarSystemModelsColors.textColorProperty,
-      center: this.layoutBounds.center,
+    // ── Orbit area background ───────────────────────────────────────────────
+    const orbitAreaBg = new Rectangle(0, 0, ORBIT_AREA_SIZE, this.layoutBounds.height, {
+      fill: "#060d1a",
     });
-    this.addChild(placeholderText);
+    this.addChild(orbitAreaBg);
 
-    // ── Accessibility: per-control names ────────────────────────────────────────
-    // EVERY interactive node must carry an `accessibleName` (and an
-    // `accessibleHelpText` where useful), sourced from the StringManager `a11y`
-    // string group — never a hard-coded English literal. Sun/scenery-phet controls
-    // (NumberControl, Checkbox, ComboBox, AquaRadioButtonGroup, …) accept it as an
-    // option; a draggable plain Node needs `tagName: "div", focusable: true` too.
-    // Example (uncomment and adapt when you add a real control):
-    //
-    //   const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
-    //   const exampleButton = new RectangularPushButton({
-    //     content: someIcon,
-    //     listener: () => model.doSomething(),
-    //     accessibleName: a11y.controls.exampleControlStringProperty,
-    //   });
-    //   this.addChild(exampleButton);
+    // ── Orbit circles ───────────────────────────────────────────────────────
+    const orbit1Circle = new Path(null, {
+      stroke: SolarSystemModelsColors.observerPlanetColorProperty,
+      lineWidth: 1,
+      lineDash: [4, 4],
+    });
+    const orbit2Circle = new Path(null, {
+      stroke: SolarSystemModelsColors.targetPlanetColorProperty,
+      lineWidth: 1,
+      lineDash: [4, 4],
+    });
+    this.addChild(orbit1Circle);
+    this.addChild(orbit2Circle);
 
-    // ── Reset All button ──────────────────────────────────────────────────────
-    // Always position at bottom-right (PhET convention).
+    // ── Orbit labels ────────────────────────────────────────────────────────
+    const orbitLabel1 = new Text("", {
+      font: new PhetFont(10),
+      fill: SolarSystemModelsColors.observerPlanetColorProperty,
+      visibleProperty: model.showOrbitLabelsProperty,
+    });
+    const orbitLabel2 = new Text("", {
+      font: new PhetFont(10),
+      fill: SolarSystemModelsColors.targetPlanetColorProperty,
+      visibleProperty: model.showOrbitLabelsProperty,
+    });
+    this.addChild(orbitLabel1);
+    this.addChild(orbitLabel2);
+
+    // ── Elongation indicator (Phase 7) ──────────────────────────────────────
+    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvt);
+    this.addChild(elongationIndicator);
+
+    // ── Sun at origin ───────────────────────────────────────────────────────
+    const sunNode = new Circle(12, { fill: SolarSystemModelsColors.sunColorProperty });
+    this.addChild(sunNode);
+
+    const updateSunPos = () => {
+      sunNode.translation = this.mvt.modelToViewPosition(Vector2.ZERO);
+    };
+    updateSunPos();
+
+    // ── Observer planet (blue) ──────────────────────────────────────────────
+    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvt, {
+      radius: 8,
+      fill: SolarSystemModelsColors.observerPlanetColorProperty,
+      cursor: "pointer",
+      tagName: "div",
+      focusable: true,
+      accessibleName: a11y.controls.observerDragStringProperty,
+    });
+    this.addChild(observerNode);
+
+    // ── Target planet (grey) ────────────────────────────────────────────────
+    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvt, {
+      radius: 8,
+      fill: SolarSystemModelsColors.targetPlanetColorProperty,
+      cursor: "pointer",
+      tagName: "div",
+      focusable: true,
+      accessibleName: a11y.controls.targetDragStringProperty,
+    });
+    this.addChild(targetNode);
+
+    // ── Planet drag listeners ───────────────────────────────────────────────
+    const makePlanetDrag = (id: 1 | 2, node: Node) => {
+      node.addInputListener(
+        new DragListener({
+          tandem: Tandem.OPT_OUT,
+          press: () => {
+            model.timer.isPlayingProperty.value = false;
+          },
+          drag: (event, listener) => {
+            const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
+            const modelPos = this.mvt.viewToModelPosition(listener.modelPoint);
+            const angle = Math.atan2(modelPos.y, modelPos.x);
+            const snap = model.snapToEventsProperty.value;
+            if (shiftKey) {
+              model.setEpochAngleByPlanetAngle(id, angle, snap, Math.PI / 12);
+            } else {
+              model.setTimeByPlanetAngle(id, angle, snap, Math.PI / 12);
+            }
+          },
+        }),
+      );
+    };
+    makePlanetDrag(1, observerNode);
+    makePlanetDrag(2, targetNode);
+
+    // ── Update orbit circles + labels when radii change ─────────────────────
+    const updateOrbits = () => {
+      const a1 = model.semimajorAxis1Property.value;
+      const a2 = model.semimajorAxis2Property.value;
+      this.mvt = buildMvt(a1, a2);
+
+      // Update elongation indicator's MVT reference
+      // (It holds a closure over mvt, so we need to re-link — simplest: rebuild shape via update)
+      const center = this.mvt.modelToViewPosition(Vector2.ZERO);
+
+      const r1 = this.mvt.modelToViewDeltaX(a1);
+      orbit1Circle.shape = Shape.circle(center.x, center.y, r1);
+
+      const r2 = this.mvt.modelToViewDeltaX(a2);
+      orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
+
+      // Labels at top of orbit circles
+      orbitLabel1.string = `${a1.toFixed(2)} AU`;
+      orbitLabel1.centerX = center.x;
+      orbitLabel1.bottom = center.y - r1 - 4;
+
+      orbitLabel2.string = `${a2.toFixed(2)} AU`;
+      orbitLabel2.centerX = center.x;
+      orbitLabel2.bottom = center.y - r2 - 4;
+
+      // Update planet node positions to use new MVT
+      updateSunPos();
+    };
+
+    Multilink.multilink([model.semimajorAxis1Property, model.semimajorAxis2Property] as const, updateOrbits);
+
+    // ── Zodiac strip at bottom ──────────────────────────────────────────────
+    const zodiacStrip = new ConfigurationsZodiacStrip(model);
+    zodiacStrip.left = 0;
+    zodiacStrip.bottom = this.layoutBounds.maxY - SCREEN_VIEW_MARGIN;
+    this.addChild(zodiacStrip);
+
+    // ── Timeline (right side, below controls) ───────────────────────────────
+    const timeline = new ConfigurationsTimeline(model);
+    // Positioned after panels are placed
+    this.addChild(timeline);
+
+    // ── Right-side panels ───────────────────────────────────────────────────
+    const controlPanel = new ConfigurationsControlPanel(model, this);
+    controlPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    controlPanel.top = SCREEN_VIEW_MARGIN;
+    this.addChild(controlPanel);
+
+    const displayPanel = new ConfigurationsDisplayPanel(model);
+    displayPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    displayPanel.top = controlPanel.bottom + 8;
+    this.addChild(displayPanel);
+
+    const timeReadout = new ConfigurationsTimeReadout(model);
+    timeReadout.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    timeReadout.top = displayPanel.bottom + 8;
+    this.addChild(timeReadout);
+
+    // Position timeline below time readout
+    timeline.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    timeline.top = timeReadout.bottom + 8;
+
+    // ── Reset All button ────────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
       listener: () => {
         model.reset();
@@ -85,35 +227,22 @@ export class ConfigurationsScreenView extends ScreenView {
     });
     this.addChild(resetAllButton);
 
-    // ── Accessibility: keyboard / reading traversal order ───────────────────────
-    // Make the parallel DOM (Tab order and screen-reader reading order)
-    // deterministic and independent of child z-order. ScreenView throws if you
-    // set pdomOrder on itself, so add a lightweight wrapper Node that "borrows"
-    // the interactive nodes in the order a user should reach them — Reset All
-    // last. Non-interactive decoration (background, placeholder) is omitted.
+    // ── pdomOrder ────────────────────────────────────────────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [
-          // TODO: add the sim's interactive nodes here, in traversal order
-          resetAllButton,
-        ],
+        pdomOrder: [controlPanel, displayPanel, timeReadout, observerNode, targetNode, resetAllButton],
       }),
     );
+
+    // Trigger initial orbit draw
+    updateOrbits();
   }
 
-  /**
-   * Resets view-side state (animations, panel visibility, etc.).
-   * Called by the Reset All button listener.
-   */
   public reset(): void {
-    // TODO: reset any view-side state here
+    // model.reset() handles all state
   }
 
-  /**
-   * Steps the view forward by dt seconds for animation.
-   * @param _dt - elapsed time in seconds
-   */
-  public override step(_dt: number): void {
-    // TODO: implement animation updates here
+  public override step(dt: number): void {
+    this.model.step(dt);
   }
 }

@@ -31,6 +31,40 @@
     "years": "yr",
     "days": "d"
   },
+  "configurations": {
+    "observerPlanet": "Observer's Planet",
+    "targetPlanet": "Target Planet",
+    "mercury": "Mercury",
+    "venus": "Venus",
+    "earth": "Earth",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn",
+    "semimajorAxis": "Semimajor Axis (AU)",
+    "labelOrbits": "Label Orbits",
+    "showElongation": "Show Elongation Angle",
+    "snapToEvents": "Snap to Events",
+    "resetTime": "Reset Time",
+    "animationRate": "Animation Rate",
+    "years": "yr",
+    "days": "d",
+    "synodicPeriod": "Synodic period:",
+    "eventAction": "When Event is Reached",
+    "run": "Run",
+    "pause": "Pause",
+    "lock": "Lock",
+    "pauseTime": "Pause Time (s)",
+    "second": "second",
+    "seconds": "seconds",
+    "opposition": "opposition",
+    "quadratureEastern": "quadrature (eastern)",
+    "conjunction": "conjunction",
+    "quadratureWestern": "quadrature (western)",
+    "inferiorConjunction": "inferior conjunction",
+    "greatestElongationWestern": "greatest elongation (western)",
+    "superiorConjunction": "superior conjunction",
+    "greatestElongationEastern": "greatest elongation (eastern)"
+  },
   "a11y": {
     "ptolemaic": {
       "screenSummary": {
@@ -69,7 +103,23 @@
       },
       "currentDetails": "The screen is in its initial state.",
       "controls": {
-        "exampleControl": "Example control"
+        "exampleControl": "Example control",
+        "observerPlanet": "Observer's planet selector",
+        "targetPlanet": "Target planet selector",
+        "observerAxis": "Observer orbit radius",
+        "targetAxis": "Target orbit radius",
+        "labelOrbits": "Label orbits",
+        "showElongation": "Show elongation angle",
+        "snapToEvents": "Snap to events",
+        "animationRate": "Animation rate",
+        "resetTime": "Reset time",
+        "eventAction": "Event action",
+        "pauseTime": "Pause time",
+        "observerDrag": "Observer's planet — drag to set time",
+        "targetDrag": "Target planet — drag to set time",
+        "observerShiftDrag": "Observer's planet — Shift-drag to set epoch angle",
+        "targetShiftDrag": "Target planet — Shift-drag to set epoch angle",
+        "timelineScroll": "Timeline — drag to scrub time"
       }
     }
   },
