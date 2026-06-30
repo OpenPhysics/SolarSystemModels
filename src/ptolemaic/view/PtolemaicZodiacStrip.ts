@@ -10,18 +10,18 @@ const TWO_PI = 2 * Math.PI;
 const LONGITUDE_TO_X = ZODIAC_STRIP_WIDTH / TWO_PI;
 
 const SIGN_NAMES = [
-  "Aries",
-  "Taurus",
-  "Gemini",
-  "Cancer",
-  "Leo",
-  "Virgo",
-  "Libra",
-  "Scorpio",
-  "Sagittarius",
-  "Capricorn",
-  "Aquarius",
   "Pisces",
+  "Aquarius",
+  "Capricorn",
+  "Sagittarius",
+  "Scorpio",
+  "Libra",
+  "Virgo",
+  "Leo",
+  "Cancer",
+  "Gemini",
+  "Taurus",
+  "Aries",
 ];
 
 function longitudeToX(lon: number): number {
@@ -43,19 +43,21 @@ export class PtolemaicZodiacStrip extends Node {
     this.addChild(band);
 
     // Dividers and sign labels
+    const segW = ZODIAC_STRIP_WIDTH / 12;
     for (let i = 0; i < 12; i++) {
-      const x = (i * ZODIAC_STRIP_WIDTH) / 12;
+      const x = i * segW;
       const divider = new Rectangle(x, 0, 1, ZODIAC_STRIP_HEIGHT, {
         fill: SolarSystemModelsColors.orbitColorProperty,
       });
       this.addChild(divider);
 
+      // Label at sign center (AS convention: reverses zodiac order so Aries = right, Pisces = left)
       const label = new Text(SIGN_NAMES[i] ?? "", {
         font: new PhetFont(9),
         fill: SolarSystemModelsColors.textColorProperty,
-        left: x + 2,
-        top: 3,
-        maxWidth: ZODIAC_STRIP_WIDTH / 12 - 4,
+        centerX: (i + 0.5) * segW,
+        centerY: ZODIAC_STRIP_HEIGHT * 0.25,
+        maxWidth: segW - 4,
       });
       this.addChild(label);
     }

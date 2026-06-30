@@ -276,7 +276,20 @@ export class ConfigurationsModel implements TModel {
     }
 
     this.calculateSystemProperties();
-    this.setTime(this.timeProperty.value);
+
+    // AS behavior: when locked on an even event (opposition or conjunction), re-snap
+    if (
+      this.lockedOnEventProperty.value &&
+      this.lockedEventIndexProperty.value >= 0 &&
+      this.lockedEventIndexProperty.value % 2 === 0
+    ) {
+      const cycle = Math.round(
+        (this.timeProperty.value - this.cycleOffsetProperty.value) / this.synodicPeriodProperty.value,
+      );
+      this.setTimeByCycleAndEventNumbers(cycle, this.lockedEventIndexProperty.value);
+    } else {
+      this.setTime(this.timeProperty.value);
+    }
     return true;
   }
 
@@ -406,14 +419,63 @@ export class ConfigurationsModel implements TModel {
     this.setTime(newTime);
   }
 
-  public setEpochAngleByPlanetAngle(
-    id: 1 | 2,
-    newAngle: number,
-    _snapToEvents: boolean,
-    _angleThreshold: number,
-  ): void {
+  /**
+   * Compute the 4 event angles relative to the other planet's current position.
+   * Returns [0]=opposition/infConj, [1]=quad/westElong, [2]=conj/supConj, [3]=quad/eastElong.
+   */
+  private computeEventAngles(thisA: number, otherA: number, otherAngle: number): [number, number, number, number] {
+    const acosVal = thisA < otherA ? Math.acos(thisA / otherA) : -Math.acos(otherA / thisA);
+    return [otherAngle, mod2pi(otherAngle + acosVal), mod2pi(otherAngle + Math.PI), mod2pi(otherAngle - acosVal)];
+  }
+
+  public setEpochAngleByPlanetAngle(id: 1 | 2, newAngle: number, snapToEvents: boolean, angleThreshold: number): void {
     const period = id === 1 ? this.period1Property.value : this.period2Property.value;
     const epochProp = id === 1 ? this.epochAngle1Property : this.epochAngle2Property;
+    const otherId = (id === 1 ? 2 : 1) as 1 | 2;
+
+    let snappedEvent = -1;
+
+    if (snapToEvents) {
+      const otherAngle = otherId === 1 ? this.angle1Property.value : this.angle2Property.value;
+      const otherA = otherId === 1 ? this.semimajorAxis1Property.value : this.semimajorAxis2Property.value;
+      const thisA = id === 1 ? this.semimajorAxis1Property.value : this.semimajorAxis2Property.value;
+
+      const eventAngles = this.computeEventAngles(thisA, otherA, otherAngle);
+
+      // Find the closest event angle to newAngle
+      let minDiff = Infinity;
+      for (let i = 0; i < 4; i++) {
+        const evtAngle = eventAngles[i] as number;
+        let diff = newAngle - evtAngle;
+        if (diff < -Math.PI) {
+          diff += TWO_PI;
+        } else if (diff > Math.PI) {
+          diff -= TWO_PI;
+        }
+        const absDiff = Math.abs(diff);
+        if (absDiff < minDiff) {
+          minDiff = absDiff;
+          snappedEvent = i;
+        }
+      }
+
+      if (minDiff < angleThreshold) {
+        const snappedAngle = eventAngles[snappedEvent] as number;
+        const newEpochAdj = mod2pi(snappedAngle - (TWO_PI * this.timeProperty.value) / period);
+        epochProp.value = newEpochAdj;
+        this.calculateSystemProperties();
+
+        const eventTimes = this.eventTimesListProperty.value;
+        const snappedEvtTime = eventTimes[snappedEvent] as number;
+        const cycle = Math.round(
+          (this.timeProperty.value - this.cycleOffsetProperty.value - snappedEvtTime) /
+            this.synodicPeriodProperty.value,
+        );
+        this.setTimeByCycleAndEventNumbers(cycle, snappedEvent);
+        return;
+      }
+    }
+
     const newEpoch = mod2pi(newAngle - (TWO_PI * this.timeProperty.value) / period);
     epochProp.value = newEpoch;
     this.calculateSystemProperties();

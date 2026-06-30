@@ -78,9 +78,26 @@ export class PtolemaicScreenView extends ScreenView {
     });
     this.addChild(orbitAreaBg);
 
-    // ── Zodiac sign labels around the rim ─────────────────────────────────
+    // ── Zodiac sign border tick marks at sign boundaries ─────────────────
+    const tickInnerR = 250;
+    const tickOuterR = 270;
     for (let i = 0; i < 12; i++) {
-      const angle = (i * Math.PI) / 6; // 0, 30°, 60°, ...
+      const angle = (i * Math.PI) / 6; // 0°, 30°, 60°, ... (sign boundaries)
+      const tick = new Path(null, {
+        stroke: "#888899",
+        lineWidth: 1,
+      });
+      const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickInnerR;
+      const y1 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * tickInnerR;
+      const x2 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickOuterR;
+      const y2 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * tickOuterR;
+      tick.shape = new Shape().moveTo(x1, y1).lineTo(x2, y2);
+      this.addChild(tick);
+    }
+
+    // ── Zodiac sign labels at sign centers (+15°) ─────────────────────────
+    for (let i = 0; i < 12; i++) {
+      const angle = ((i + 0.5) * Math.PI) / 6; // 15°, 45°, 75°, ... (sign centers)
       const vx = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_LABEL_RADIUS;
       // Inverted Y: positive y in model = up in view, so negate for angle
       const vy = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_LABEL_RADIUS;
