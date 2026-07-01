@@ -185,6 +185,9 @@ export class ConfigurationsTimeline extends Node {
         },
         drag: (_event, listener) => {
           const synodic = model.synodicPeriodProperty.value;
+          if (synodic <= 0) {
+            return;
+          }
           const scale = CYCLE_HEIGHT_PX / synodic;
           const deltaY = initY - listener.parentPoint.y;
           const newTime = initTime + deltaY / scale;

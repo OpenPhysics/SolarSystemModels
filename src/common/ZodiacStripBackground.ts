@@ -26,8 +26,8 @@ export class ZodiacStripBackground extends Node {
     this.addChild(band);
 
     const segW = width / 12;
-    for (let i = 0; i < 12; i++) {
-      const label = new Text(signStringProperties[i]!, {
+    signStringProperties.forEach((signStringProperty, i) => {
+      const label = new Text(signStringProperty, {
         font: new PhetFont(9),
         fill: SolarSystemModelsColors.zodiacLabelColorProperty,
         maxWidth: segW - 4,
@@ -42,6 +42,6 @@ export class ZodiacStripBackground extends Node {
         });
         this.addChild(divider);
       }
-    }
+    });
   }
 }

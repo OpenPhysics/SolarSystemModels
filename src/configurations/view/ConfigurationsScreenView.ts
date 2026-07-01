@@ -166,10 +166,19 @@ export class ConfigurationsScreenView extends ScreenView {
     const updateOrbits = () => {
       const a1 = model.semimajorAxis1Property.value;
       const a2 = model.semimajorAxis2Property.value;
-      this.mvt = buildMvt(a1, a2);
+      // Mutate the existing mvt's matrix in place (rather than replacing the
+      // object) so CelestialBodyNode's internal closure — captured once at
+      // construction — keeps reading the current transform on every future
+      // position update, not just the one right after this call.
+      this.mvt.setMatrix(buildMvt(a1, a2).matrix);
 
-      // Update elongation indicator's MVT reference
-      // (It holds a closure over mvt, so we need to re-link — simplest: rebuild shape via update)
+      // pos1Property/pos2Property may have already reacted to the axis change
+      // (and pushed stale-scale positions) before this listener ran, so
+      // explicitly re-sync the planet nodes and elongation indicator now.
+      observerNode.translation = this.mvt.modelToViewPosition(model.pos1Property.value);
+      targetNode.translation = this.mvt.modelToViewPosition(model.pos2Property.value);
+      elongationIndicator.setModelViewTransform(this.mvt);
+
       const center = this.mvt.modelToViewPosition(Vector2.ZERO);
 
       const r1 = this.mvt.modelToViewDeltaX(a1);
