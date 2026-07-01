@@ -77,6 +77,77 @@ const SolarSystemModelsColors = {
     default: "#1e293b",
     projector: "#e8eaf6",
   }),
+
+  // ── Sky / background ──────────────────────────────────────────────────────
+
+  orbitAreaBackgroundColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "orbitAreaBackground", {
+    default: "#0a0a18",
+    projector: "#edf0f5",
+  }),
+
+  // ── Zodiac ring decorations ────────────────────────────────────────────────
+
+  zodiacTickColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacTick", {
+    default: "#888899",
+    projector: "#555566",
+  }),
+  zodiacLabelColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacLabel", {
+    default: "#aabbcc",
+    projector: "#334455",
+  }),
+  zodiacBorderColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacBorder", {
+    default: "#555577",
+    projector: "#9999bb",
+  }),
+  zodiacDividerColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacDivider", {
+    default: "#444455",
+    projector: "#9999bb",
+  }),
+
+  // ── Constellation decorations ──────────────────────────────────────────────
+
+  constellationLineColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "constellationLine", {
+    default: "#4d6080",
+    projector: "#99aacc",
+  }),
+  constellationStarColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "constellationStar", {
+    default: "#aabbdd",
+    projector: "#556677",
+  }),
+
+  // ── Ptolemaic reference geometry ──────────────────────────────────────────
+
+  sunOrbitReferenceColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "sunOrbitReference", {
+    default: "#333355",
+    projector: "#99aabb",
+  }),
+
+  // ── Configurations timeline ────────────────────────────────────────────────
+
+  timelineBackgroundColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineBackground", {
+    default: "#0d1117",
+    projector: "#f0f4f8",
+  }),
+  timelineBorderColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineBorder", {
+    default: "#334466",
+    projector: "#aabbcc",
+  }),
+  timelineEventColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineEvent", {
+    default: "#446688",
+    projector: "#334466",
+  }),
+  timelineSelectedColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineSelected", {
+    default: "#223355",
+    projector: "#ccd8e8",
+  }),
+  timelineCursorColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineCursor", {
+    default: "#aabbcc",
+    projector: "#334466",
+  }),
+  timelineLabelColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineLabel", {
+    default: "#9999bb",
+    projector: "#445566",
+  }),
 };
 
 export default SolarSystemModelsColors;

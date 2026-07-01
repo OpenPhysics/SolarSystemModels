@@ -57,6 +57,10 @@ export class StringManager {
     return stringProperties.a11y.configurations;
   }
 
+  public getZodiacStrings() {
+    return stringProperties.zodiac;
+  }
+
   public getPreferences() {
     return stringProperties.preferences;
   }
