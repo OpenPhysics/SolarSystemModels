@@ -14,8 +14,7 @@ import {
   PANEL_WIDTH,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
-import type { PlanetPresetKey } from "../model/PtolemaicPlanet.js";
-import { PlanetType } from "../model/PtolemaicPlanet.js";
+import { PlanetType, PRESET_KEYS } from "../model/PtolemaicPlanet.js";
 
 const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
 const LABEL_FONT = new PhetFont(13);
@@ -27,7 +26,6 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     const a11y = StringManager.getInstance().getPtolemaicA11yStrings();
 
     // ── Planet preset ComboBox ─────────────────────────────────────────────
-    const presetKeys: PlanetPresetKey[] = ["venus", "mars", "jupiter", "saturn"];
     const presetLabels = [
       strings.venusStringProperty,
       strings.marsStringProperty,
@@ -35,7 +33,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       strings.saturnStringProperty,
     ];
 
-    const comboItems = presetKeys.map((key, i) => {
+    const comboItems = PRESET_KEYS.map((key, i) => {
       const labelProp = presetLabels[i] ?? strings.marsStringProperty;
       return {
         value: i,

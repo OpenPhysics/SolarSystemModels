@@ -121,6 +121,7 @@ export class ConfigurationsScreenView extends ScreenView {
       tagName: "div",
       focusable: true,
       accessibleName: a11y.controls.observerDragStringProperty,
+      accessibleHelpText: a11y.controls.observerShiftDragStringProperty,
     });
     this.addChild(observerNode);
 
@@ -132,6 +133,7 @@ export class ConfigurationsScreenView extends ScreenView {
       tagName: "div",
       focusable: true,
       accessibleName: a11y.controls.targetDragStringProperty,
+      accessibleHelpText: a11y.controls.targetShiftDragStringProperty,
     });
     this.addChild(targetNode);
 
@@ -190,9 +192,8 @@ export class ConfigurationsScreenView extends ScreenView {
       updateSunPos();
     };
 
-    Multilink.multilink(
-      [model.semimajorAxis1Property, model.semimajorAxis2Property, s.auStringProperty] as const,
-      () => updateOrbits(),
+    Multilink.multilink([model.semimajorAxis1Property, model.semimajorAxis2Property, s.auStringProperty] as const, () =>
+      updateOrbits(),
     );
 
     // ── Zodiac strip at bottom ──────────────────────────────────────────────

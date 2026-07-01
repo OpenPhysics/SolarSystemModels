@@ -43,7 +43,9 @@ export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
         s.secondsStringProperty,
       ] as const,
       (remaining, pausedFor, second, seconds) => {
-        if (remaining <= 0) return "";
+        if (remaining <= 0) {
+          return "";
+        }
         const secs = Math.ceil(remaining);
         const unit = secs === 1 ? second : seconds;
         return pausedFor.replace("{0}", String(secs)).replace("{1}", unit);

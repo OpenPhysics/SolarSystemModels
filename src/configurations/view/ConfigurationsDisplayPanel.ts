@@ -1,4 +1,5 @@
 import { Text, VBox } from "scenerystack/scenery";
+import { PhetFont } from "scenerystack/scenery-phet";
 import { Checkbox } from "scenerystack/sun";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -7,7 +8,7 @@ import { PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
 const LABEL_OPTS = {
-  font: "14px sans-serif",
+  font: new PhetFont(14),
   fill: SolarSystemModelsColors.textColorProperty,
   maxWidth: PANEL_WIDTH - 60,
 } as const;

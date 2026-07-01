@@ -15,7 +15,7 @@ import {
   PTOLEMAIC_SUN_ORBIT_RADIUS,
 } from "../../SolarSystemModelsConstants.js";
 import type { PlanetPresetKey } from "./PtolemaicPlanet.js";
-import { PLANET_PRESETS, PlanetType } from "./PtolemaicPlanet.js";
+import { PLANET_PRESETS, PlanetType, PRESET_KEYS } from "./PtolemaicPlanet.js";
 
 type MemorySnapshot = {
   epicycleSize: number;
@@ -64,9 +64,6 @@ export class PtolemaicModel implements TModel {
 
   private memory: MemorySnapshot | null = null;
 
-  // Ordered preset keys so control panel can reference by index
-  public static readonly PRESET_KEYS: readonly PlanetPresetKey[] = ["venus", "mars", "jupiter", "saturn"];
-
   public constructor() {
     this.timer = new TimeModel(false);
 
@@ -86,7 +83,7 @@ export class PtolemaicModel implements TModel {
 
     // Index into PRESET_KEYS (1 = mars)
     this.presetKeyProperty = new NumberProperty(1, {
-      range: new Range(0, PtolemaicModel.PRESET_KEYS.length - 1),
+      range: new Range(0, PRESET_KEYS.length - 1),
       numberType: "Integer",
     });
 
@@ -148,7 +145,7 @@ export class PtolemaicModel implements TModel {
 
     // Apply Mars preset to keep presetKeyProperty in sync
     this.presetKeyProperty.lazyLink((idx) => {
-      const key = PtolemaicModel.PRESET_KEYS[idx];
+      const key = PRESET_KEYS[idx];
       if (key !== undefined) {
         this.applyPresetData(PLANET_PRESETS[key]);
       }
@@ -185,7 +182,7 @@ export class PtolemaicModel implements TModel {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   public applyPreset(key: PlanetPresetKey): void {
-    const idx = PtolemaicModel.PRESET_KEYS.indexOf(key);
+    const idx = PRESET_KEYS.indexOf(key);
     this.presetKeyProperty.value = idx;
     this.applyPresetData(PLANET_PRESETS[key]);
   }

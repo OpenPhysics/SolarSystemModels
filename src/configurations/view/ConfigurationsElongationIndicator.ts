@@ -5,9 +5,8 @@ import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Node, Path, Text } from "scenerystack/scenery";
 import { ArrowNode, PhetFont } from "scenerystack/scenery-phet";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
+import { CONFIGURATIONS_ELONGATION_ARC_RADIUS } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
-
-const ARC_RADIUS_VIEW = 35; // px — arc radius in view space
 
 export class ConfigurationsElongationIndicator extends Node {
   public constructor(model: ConfigurationsModel, mvt: ModelViewTransform2) {
@@ -74,13 +73,13 @@ export class ConfigurationsElongationIndicator extends Node {
           const endAngle = planetDir;
           // Determine sweep direction: elongDeg < 0 (East) means target is east of Sun
           const anticlockwise = elongDeg > 0; // W = clockwise sweep, E = anticlockwise
-          arcShape.arc(vp1.x, vp1.y, ARC_RADIUS_VIEW, startAngle, endAngle, anticlockwise);
+          arcShape.arc(vp1.x, vp1.y, CONFIGURATIONS_ELONGATION_ARC_RADIUS, startAngle, endAngle, anticlockwise);
         }
         arcPath.shape = arcShape;
 
         // Label at midpoint angle
         const midAngle = (sunDir + planetDir) / 2;
-        const labelR = ARC_RADIUS_VIEW + 14;
+        const labelR = CONFIGURATIONS_ELONGATION_ARC_RADIUS + 14;
         elongLabel.string = `${Math.abs(elongDeg).toFixed(1)}° ${elongLabel_}`;
         elongLabel.centerX = vp1.x + labelR * Math.cos(midAngle);
         elongLabel.centerY = vp1.y + labelR * Math.sin(midAngle);

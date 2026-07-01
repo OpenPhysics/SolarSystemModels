@@ -49,4 +49,7 @@ export const PLANET_PRESETS = {
 
 export type PlanetPresetKey = keyof typeof PLANET_PRESETS;
 
+// Ordered preset keys so the control panel and model can reference by index.
+export const PRESET_KEYS: readonly PlanetPresetKey[] = ["venus", "mars", "jupiter", "saturn"];
+
 SolarSystemModelsNamespace.register("PlanetType", PlanetType);
