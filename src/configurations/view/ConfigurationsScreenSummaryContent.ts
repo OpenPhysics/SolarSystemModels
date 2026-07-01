@@ -13,26 +13,60 @@
  *   - currentDetailsContent — a LIVE paragraph describing current state
  *   - interactionHintContent — a short hint on how to get started
  *
- * ── Making "current details" live ─────────────────────────────────────────────
- * The template has no model state, so currentDetails is a static string. In a
- * real sim, build a DerivedProperty over the relevant model Properties and pass
- * it as `currentDetailsContent` so the paragraph updates as the sim runs.
- * See LunarLander/src/.../LunarLanderScreenSummaryContent.ts for the pattern.
+ * currentDetailsContent is a DerivedProperty over the observer/target planet
+ * presets, the current time, and (if locked) the current configuration name,
+ * so the paragraph updates as the sim runs.
  */
+import { DerivedProperty } from "scenerystack/axon";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
+import { PRESET_KEYS } from "../model/ConfigurationsPlanet.js";
 
 export class ConfigurationsScreenSummaryContent extends ScreenSummaryContent {
-  // `model` is unused in the template but kept in the signature so real sims can
-  // derive a live currentDetailsContent from it without changing call sites.
-  public constructor(_model: ConfigurationsModel) {
+  public constructor(model: ConfigurationsModel) {
     const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
+    const strings = StringManager.getInstance().getConfigurationsStrings();
+
+    // Ordered to match PRESET_KEYS: mercury, venus, earth, mars, jupiter, saturn.
+    const planetLabelProperties = [
+      strings.mercuryStringProperty,
+      strings.venusStringProperty,
+      strings.earthStringProperty,
+      strings.marsStringProperty,
+      strings.jupiterStringProperty,
+      strings.saturnStringProperty,
+    ] as const;
+
+    const currentDetailsProperty = new DerivedProperty(
+      [
+        model.preset1IndexProperty,
+        model.preset2IndexProperty,
+        model.timeProperty,
+        model.currentConfigurationProperty,
+        a11y.currentDetailsTemplateStringProperty,
+        a11y.currentConfigurationTemplateStringProperty,
+        ...planetLabelProperties,
+      ] as const,
+      (preset1Index, preset2Index, time, currentConfiguration, template, configTemplate, ...planetLabels) => {
+        const earthIndex = PRESET_KEYS.indexOf("earth");
+        const observerLabel = planetLabels[preset1Index] ?? planetLabels[earthIndex];
+        const targetLabel = planetLabels[preset2Index] ?? planetLabels[earthIndex];
+        const configPart = currentConfiguration === "" ? "" : configTemplate.replace("{0}", currentConfiguration);
+
+        return template
+          .replace("{0}", observerLabel ?? "")
+          .replace("{1}", targetLabel ?? "")
+          .replace("{2}", time.toFixed(2))
+          .replace("{3}", configPart)
+          .trim();
+      },
+    );
 
     super({
       playAreaContent: a11y.screenSummary.playAreaStringProperty,
       controlAreaContent: a11y.screenSummary.controlAreaStringProperty,
-      currentDetailsContent: a11y.currentDetailsStringProperty,
+      currentDetailsContent: currentDetailsProperty,
       interactionHintContent: a11y.screenSummary.interactionHintStringProperty,
     });
   }

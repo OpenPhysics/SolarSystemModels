@@ -18,7 +18,10 @@ import {
   PTOLEMAIC_DEFERENT_RADIUS,
   PTOLEMAIC_SUN_ORBIT_RADIUS,
   SCREEN_VIEW_MARGIN,
+  ZODIAC_LABEL_MAX_WIDTH,
   ZODIAC_LABEL_RADIUS,
+  ZODIAC_TICK_INNER_RADIUS,
+  ZODIAC_TICK_OUTER_RADIUS,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 import { PtolemaicControlPanel } from "./PtolemaicControlPanel.js";
@@ -28,7 +31,6 @@ import { PtolemaicScreenSummaryContent } from "./PtolemaicScreenSummaryContent.j
 import { PtolemaicTimeControls } from "./PtolemaicTimeControls.js";
 import { PtolemaicTimeReadout } from "./PtolemaicTimeReadout.js";
 import { PtolemaicZodiacStrip } from "./PtolemaicZodiacStrip.js";
-
 
 export class PtolemaicScreenView extends ScreenView {
   private readonly pathTrail: PtolemaicPathTrail;
@@ -86,18 +88,16 @@ export class PtolemaicScreenView extends ScreenView {
     this.addChild(constellationNode);
 
     // ── Zodiac sign border tick marks at sign boundaries ─────────────────
-    const tickInnerR = 250;
-    const tickOuterR = 270;
     for (let i = 0; i < 12; i++) {
       const angle = (i * Math.PI) / 6; // 0°, 30°, 60°, ... (sign boundaries)
       const tick = new Path(null, {
         stroke: SolarSystemModelsColors.zodiacTickColorProperty,
         lineWidth: 1,
       });
-      const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickInnerR;
-      const y1 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * tickInnerR;
-      const x2 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickOuterR;
-      const y2 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * tickOuterR;
+      const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_TICK_INNER_RADIUS;
+      const y1 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_TICK_INNER_RADIUS;
+      const x2 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_TICK_OUTER_RADIUS;
+      const y2 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_TICK_OUTER_RADIUS;
       tick.shape = new Shape().moveTo(x1, y1).lineTo(x2, y2);
       this.addChild(tick);
     }
@@ -111,7 +111,7 @@ export class PtolemaicScreenView extends ScreenView {
       const label = new Text(ZODIAC_SIGN_PROPS[i]!, {
         font: new PhetFont(10),
         fill: SolarSystemModelsColors.zodiacLabelColorProperty,
-        maxWidth: 55,
+        maxWidth: ZODIAC_LABEL_MAX_WIDTH,
       });
       label.centerX = vx;
       label.centerY = vy;

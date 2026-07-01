@@ -74,9 +74,10 @@
         "controlArea": "The control area has controls for the planet and the sizes and rates of its deferent and epicycle, plus a Reset All button that returns the screen to its starting state.",
         "interactionHint": "Adjust the deferent and epicycle to see how the planet appears to move as seen from Earth."
       },
-      "currentDetails": "The screen is in its initial state.",
+      "currentDetailsTemplate": "Planet preset: {0}. The animation is {1}, running at {2} times speed.",
+      "playing": "playing",
+      "paused": "paused",
       "controls": {
-        "exampleControl": "Example control",
         "sunDrag": "Sun — drag to set angle",
         "planetPreset": "Planet preset",
         "epicycleSize": "Epicycle size",
@@ -103,9 +104,9 @@
         "controlArea": "The control area has controls for choosing a planet and its orbit and for animating the orbits, plus a Reset All button that returns the screen to its starting state.",
         "interactionHint": "Choose a planet and animate the orbits to see the planetary configurations form."
       },
-      "currentDetails": "The screen is in its initial state.",
+      "currentDetailsTemplate": "Observer's planet: {0}. Target planet: {1}. Current time: {2} years. {3}",
+      "currentConfigurationTemplate": "Currently at {0}.",
       "controls": {
-        "exampleControl": "Example control",
         "observerPlanet": "Observer's planet selector",
         "targetPlanet": "Target planet selector",
         "observerAxis": "Observer orbit radius",
@@ -120,8 +121,7 @@
         "observerDrag": "Observer's planet — drag to set time",
         "targetDrag": "Target planet — drag to set time",
         "observerShiftDrag": "Observer's planet — Shift-drag to set epoch angle",
-        "targetShiftDrag": "Target planet — Shift-drag to set epoch angle",
-        "timelineScroll": "Timeline — drag to scrub time"
+        "targetShiftDrag": "Target planet — Shift-drag to set epoch angle"
       }
     }
   },

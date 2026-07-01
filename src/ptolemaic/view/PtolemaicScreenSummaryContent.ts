@@ -13,26 +13,52 @@
  *   - currentDetailsContent — a LIVE paragraph describing current state
  *   - interactionHintContent — a short hint on how to get started
  *
- * ── Making "current details" live ─────────────────────────────────────────────
- * The template has no model state, so currentDetails is a static string. In a
- * real sim, build a DerivedProperty over the relevant model Properties and pass
- * it as `currentDetailsContent` so the paragraph updates as the sim runs.
- * See LunarLander/src/.../LunarLanderScreenSummaryContent.ts for the pattern.
+ * currentDetailsContent is a DerivedProperty over the current planet preset
+ * and the play/pause + animation rate state, so the paragraph updates as the
+ * sim runs.
  */
+import { DerivedProperty } from "scenerystack/axon";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
+import { PRESET_KEYS } from "../model/PtolemaicPlanet.js";
 
 export class PtolemaicScreenSummaryContent extends ScreenSummaryContent {
-  // `model` is unused in the template but kept in the signature so real sims can
-  // derive a live currentDetailsContent from it without changing call sites.
-  public constructor(_model: PtolemaicModel) {
+  public constructor(model: PtolemaicModel) {
     const a11y = StringManager.getInstance().getPtolemaicA11yStrings();
+    const strings = StringManager.getInstance().getPtolemaicStrings();
+
+    // Ordered to match PRESET_KEYS: venus, mars, jupiter, saturn.
+    const presetLabelProperties = [
+      strings.venusStringProperty,
+      strings.marsStringProperty,
+      strings.jupiterStringProperty,
+      strings.saturnStringProperty,
+    ] as const;
+
+    const currentDetailsProperty = new DerivedProperty(
+      [
+        model.presetKeyProperty,
+        model.timer.isPlayingProperty,
+        model.timer.animationRateProperty,
+        a11y.currentDetailsTemplateStringProperty,
+        a11y.playingStringProperty,
+        a11y.pausedStringProperty,
+        ...presetLabelProperties,
+      ] as const,
+      (presetIndex, isPlaying, animationRate, template, playing, paused, ...presetLabels) => {
+        const presetLabel = presetLabels[presetIndex] ?? presetLabels[PRESET_KEYS.indexOf("mars")];
+        return template
+          .replace("{0}", presetLabel ?? "")
+          .replace("{1}", isPlaying ? playing : paused)
+          .replace("{2}", animationRate.toFixed(1));
+      },
+    );
 
     super({
       playAreaContent: a11y.screenSummary.playAreaStringProperty,
       controlAreaContent: a11y.screenSummary.controlAreaStringProperty,
-      currentDetailsContent: a11y.currentDetailsStringProperty,
+      currentDetailsContent: currentDetailsProperty,
       interactionHintContent: a11y.screenSummary.interactionHintStringProperty,
     });
   }

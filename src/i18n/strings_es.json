@@ -74,9 +74,10 @@
         "controlArea": "El área de control tiene controles para el planeta y para los tamaños y velocidades de su deferente y su epiciclo, además de un botón Restablecer todo que devuelve la pantalla a su estado inicial.",
         "interactionHint": "Ajusta el deferente y el epiciclo para ver cómo parece moverse el planeta visto desde la Tierra."
       },
-      "currentDetails": "La pantalla está en su estado inicial.",
+      "currentDetailsTemplate": "Preset de planeta: {0}. La animación está {1}, a una velocidad de {2} veces.",
+      "playing": "en marcha",
+      "paused": "en pausa",
       "controls": {
-        "exampleControl": "Control de ejemplo",
         "sunDrag": "Sol — arrastrar para establecer el ángulo",
         "planetPreset": "Preset de planeta",
         "epicycleSize": "Tamaño del epiciclo",
@@ -103,9 +104,9 @@
         "controlArea": "El área de control tiene controles para elegir un planeta y su órbita y para animar las órbitas, además de un botón Restablecer todo que devuelve la pantalla a su estado inicial.",
         "interactionHint": "Elige un planeta y anima las órbitas para ver cómo se forman las configuraciones planetarias."
       },
-      "currentDetails": "La pantalla está en su estado inicial.",
+      "currentDetailsTemplate": "Planeta del observador: {0}. Planeta objetivo: {1}. Tiempo actual: {2} años. {3}",
+      "currentConfigurationTemplate": "Actualmente en {0}.",
       "controls": {
-        "exampleControl": "Control de ejemplo",
         "observerPlanet": "Observer's planet selector",
         "targetPlanet": "Target planet selector",
         "observerAxis": "Observer orbit radius",
@@ -120,8 +121,7 @@
         "observerDrag": "Observer's planet — drag to set time",
         "targetDrag": "Target planet — drag to set time",
         "observerShiftDrag": "Observer's planet — Shift-drag to set epoch angle",
-        "targetShiftDrag": "Target planet — Shift-drag to set epoch angle",
-        "timelineScroll": "Timeline — drag to scrub time"
+        "targetShiftDrag": "Target planet — Shift-drag to set epoch angle"
       }
     }
   },

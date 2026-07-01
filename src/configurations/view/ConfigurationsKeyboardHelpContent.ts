@@ -2,15 +2,26 @@
  * ConfigurationsKeyboardHelpContent.ts
  *
  * Content for the keyboard-help dialog (the "?" button in the navigation bar).
- * The template's only interactions are buttons and Reset All, so a single
- * basic-actions section covers the available keyboard controls. Add a slider or
- * combo-box section here as the simulation grows.
+ * Covers the screen's keyboard-accessible interactions: basic actions (Tab,
+ * Reset All), the observer/target planet combo boxes, and the NumberControl
+ * sliders (orbit radii, animation rate, pause time). Dragging the planets
+ * (and Shift-dragging to set epoch angle) and scrubbing/clicking the timeline
+ * are mouse/touch only — they have no keyboard equivalent, so they aren't
+ * documented here.
  */
 
-import { BasicActionsKeyboardHelpSection, TwoColumnKeyboardHelpContent } from "scenerystack/scenery-phet";
+import {
+  BasicActionsKeyboardHelpSection,
+  ComboBoxKeyboardHelpSection,
+  SliderControlsKeyboardHelpSection,
+  TwoColumnKeyboardHelpContent,
+} from "scenerystack/scenery-phet";
 
 export class ConfigurationsKeyboardHelpContent extends TwoColumnKeyboardHelpContent {
   public constructor() {
-    super([new BasicActionsKeyboardHelpSection()], []);
+    super(
+      [new BasicActionsKeyboardHelpSection(), new ComboBoxKeyboardHelpSection()],
+      [new SliderControlsKeyboardHelpSection()],
+    );
   }
 }

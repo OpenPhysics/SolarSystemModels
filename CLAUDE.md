@@ -5,8 +5,8 @@ Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhys
 ## Project
 
 A two-screen SceneryStack simulation porting the NAAP **Solar System Models** lab,
-scaffolded from `TemplateSingleSim`. **Scaffolding only** — both screens are a
-placeholder label + Reset All; no model/physics yet.
+scaffolded from `TemplateSingleSim`. Both screens now have complete models and
+fully wired views (not scaffolding).
 
 - **Ptolemaic System** (`src/ptolemaic/`) — port of the NAAP *Ptolemaic System Simulator* (`ptolemaic.swf`): the Earth-centered (geocentric) model with deferent + epicycle and the resulting view from Earth.
 - **Planetary Configurations** (`src/configurations/`) — port of the NAAP *Planetary Configurations Simulator* (`configurationsSimulator.swf`): the Sun-centered system and the configurations (opposition, conjunction, elongation) that Earth and another planet form.
@@ -26,10 +26,10 @@ Shared code keeps the `SolarSystemModels` prefix; per-screen code uses the
 | `src/i18n/StringManager.ts` | Singleton localized string accessor; per-screen name + a11y getters |
 | `src/main.ts` | Entry point; registers both screens with the Sim |
 | `src/ptolemaic/PtolemaicScreen.ts` | `Screen<PtolemaicModel, PtolemaicScreenView>` wrapper |
-| `src/ptolemaic/model/PtolemaicModel.ts` | Ptolemaic screen state (scaffold) |
+| `src/ptolemaic/model/PtolemaicModel.ts` | Ptolemaic screen state: deferent/epicycle geometry, presets, memory |
 | `src/ptolemaic/view/PtolemaicScreenView.ts` | Ptolemaic visuals, `screenSummaryContent` + `pdomOrder` |
 | `src/configurations/ConfigurationsScreen.ts` | `Screen<ConfigurationsModel, ConfigurationsScreenView>` wrapper |
-| `src/configurations/model/ConfigurationsModel.ts` | Configurations screen state (scaffold) |
+| `src/configurations/model/ConfigurationsModel.ts` | Configurations screen state: orbits, synodic events, timeline |
 | `src/configurations/view/ConfigurationsScreenView.ts` | Configurations visuals, `screenSummaryContent` + `pdomOrder` |
 | `src/preferences/solarSystemModelsQueryParameters.ts` | `QueryStringMachine` parameters |
 | `scripts/decompile-flash.ts` | Extract ActionScript from the NAAP Flash `.swf` sources via JPEXS FFDec (→ `NAAP/decompiled/`) |

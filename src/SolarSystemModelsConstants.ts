@@ -12,6 +12,9 @@ export const ORBIT_VIEW_SCALE = 95; // px per model unit
 export const ORBIT_VIEW_CENTER_X = 295; // px — model origin maps here (x)
 export const ORBIT_VIEW_CENTER_Y = 300; // px — model origin maps here (y)
 export const ZODIAC_LABEL_RADIUS = 285; // px — zodiac sign label ring
+export const ZODIAC_LABEL_MAX_WIDTH = 55; // px — max width of a zodiac sign label
+export const ZODIAC_TICK_INNER_RADIUS = 250; // px — zodiac sign boundary tick, inner end
+export const ZODIAC_TICK_OUTER_RADIUS = 270; // px — zodiac sign boundary tick, outer end
 export const ZODIAC_STRIP_HEIGHT = 80; // px — "view from Earth" strip height
 export const ZODIAC_STRIP_WIDTH = 600; // px — width matching AS factor 600/2π
 
@@ -39,6 +42,8 @@ export const CONFIGURATIONS_ORBIT_CENTER_Y = 285; // px — Sun maps here (y)
 export const CONFIGURATIONS_ORBIT_MARGIN = 60; // px — margin around orbit area
 export const CONFIGURATIONS_TIMELINE_WIDTH = 210; // px
 export const CONFIGURATIONS_TIMELINE_HEIGHT = 350; // px
+export const CONFIGURATIONS_TIMELINE_CYCLE_HEIGHT = 120; // px — vertical px per synodic cycle
+export const CONFIGURATIONS_ELONGATION_ARC_RADIUS = 35; // px — elongation indicator arc radius
 
 // ── Configurations preset orbital radii (AU) ───────────────────────────────────
 
@@ -59,6 +64,9 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   ORBIT_VIEW_CENTER_X,
   ORBIT_VIEW_CENTER_Y,
   ZODIAC_LABEL_RADIUS,
+  ZODIAC_LABEL_MAX_WIDTH,
+  ZODIAC_TICK_INNER_RADIUS,
+  ZODIAC_TICK_OUTER_RADIUS,
   ZODIAC_STRIP_HEIGHT,
   ZODIAC_STRIP_WIDTH,
   PTOLEMAIC_DEFERENT_RADIUS,
@@ -71,6 +79,8 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   CONFIGURATIONS_ORBIT_MARGIN,
   CONFIGURATIONS_TIMELINE_WIDTH,
   CONFIGURATIONS_TIMELINE_HEIGHT,
+  CONFIGURATIONS_TIMELINE_CYCLE_HEIGHT,
+  CONFIGURATIONS_ELONGATION_ARC_RADIUS,
   EPICYCLE_SIZE_RANGE,
   ECCENTRICITY_RANGE,
   MOTION_RATE_RANGE,

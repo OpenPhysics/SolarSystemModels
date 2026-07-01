@@ -1,7 +1,7 @@
 import { Shape } from "scenerystack/kite";
-import { Circle, Node, Path, Rectangle, Text } from "scenerystack/scenery";
-import { PhetFont } from "scenerystack/scenery-phet";
+import { Circle, Node, Path, Rectangle } from "scenerystack/scenery";
 import { ECLIPTIC_CONSTELLATIONS } from "../../common/ZodiacConstellationsData.js";
+import { ZodiacStripBackground } from "../../common/ZodiacStripBackground.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { ZODIAC_STRIP_HEIGHT, ZODIAC_STRIP_WIDTH } from "../../SolarSystemModelsConstants.js";
@@ -85,13 +85,8 @@ export class PtolemaicZodiacStrip extends Node {
       z.ariesStringProperty,
     ];
 
-    // Background band
-    const band = new Rectangle(0, 0, ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT, {
-      fill: SolarSystemModelsColors.zodiacBandColorProperty,
-      stroke: SolarSystemModelsColors.orbitColorProperty,
-      lineWidth: 1,
-    });
-    this.addChild(band);
+    // ── Shared band + sign labels + dividers ──────────────────────────────
+    this.addChild(new ZodiacStripBackground(ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT, SIGN_NAME_PROPS));
 
     // ── Constellation stick figures ──────────────────────────────────────
     const constelShape = buildConstellationShape(ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT);
@@ -105,25 +100,6 @@ export class PtolemaicZodiacStrip extends Node {
       clipArea: clipRect.shape,
     });
     this.addChild(constelPath);
-
-    // ── Dividers and sign labels ──────────────────────────────────────────
-    const segW = ZODIAC_STRIP_WIDTH / 12;
-    for (let i = 0; i < 12; i++) {
-      const x = i * segW;
-      const divider = new Rectangle(x, 0, 1, ZODIAC_STRIP_HEIGHT, {
-        fill: SolarSystemModelsColors.orbitColorProperty,
-      });
-      this.addChild(divider);
-
-      const label = new Text(SIGN_NAME_PROPS[i]!, {
-        font: new PhetFont(9),
-        fill: SolarSystemModelsColors.zodiacLabelColorProperty,
-        maxWidth: segW - 4,
-      });
-      label.centerX = (i + 0.5) * segW;
-      label.centerY = ZODIAC_STRIP_HEIGHT * 0.25;
-      this.addChild(label);
-    }
 
     // ── Sun marker (yellow circle) ──────────────────────────────────────
     const sunMarker = new Circle(7, {

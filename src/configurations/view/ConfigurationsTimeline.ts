@@ -1,24 +1,45 @@
 import { Multilink } from "scenerystack/axon";
 import { Shape } from "scenerystack/kite";
-import { DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { DragListener, FireListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { Tandem } from "scenerystack/tandem";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { CONFIGURATIONS_TIMELINE_HEIGHT, CONFIGURATIONS_TIMELINE_WIDTH } from "../../SolarSystemModelsConstants.js";
+import {
+  CONFIGURATIONS_TIMELINE_CYCLE_HEIGHT,
+  CONFIGURATIONS_TIMELINE_HEIGHT,
+  CONFIGURATIONS_TIMELINE_WIDTH,
+} from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
 const W = CONFIGURATIONS_TIMELINE_WIDTH;
 const H = CONFIGURATIONS_TIMELINE_HEIGHT;
-const CYCLE_HEIGHT_PX = 120;
+const CYCLE_HEIGHT_PX = CONFIGURATIONS_TIMELINE_CYCLE_HEIGHT;
 
-function plotEventMark(shape: Shape, labelPool: Text[], labelIdx: number, y: number, name: string): number {
+// Which (cycle, event) a pooled label currently represents — read by that
+// label's FireListener at click-time, so clicking always slews to whatever
+// event the label is currently showing.
+type EventBinding = { cycle: number; event: number };
+
+function plotEventMark(
+  shape: Shape,
+  labelPool: Text[],
+  bindings: EventBinding[],
+  labelIdx: number,
+  y: number,
+  name: string,
+  cycle: number,
+  event: number,
+): number {
   shape.moveTo(0, y).lineTo(W * 0.4, y);
   const lbl = labelPool[labelIdx];
-  if (lbl !== undefined) {
+  const binding = bindings[labelIdx];
+  if (lbl !== undefined && binding !== undefined) {
     lbl.string = name;
     lbl.left = W * 0.42;
     lbl.centerY = y;
     lbl.visible = true;
+    binding.cycle = cycle;
+    binding.event = event;
     return labelIdx + 1;
   }
   return labelIdx;
@@ -73,13 +94,24 @@ export class ConfigurationsTimeline extends Node {
     this.addChild(cursorLine);
 
     const labelPool: Text[] = [];
+    const labelBindings: EventBinding[] = [];
     for (let i = 0; i < 20; i++) {
+      const binding: EventBinding = { cycle: 0, event: 0 };
+      labelBindings.push(binding);
+
       const t = new Text("", {
         font: new PhetFont(9),
         fill: SolarSystemModelsColors.timelineLabelColorProperty,
         maxWidth: W - 8,
+        cursor: "pointer",
       });
       t.visible = false;
+      t.addInputListener(
+        new FireListener({
+          tandem: Tandem.OPT_OUT,
+          fire: () => model.slewToEvent(binding.cycle, binding.event),
+        }),
+      );
       labelPool.push(t);
       this.addChild(t);
     }
@@ -108,7 +140,7 @@ export class ConfigurationsTimeline extends Node {
           if (y < -20 || y > H + 20) {
             continue;
           }
-          labelIdx = plotEventMark(shape, labelPool, labelIdx, y, eventNames[e] ?? "");
+          labelIdx = plotEventMark(shape, labelPool, labelBindings, labelIdx, y, eventNames[e] ?? "", cycle, e);
           checkLocked(selectedEventBg, model, e, t, time, synodic, y);
         }
       }
