@@ -48,6 +48,7 @@
     "animationRate": "Animation Rate",
     "years": "yr",
     "days": "d",
+    "au": "AU",
     "synodicPeriod": "Synodic period:",
     "eventAction": "When Event is Reached",
     "run": "Run",
@@ -56,6 +57,7 @@
     "pauseTime": "Pause Time (s)",
     "second": "second",
     "seconds": "seconds",
+    "pausedFor": "Paused: {0} {1}",
     "opposition": "opposition",
     "quadratureEastern": "quadrature (eastern)",
     "conjunction": "conjunction",
@@ -122,6 +124,20 @@
         "timelineScroll": "Timeline — drag to scrub time"
       }
     }
+  },
+  "zodiac": {
+    "aries": "Aries",
+    "taurus": "Taurus",
+    "gemini": "Gemini",
+    "cancer": "Cancer",
+    "leo": "Leo",
+    "virgo": "Virgo",
+    "libra": "Libra",
+    "scorpius": "Scorpius",
+    "sagittarius": "Sagittarius",
+    "capricorn": "Capricorn",
+    "aquarius": "Aquarius",
+    "pisces": "Pisces"
   },
   "preferences": {
     "title": "Simulation",

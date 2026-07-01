@@ -3,6 +3,7 @@ import { Shape } from "scenerystack/kite";
 import { DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { Tandem } from "scenerystack/tandem";
+import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { CONFIGURATIONS_TIMELINE_HEIGHT, CONFIGURATIONS_TIMELINE_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
@@ -46,24 +47,38 @@ export class ConfigurationsTimeline extends Node {
   public constructor(model: ConfigurationsModel) {
     super();
 
-    const bg = new Rectangle(0, 0, W, H, { fill: "#0d1117", stroke: "#334466", lineWidth: 1 });
+    const bg = new Rectangle(0, 0, W, H, {
+      fill: SolarSystemModelsColors.timelineBackgroundColorProperty,
+      stroke: SolarSystemModelsColors.timelineBorderColorProperty,
+      lineWidth: 1,
+    });
     this.addChild(bg);
 
-    const eventLayer = new Path(null, { stroke: "#446688", lineWidth: 1 });
+    const eventLayer = new Path(null, {
+      stroke: SolarSystemModelsColors.timelineEventColorProperty,
+      lineWidth: 1,
+    });
     this.addChild(eventLayer);
 
-    const selectedEventBg = new Rectangle(0, 0, W, 18, { fill: "#223355", visible: false });
+    const selectedEventBg = new Rectangle(0, 0, W, 18, {
+      fill: SolarSystemModelsColors.timelineSelectedColorProperty,
+      visible: false,
+    });
     this.addChild(selectedEventBg);
 
     const cursorLine = new Path(new Shape().moveTo(0, H / 2).lineTo(W, H / 2), {
-      stroke: "#aabbcc",
+      stroke: SolarSystemModelsColors.timelineCursorColorProperty,
       lineWidth: 1.5,
     });
     this.addChild(cursorLine);
 
     const labelPool: Text[] = [];
     for (let i = 0; i < 20; i++) {
-      const t = new Text("", { font: new PhetFont(9), fill: "#9999bb", maxWidth: W - 8 });
+      const t = new Text("", {
+        font: new PhetFont(9),
+        fill: SolarSystemModelsColors.timelineLabelColorProperty,
+        maxWidth: W - 8,
+      });
       t.visible = false;
       labelPool.push(t);
       this.addChild(t);

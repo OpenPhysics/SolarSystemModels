@@ -2,27 +2,13 @@ import { Shape } from "scenerystack/kite";
 import { Circle, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { ECLIPTIC_CONSTELLATIONS } from "../../common/ZodiacConstellationsData.js";
+import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { ZODIAC_STRIP_HEIGHT, ZODIAC_STRIP_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 
 const TWO_PI = 2 * Math.PI;
 const LONGITUDE_TO_X = ZODIAC_STRIP_WIDTH / TWO_PI;
-
-const SIGN_NAMES = [
-  "Pisces",
-  "Aquarius",
-  "Capricorn",
-  "Sagittarius",
-  "Scorpius",
-  "Libra",
-  "Virgo",
-  "Leo",
-  "Cancer",
-  "Gemini",
-  "Taurus",
-  "Aries",
-];
 
 /** Map ecliptic longitude to strip x — AS convention: x = (−λ · width/2π) mod width. */
 function lonToX(lon: number): number {
@@ -81,6 +67,24 @@ export class PtolemaicZodiacStrip extends Node {
   public constructor(model: PtolemaicModel) {
     super();
 
+    const z = StringManager.getInstance().getZodiacStrings();
+    // Reversed order: ecliptic strip maps increasing longitude rightward, but
+    // the AS convention maps longitude leftward (negative x), so Pisces appears first.
+    const SIGN_NAME_PROPS = [
+      z.piscesStringProperty,
+      z.aquariusStringProperty,
+      z.capricornStringProperty,
+      z.sagittariusStringProperty,
+      z.scorpiusStringProperty,
+      z.libraStringProperty,
+      z.virgoStringProperty,
+      z.leoStringProperty,
+      z.cancerStringProperty,
+      z.geminiStringProperty,
+      z.taurusStringProperty,
+      z.ariesStringProperty,
+    ];
+
     // Background band
     const band = new Rectangle(0, 0, ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT, {
       fill: SolarSystemModelsColors.zodiacBandColorProperty,
@@ -95,7 +99,7 @@ export class PtolemaicZodiacStrip extends Node {
     const clipRect = new Rectangle(0, 0, ZODIAC_STRIP_WIDTH, ZODIAC_STRIP_HEIGHT);
     const constelPath = new Path(constelShape, {
       fill: null,
-      stroke: "#446688",
+      stroke: SolarSystemModelsColors.constellationLineColorProperty,
       lineWidth: 0.5,
       opacity: 0.5,
       clipArea: clipRect.shape,
@@ -111,13 +115,13 @@ export class PtolemaicZodiacStrip extends Node {
       });
       this.addChild(divider);
 
-      const label = new Text(SIGN_NAMES[i] ?? "", {
+      const label = new Text(SIGN_NAME_PROPS[i]!, {
         font: new PhetFont(9),
-        fill: SolarSystemModelsColors.textColorProperty,
-        centerX: (i + 0.5) * segW,
-        centerY: ZODIAC_STRIP_HEIGHT * 0.25,
+        fill: SolarSystemModelsColors.zodiacLabelColorProperty,
         maxWidth: segW - 4,
       });
+      label.centerX = (i + 0.5) * segW;
+      label.centerY = ZODIAC_STRIP_HEIGHT * 0.25;
       this.addChild(label);
     }
 

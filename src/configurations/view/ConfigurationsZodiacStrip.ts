@@ -1,27 +1,13 @@
 import { Multilink } from "scenerystack/axon";
 import { Circle, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
+import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
 const STRIP_WIDTH = 600;
 const STRIP_HEIGHT = 60;
 const TWO_PI = 2 * Math.PI;
-
-const ZODIAC_SIGNS = [
-  "Aries",
-  "Taurus",
-  "Gemini",
-  "Cancer",
-  "Leo",
-  "Virgo",
-  "Libra",
-  "Scorpius",
-  "Sagittarius",
-  "Capricorn",
-  "Aquarius",
-  "Pisces",
-];
 
 function mod(x: number, m: number): number {
   return ((x % m) + m) % m;
@@ -31,10 +17,26 @@ export class ConfigurationsZodiacStrip extends Node {
   public constructor(model: ConfigurationsModel) {
     super();
 
+    const z = StringManager.getInstance().getZodiacStrings();
+    const ZODIAC_SIGN_PROPS = [
+      z.ariesStringProperty,
+      z.taurusStringProperty,
+      z.geminiStringProperty,
+      z.cancerStringProperty,
+      z.leoStringProperty,
+      z.virgoStringProperty,
+      z.libraStringProperty,
+      z.scorpiusStringProperty,
+      z.sagittariusStringProperty,
+      z.capricornStringProperty,
+      z.aquariusStringProperty,
+      z.piscesStringProperty,
+    ];
+
     // Band background
     const band = new Rectangle(0, 0, STRIP_WIDTH, STRIP_HEIGHT, {
       fill: SolarSystemModelsColors.zodiacBandColorProperty,
-      stroke: "#555577",
+      stroke: SolarSystemModelsColors.zodiacBorderColorProperty,
       lineWidth: 1,
     });
     this.addChild(band);
@@ -42,9 +44,9 @@ export class ConfigurationsZodiacStrip extends Node {
     // 12 sign labels
     const segW = STRIP_WIDTH / 12;
     for (let i = 0; i < 12; i++) {
-      const label = new Text(ZODIAC_SIGNS[i] ?? "", {
+      const label = new Text(ZODIAC_SIGN_PROPS[i]!, {
         font: new PhetFont(9),
-        fill: "#9999bb",
+        fill: SolarSystemModelsColors.zodiacLabelColorProperty,
         maxWidth: segW - 4,
       });
       label.centerX = (i + 0.5) * segW;
@@ -53,7 +55,9 @@ export class ConfigurationsZodiacStrip extends Node {
 
       // Divider
       if (i > 0) {
-        const divider = new Rectangle(i * segW, 0, 1, STRIP_HEIGHT, { fill: "#445" });
+        const divider = new Rectangle(i * segW, 0, 1, STRIP_HEIGHT, {
+          fill: SolarSystemModelsColors.zodiacDividerColorProperty,
+        });
         this.addChild(divider);
       }
     }
@@ -89,8 +93,7 @@ export class ConfigurationsZodiacStrip extends Node {
         sunMarker.centerX = mod((sunLong * STRIP_WIDTH) / TWO_PI, STRIP_WIDTH);
         planetMarker.centerX = mod((planetLong * STRIP_WIDTH) / TWO_PI, STRIP_WIDTH);
 
-        const labelStr = `${Math.abs(elongDeg).toFixed(1)}° ${elongLabel}`;
-        elongText.string = labelStr;
+        elongText.string = `${Math.abs(elongDeg).toFixed(1)}° ${elongLabel}`;
       },
     );
   }

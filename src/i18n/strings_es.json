@@ -48,22 +48,24 @@
     "animationRate": "Animation Rate",
     "years": "yr",
     "days": "d",
-    "synodicPeriod": "Synodic period:",
+    "au": "UA",
+    "synodicPeriod": "Período sinódico:",
     "eventAction": "When Event is Reached",
     "run": "Run",
     "pause": "Pause",
     "lock": "Lock",
     "pauseTime": "Pause Time (s)",
-    "second": "second",
-    "seconds": "seconds",
-    "opposition": "opposition",
-    "quadratureEastern": "quadrature (eastern)",
-    "conjunction": "conjunction",
-    "quadratureWestern": "quadrature (western)",
-    "inferiorConjunction": "inferior conjunction",
-    "greatestElongationWestern": "greatest elongation (western)",
-    "superiorConjunction": "superior conjunction",
-    "greatestElongationEastern": "greatest elongation (eastern)"
+    "second": "segundo",
+    "seconds": "segundos",
+    "pausedFor": "En pausa: {0} {1}",
+    "opposition": "oposición",
+    "quadratureEastern": "cuadratura (este)",
+    "conjunction": "conjunción",
+    "quadratureWestern": "cuadratura (oeste)",
+    "inferiorConjunction": "conjunción inferior",
+    "greatestElongationWestern": "máxima elongación (oeste)",
+    "superiorConjunction": "conjunción superior",
+    "greatestElongationEastern": "máxima elongación (este)"
   },
   "a11y": {
     "ptolemaic": {
@@ -122,6 +124,20 @@
         "timelineScroll": "Timeline — drag to scrub time"
       }
     }
+  },
+  "zodiac": {
+    "aries": "Aries",
+    "taurus": "Tauro",
+    "gemini": "Géminis",
+    "cancer": "Cáncer",
+    "leo": "Leo",
+    "virgo": "Virgo",
+    "libra": "Libra",
+    "scorpius": "Escorpio",
+    "sagittarius": "Sagitario",
+    "capricorn": "Capricornio",
+    "aquarius": "Acuario",
+    "pisces": "Piscis"
   },
   "preferences": {
     "title": "Simulación",

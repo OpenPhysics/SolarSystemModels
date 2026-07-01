@@ -29,20 +29,6 @@ import { PtolemaicTimeControls } from "./PtolemaicTimeControls.js";
 import { PtolemaicTimeReadout } from "./PtolemaicTimeReadout.js";
 import { PtolemaicZodiacStrip } from "./PtolemaicZodiacStrip.js";
 
-const ZODIAC_SIGNS = [
-  "Aries",
-  "Taurus",
-  "Gemini",
-  "Cancer",
-  "Leo",
-  "Virgo",
-  "Libra",
-  "Scorpius",
-  "Sagittarius",
-  "Capricorn",
-  "Aquarius",
-  "Pisces",
-];
 
 export class PtolemaicScreenView extends ScreenView {
   private readonly pathTrail: PtolemaicPathTrail;
@@ -56,6 +42,22 @@ export class PtolemaicScreenView extends ScreenView {
     });
 
     this.model = model;
+
+    const zodiacStrings = StringManager.getInstance().getZodiacStrings();
+    const ZODIAC_SIGN_PROPS = [
+      zodiacStrings.ariesStringProperty,
+      zodiacStrings.taurusStringProperty,
+      zodiacStrings.geminiStringProperty,
+      zodiacStrings.cancerStringProperty,
+      zodiacStrings.leoStringProperty,
+      zodiacStrings.virgoStringProperty,
+      zodiacStrings.libraStringProperty,
+      zodiacStrings.scorpiusStringProperty,
+      zodiacStrings.sagittariusStringProperty,
+      zodiacStrings.capricornStringProperty,
+      zodiacStrings.aquariusStringProperty,
+      zodiacStrings.piscesStringProperty,
+    ];
 
     // ── Model–view transform ───────────────────────────────────────────────
     // Earth at model origin → view center-left; y inverted (Flash screen-y down)
@@ -75,7 +77,7 @@ export class PtolemaicScreenView extends ScreenView {
 
     // ── Orbital area background ────────────────────────────────────────────
     const orbitAreaBg = new Rectangle(0, 0, ORBIT_VIEW_CENTER_X * 2 + 20, this.layoutBounds.height, {
-      fill: "#0a0a18",
+      fill: SolarSystemModelsColors.orbitAreaBackgroundColorProperty,
     });
     this.addChild(orbitAreaBg);
 
@@ -89,7 +91,7 @@ export class PtolemaicScreenView extends ScreenView {
     for (let i = 0; i < 12; i++) {
       const angle = (i * Math.PI) / 6; // 0°, 30°, 60°, ... (sign boundaries)
       const tick = new Path(null, {
-        stroke: "#888899",
+        stroke: SolarSystemModelsColors.zodiacTickColorProperty,
         lineWidth: 1,
       });
       const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickInnerR;
@@ -106,13 +108,13 @@ export class PtolemaicScreenView extends ScreenView {
       const vx = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_LABEL_RADIUS;
       // Inverted Y: positive y in model = up in view, so negate for angle
       const vy = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_LABEL_RADIUS;
-      const label = new Text(ZODIAC_SIGNS[i] ?? "", {
+      const label = new Text(ZODIAC_SIGN_PROPS[i]!, {
         font: new PhetFont(10),
-        fill: "#aabbcc",
-        centerX: vx,
-        centerY: vy,
+        fill: SolarSystemModelsColors.zodiacLabelColorProperty,
         maxWidth: 55,
       });
+      label.centerX = vx;
+      label.centerY = vy;
       this.addChild(label);
     }
 
@@ -152,7 +154,7 @@ export class PtolemaicScreenView extends ScreenView {
     const sunOrbitVr = ORBIT_VIEW_SCALE * PTOLEMAIC_SUN_ORBIT_RADIUS;
     const sunOrbitViewCenter = mvt.modelToViewPosition(Vector2.ZERO);
     const sunOrbitCircle = new Path(Shape.circle(sunOrbitViewCenter.x, sunOrbitViewCenter.y, sunOrbitVr), {
-      stroke: "#333355",
+      stroke: SolarSystemModelsColors.sunOrbitReferenceColorProperty,
       lineWidth: 1,
     });
     this.addChild(sunOrbitCircle);

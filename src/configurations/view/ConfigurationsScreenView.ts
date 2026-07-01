@@ -54,6 +54,7 @@ export class ConfigurationsScreenView extends ScreenView {
     this.mvt = buildMvt(model.semimajorAxis1Property.value, model.semimajorAxis2Property.value);
 
     const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
+    const s = StringManager.getInstance().getConfigurationsStrings();
 
     // ── Background ──────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -63,7 +64,7 @@ export class ConfigurationsScreenView extends ScreenView {
 
     // ── Orbit area background ───────────────────────────────────────────────
     const orbitAreaBg = new Rectangle(0, 0, ORBIT_AREA_SIZE, this.layoutBounds.height, {
-      fill: "#060d1a",
+      fill: SolarSystemModelsColors.orbitAreaBackgroundColorProperty,
     });
     this.addChild(orbitAreaBg);
 
@@ -176,11 +177,12 @@ export class ConfigurationsScreenView extends ScreenView {
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
       // Labels at top of orbit circles
-      orbitLabel1.string = `${a1.toFixed(2)} AU`;
+      const au = s.auStringProperty.value;
+      orbitLabel1.string = `${a1.toFixed(2)} ${au}`;
       orbitLabel1.centerX = center.x;
       orbitLabel1.bottom = center.y - r1 - 4;
 
-      orbitLabel2.string = `${a2.toFixed(2)} AU`;
+      orbitLabel2.string = `${a2.toFixed(2)} ${au}`;
       orbitLabel2.centerX = center.x;
       orbitLabel2.bottom = center.y - r2 - 4;
 
@@ -188,7 +190,10 @@ export class ConfigurationsScreenView extends ScreenView {
       updateSunPos();
     };
 
-    Multilink.multilink([model.semimajorAxis1Property, model.semimajorAxis2Property] as const, updateOrbits);
+    Multilink.multilink(
+      [model.semimajorAxis1Property, model.semimajorAxis2Property, s.auStringProperty] as const,
+      () => updateOrbits(),
+    );
 
     // ── Zodiac strip at bottom ──────────────────────────────────────────────
     const zodiacStrip = new ConfigurationsZodiacStrip(model);

@@ -1,5 +1,6 @@
 import { Shape } from "scenerystack/kite";
 import { Node, Path } from "scenerystack/scenery";
+import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
 import { ECLIPTIC_CONSTELLATIONS } from "./ZodiacConstellationsData.js";
 
 // Radius at which constellation stars are drawn (in pixels) — inside the
@@ -44,7 +45,7 @@ export class ZodiacConstellationNode extends Node {
       }
     }
     const linesPath = new Path(linesShape, {
-      stroke: "#556688",
+      stroke: SolarSystemModelsColors.constellationLineColorProperty,
       lineWidth: 0.5,
       opacity: 0.6,
     });
@@ -61,7 +62,7 @@ export class ZodiacConstellationNode extends Node {
       }
     }
     const starsPath = new Path(starsShape, {
-      fill: "#aabbdd",
+      fill: SolarSystemModelsColors.constellationStarColorProperty,
       stroke: null,
       opacity: 0.7,
     });
