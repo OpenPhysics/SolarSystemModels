@@ -569,16 +569,24 @@ export class ConfigurationsModel implements TModel {
     }
   }
 
-  public applyPreset(id: 1 | 2, key: PlanetPresetKey): void {
+  /**
+   * Applies a planet preset's semimajor axis. Returns false (and leaves the
+   * preset index Properties untouched) when the preset would put both
+   * planets on the same orbit — that configuration has no synodic period,
+   * so the caller should revert the requesting UI element instead.
+   */
+  public applyPreset(id: 1 | 2, key: PlanetPresetKey): boolean {
     const a = PLANET_PRESETS[key];
-    this.setSemimajorAxis(id, a, false);
+    if (!this.setSemimajorAxis(id, a, false)) {
+      return false;
+    }
+    const idx = PRESET_KEYS.indexOf(key);
     if (id === 1) {
-      const idx = PRESET_KEYS.indexOf(key);
       this.preset1IndexProperty.value = idx >= 0 ? idx : 0;
     } else {
-      const idx = PRESET_KEYS.indexOf(key);
       this.preset2IndexProperty.value = idx >= 0 ? idx : 0;
     }
+    return true;
   }
 
   public reset(): void {

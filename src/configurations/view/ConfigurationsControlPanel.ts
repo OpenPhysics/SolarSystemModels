@@ -59,17 +59,18 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       accessibleName: a11y.controls.targetPlanetStringProperty,
     });
 
-    // When preset index changes, apply preset
-    model.preset1IndexProperty.lazyLink((idx) => {
+    // When preset index changes, apply preset. Both planets landing on the same
+    // orbit has no synodic period, so revert the combo box if that's rejected.
+    model.preset1IndexProperty.lazyLink((idx, oldIdx) => {
       const key = PRESET_KEYS[idx];
-      if (key !== undefined) {
-        model.applyPreset(1, key);
+      if (key !== undefined && !model.applyPreset(1, key)) {
+        model.preset1IndexProperty.value = oldIdx;
       }
     });
-    model.preset2IndexProperty.lazyLink((idx) => {
+    model.preset2IndexProperty.lazyLink((idx, oldIdx) => {
       const key = PRESET_KEYS[idx];
-      if (key !== undefined) {
-        model.applyPreset(2, key);
+      if (key !== undefined && !model.applyPreset(2, key)) {
+        model.preset2IndexProperty.value = oldIdx;
       }
     });
 

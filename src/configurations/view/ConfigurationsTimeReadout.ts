@@ -54,12 +54,8 @@ export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
 
     const timeText = new Text(timeStringProperty, FONT_OPTS);
     const synodicText = new Text(synodicStringProperty, FONT_OPTS);
-    const configText = new Text("", FONT_OPTS);
+    const configText = new Text(model.currentConfigurationProperty, FONT_OPTS);
     const countdownText = new Text(countdownStringProperty, FONT_OPTS);
-
-    model.currentConfigurationProperty.link((cfg) => {
-      configText.string = cfg;
-    });
 
     const content = new VBox({
       children: [timeText, synodicText, configText, countdownText],

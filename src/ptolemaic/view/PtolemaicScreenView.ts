@@ -103,12 +103,12 @@ export class PtolemaicScreenView extends ScreenView {
     }
 
     // ── Zodiac sign labels at sign centers (+15°) ─────────────────────────
-    for (let i = 0; i < 12; i++) {
+    ZODIAC_SIGN_PROPS.forEach((signStringProperty, i) => {
       const angle = ((i + 0.5) * Math.PI) / 6; // 15°, 45°, 75°, ... (sign centers)
       const vx = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_LABEL_RADIUS;
       // Inverted Y: positive y in model = up in view, so negate for angle
       const vy = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_LABEL_RADIUS;
-      const label = new Text(ZODIAC_SIGN_PROPS[i]!, {
+      const label = new Text(signStringProperty, {
         font: new PhetFont(10),
         fill: SolarSystemModelsColors.zodiacLabelColorProperty,
         maxWidth: ZODIAC_LABEL_MAX_WIDTH,
@@ -116,7 +116,7 @@ export class PtolemaicScreenView extends ScreenView {
       label.centerX = vx;
       label.centerY = vy;
       this.addChild(label);
-    }
+    });
 
     // ── Path trail (behind orbit circles) ─────────────────────────────────
     this.pathTrail = new PtolemaicPathTrail(model, mvt);
