@@ -9,6 +9,7 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SolarSystemModelsButtonOptions.js";
 import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -232,6 +233,7 @@ export class ConfigurationsScreenView extends ScreenView {
       },
       right: this.layoutBounds.maxX - SCREEN_VIEW_MARGIN,
       bottom: this.layoutBounds.maxY - SCREEN_VIEW_MARGIN,
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 

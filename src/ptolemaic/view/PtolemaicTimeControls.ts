@@ -2,6 +2,10 @@ import { Dimension2, Range } from "scenerystack/dot";
 import { Text, VBox } from "scenerystack/scenery";
 import { PhetFont, TimeControlNode } from "scenerystack/scenery-phet";
 import { HSlider, RectangularPushButton } from "scenerystack/sun";
+import {
+  FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+} from "../../common/SolarSystemModelsButtonOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -19,7 +23,9 @@ export class PtolemaicTimeControls extends SolarSystemModelsPanel {
 
     const timeControlNode = new TimeControlNode(model.timer.isPlayingProperty, {
       playPauseStepButtonOptions: {
+        ...FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
         stepForwardButtonOptions: {
+          ...FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS.stepForwardButtonOptions,
           listener: () => {
             if (!model.timer.isPlayingProperty.value) {
               model.step(1 / 60);
@@ -64,6 +70,7 @@ export class PtolemaicTimeControls extends SolarSystemModelsPanel {
       }),
       listener: () => model.resetTime(),
       accessibleName: a11y.controls.resetTimeStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     const content = new VBox({

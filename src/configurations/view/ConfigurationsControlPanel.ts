@@ -4,6 +4,11 @@ import { HBox, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, TimeControlNode } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, ComboBox, HSlider, RectangularPushButton } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
+import {
+  FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
+} from "../../common/SolarSystemModelsButtonOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -51,11 +56,13 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
     }));
 
     const preset1Combo = new ComboBox(model.preset1IndexProperty, observer1Items, listParent, {
+      ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
       accessibleName: a11y.controls.observerPlanetStringProperty,
     });
     preset1Combo.addLinkedElement(model.preset1IndexProperty);
 
     const preset2Combo = new ComboBox(model.preset2IndexProperty, observer2Items, listParent, {
+      ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
       accessibleName: a11y.controls.targetPlanetStringProperty,
     });
 
@@ -109,7 +116,9 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
     // ── TimeControlNode ───────────────────────────────────────────────────
     const timeControlNode = new TimeControlNode(model.timer.isPlayingProperty, {
       playPauseStepButtonOptions: {
+        ...FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
         stepForwardButtonOptions: {
+          ...FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS.stepForwardButtonOptions,
           listener: () => {
             if (!model.timer.isPlayingProperty.value) {
               model.step(1 / 60);
@@ -135,6 +144,7 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       content: new Text(s.resetTimeStringProperty, labelOpts),
       listener: () => model.resetTime(),
       accessibleName: a11y.controls.resetTimeStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     // ── Event action radio group ──────────────────────────────────────────
