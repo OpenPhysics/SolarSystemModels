@@ -45,16 +45,9 @@ export const CONFIGURATIONS_TIMELINE_HEIGHT = 350; // px
 export const CONFIGURATIONS_TIMELINE_CYCLE_HEIGHT = 120; // px — vertical px per synodic cycle
 export const CONFIGURATIONS_ELONGATION_ARC_RADIUS = 35; // px — elongation indicator arc radius
 
-// ── Configurations preset orbital radii (AU) ───────────────────────────────────
-
-export const PRESET_RADII = {
-  mercury: 0.39,
-  venus: 0.72,
-  earth: 1.0,
-  mars: 1.52,
-  jupiter: 5.2,
-  saturn: 9.54,
-} as const;
+// Configurations preset orbital radii (AU) live in
+// configurations/model/ConfigurationsPlanet.ts, next to the screen that uses
+// them — not duplicated here.
 
 SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   SCREEN_VIEW_MARGIN,
@@ -87,5 +80,4 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   APOGEE_ANGLE_RANGE,
   ANIMATION_RATE_RANGE,
   PATH_DURATION_RANGE,
-  PRESET_RADII,
 });

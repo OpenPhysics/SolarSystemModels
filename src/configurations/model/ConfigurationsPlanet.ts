@@ -2,6 +2,8 @@ import SolarSystemModelsNamespace from "../../SolarSystemModelsNamespace.js";
 
 export type PlanetPresetKey = "mercury" | "venus" | "earth" | "mars" | "jupiter" | "saturn";
 
+// Semimajor axis presets (AU) — the single source of truth for these radii;
+// don't duplicate them in SolarSystemModelsConstants.ts.
 export const PLANET_PRESETS: Record<PlanetPresetKey, number> = {
   mercury: 0.39,
   venus: 0.72,

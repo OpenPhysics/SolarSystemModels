@@ -1,5 +1,5 @@
 import type { TReadOnlyProperty } from "scenerystack/axon";
-import { BooleanProperty, DerivedProperty, EnumerationProperty, NumberProperty, Property } from "scenerystack/axon";
+import { BooleanProperty, DerivedProperty, EnumerationProperty, NumberProperty } from "scenerystack/axon";
 import { Range, Vector2 } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
 import { TimeModel } from "../../common/TimeModel.js";
@@ -13,6 +13,18 @@ const TWO_PI = 2 * Math.PI;
 function mod2pi(x: number): number {
   return ((x % TWO_PI) + TWO_PI) % TWO_PI;
 }
+
+// Idle between animated moves; slewing eases the clock toward a target event;
+// countingDown pauses play at an event for pauseTimeProperty seconds before resuming.
+type AnimationState = "idle" | "slewing" | "countingDown";
+
+type SystemProperties = {
+  readonly synodicPeriod: number;
+  readonly cycleOffset: number;
+  // [0]: 0, [1]: t_q, [2]: T_syn/2, [3]: T_syn − t_q
+  readonly eventTimesList: readonly [number, number, number, number];
+  readonly eventNames: readonly string[];
+};
 
 export class ConfigurationsModel implements TModel {
   // ── Composed timing model ──────────────────────────────────────────────────
@@ -29,13 +41,12 @@ export class ConfigurationsModel implements TModel {
   // ── Dynamic time ───────────────────────────────────────────────────────────
   public readonly timeProperty: NumberProperty; // years
 
-  // ── Synodic / event schedule ───────────────────────────────────────────────
-  public readonly synodicPeriodProperty: NumberProperty;
-  public readonly cycleOffsetProperty: NumberProperty;
-  // [0]: 0, [1]: t_q, [2]: T_syn/2, [3]: T_syn − t_q
-  public readonly eventTimesListProperty: Property<readonly [number, number, number, number]>;
-  public readonly eventNamesProperty: Property<readonly string[]>;
-  public readonly currentCycleNumberProperty: NumberProperty;
+  // ── Synodic / event schedule (derived from the orbital parameters above) ───
+  public readonly synodicPeriodProperty: TReadOnlyProperty<number>;
+  public readonly cycleOffsetProperty: TReadOnlyProperty<number>;
+  public readonly eventTimesListProperty: TReadOnlyProperty<readonly [number, number, number, number]>;
+  public readonly eventNamesProperty: TReadOnlyProperty<readonly string[]>;
+  public readonly currentCycleNumberProperty: TReadOnlyProperty<number>;
 
   // ── Event navigation ───────────────────────────────────────────────────────
   public readonly lockedOnEventProperty: BooleanProperty;
@@ -69,17 +80,15 @@ export class ConfigurationsModel implements TModel {
   private nextCycleNumber = 0;
   private nextEventTime = 0;
 
-  // ── Private slew state ─────────────────────────────────────────────────────
-  private slewActive = false;
+  // ── Private animation state ────────────────────────────────────────────────
+  private animationState: AnimationState = "idle";
   private slewElapsed = 0;
   private readonly slewDuration = 0.65; // seconds
   private slewStartModelTime = 0;
   private slewDeltaModelTime = 0;
   private slewTargetCycle = 0;
   private slewTargetEvent = 0;
-
-  // ── Private countdown state ────────────────────────────────────────────────
-  private countdownElapsed = -1; // -1 = idle
+  private countdownElapsed = 0;
 
   public constructor() {
     this.timer = new TimeModel(false);
@@ -93,12 +102,6 @@ export class ConfigurationsModel implements TModel {
     this.epochAngle2Property = new NumberProperty(0, { range: new Range(0, TWO_PI) });
 
     this.timeProperty = new NumberProperty(0);
-
-    this.synodicPeriodProperty = new NumberProperty(1);
-    this.cycleOffsetProperty = new NumberProperty(0);
-    this.eventTimesListProperty = new Property<readonly [number, number, number, number]>([0, 0, 0, 0]);
-    this.eventNamesProperty = new Property<readonly string[]>([]);
-    this.currentCycleNumberProperty = new NumberProperty(0, { numberType: "Integer" });
 
     this.lockedOnEventProperty = new BooleanProperty(false);
     this.lockedEventIndexProperty = new NumberProperty(-1, {
@@ -158,6 +161,30 @@ export class ConfigurationsModel implements TModel {
       return "";
     });
 
+    // ── Synodic / event schedule — recomputed automatically whenever the
+    // orbital parameters change, instead of an imperatively-called method
+    // that every mutation site has to remember to invoke. ───────────────────
+    const systemPropertiesProperty: TReadOnlyProperty<SystemProperties> = new DerivedProperty(
+      [
+        this.semimajorAxis1Property,
+        this.semimajorAxis2Property,
+        this.period1Property,
+        this.period2Property,
+        this.epochAngle1Property,
+        this.epochAngle2Property,
+      ] as const,
+      (a1, a2, p1, p2, epoch1, epoch2) => ConfigurationsModel.computeSystemProperties(a1, a2, p1, p2, epoch1, epoch2),
+    );
+
+    this.synodicPeriodProperty = new DerivedProperty([systemPropertiesProperty], (sp) => sp.synodicPeriod);
+    this.cycleOffsetProperty = new DerivedProperty([systemPropertiesProperty], (sp) => sp.cycleOffset);
+    this.eventTimesListProperty = new DerivedProperty([systemPropertiesProperty], (sp) => sp.eventTimesList);
+    this.eventNamesProperty = new DerivedProperty([systemPropertiesProperty], (sp) => sp.eventNames);
+    this.currentCycleNumberProperty = new DerivedProperty(
+      [systemPropertiesProperty, this.timeProperty] as const,
+      (sp, time) => Math.floor((time - sp.cycleOffset) / sp.synodicPeriod),
+    );
+
     // ── Current configuration name ────────────────────────────────────────
     this.currentConfigurationProperty = new DerivedProperty(
       [
@@ -174,8 +201,6 @@ export class ConfigurationsModel implements TModel {
       },
     );
 
-    // Initialize system properties
-    this.calculateSystemProperties();
     this.setTime(0);
   }
 
@@ -197,56 +222,44 @@ export class ConfigurationsModel implements TModel {
     return elongValue;
   }
 
-  private calculateSystemProperties(): void {
-    const a1 = this.semimajorAxis1Property.value;
-    const a2 = this.semimajorAxis2Property.value;
-    const p1 = this.period1Property.value;
-    const p2 = this.period2Property.value;
-    const epoch1 = this.epochAngle1Property.value;
-    const epoch2 = this.epochAngle2Property.value;
+  /**
+   * The four synodic events (opposition/conjunction pair for a superior
+   * configuration, or inferior/superior conjunction pair for an inferior one)
+   * depend only on which orbit is inner and which is outer — not on which
+   * planet id (1 or 2) happens to be inner, so both cases share one formula.
+   */
+  private static computeSystemProperties(
+    a1: number,
+    a2: number,
+    p1: number,
+    p2: number,
+    epoch1: number,
+    epoch2: number,
+  ): SystemProperties {
+    const isPlanet1Inner = a1 < a2;
+    const innerA = isPlanet1Inner ? a1 : a2;
+    const outerA = isPlanet1Inner ? a2 : a1;
+    const innerPeriod = isPlanet1Inner ? p1 : p2;
+    const outerPeriod = isPlanet1Inner ? p2 : p1;
+    const innerEpoch = isPlanet1Inner ? epoch1 : epoch2;
+    const outerEpoch = isPlanet1Inner ? epoch2 : epoch1;
 
-    let innerPeriod: number;
-    let outerPeriod: number;
-    let innerEpoch: number;
-    let outerEpoch: number;
-    let eventNames: readonly string[];
+    const eventNames: readonly string[] = isPlanet1Inner
+      ? ["opposition", "quadrature (eastern)", "conjunction", "quadrature (western)"]
+      : [
+          "inferior conjunction",
+          "greatest elongation (western)",
+          "superior conjunction",
+          "greatest elongation (eastern)",
+        ];
 
-    if (a1 < a2) {
-      innerPeriod = p1;
-      outerPeriod = p2;
-      innerEpoch = epoch1;
-      outerEpoch = epoch2;
-      eventNames = ["opposition", "quadrature (eastern)", "conjunction", "quadrature (western)"];
-      const synodicPeriod = 1 / (1 / innerPeriod - 1 / outerPeriod);
-      const omegaSyn = TWO_PI / synodicPeriod;
-      const cycleOffset = mod2pi(outerEpoch - innerEpoch) / omegaSyn;
-      const tQ = Math.acos(a1 / a2) / omegaSyn;
-      const eventTimesList: [number, number, number, number] = [0, tQ, synodicPeriod / 2, synodicPeriod - tQ];
-      this.synodicPeriodProperty.value = synodicPeriod;
-      this.cycleOffsetProperty.value = cycleOffset;
-      this.eventTimesListProperty.value = eventTimesList;
-      this.eventNamesProperty.value = eventNames;
-    } else {
-      innerPeriod = p2;
-      outerPeriod = p1;
-      innerEpoch = epoch2;
-      outerEpoch = epoch1;
-      eventNames = [
-        "inferior conjunction",
-        "greatest elongation (western)",
-        "superior conjunction",
-        "greatest elongation (eastern)",
-      ];
-      const synodicPeriod = 1 / (1 / innerPeriod - 1 / outerPeriod);
-      const omegaSyn = TWO_PI / synodicPeriod;
-      const cycleOffset = mod2pi(outerEpoch - innerEpoch) / omegaSyn;
-      const tQ = Math.acos(a2 / a1) / omegaSyn;
-      const eventTimesList: [number, number, number, number] = [0, tQ, synodicPeriod / 2, synodicPeriod - tQ];
-      this.synodicPeriodProperty.value = synodicPeriod;
-      this.cycleOffsetProperty.value = cycleOffset;
-      this.eventTimesListProperty.value = eventTimesList;
-      this.eventNamesProperty.value = eventNames;
-    }
+    const synodicPeriod = 1 / (1 / innerPeriod - 1 / outerPeriod);
+    const omegaSyn = TWO_PI / synodicPeriod;
+    const cycleOffset = mod2pi(outerEpoch - innerEpoch) / omegaSyn;
+    const tQ = Math.acos(innerA / outerA) / omegaSyn;
+    const eventTimesList: readonly [number, number, number, number] = [0, tQ, synodicPeriod / 2, synodicPeriod - tQ];
+
+    return { synodicPeriod, cycleOffset, eventTimesList, eventNames };
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -275,8 +288,6 @@ export class ConfigurationsModel implements TModel {
       this.period2Property.value = newPeriod;
     }
 
-    this.calculateSystemProperties();
-
     // AS behavior: when locked on an even event (opposition or conjunction), re-snap
     if (
       this.lockedOnEventProperty.value &&
@@ -293,34 +304,44 @@ export class ConfigurationsModel implements TModel {
     return true;
   }
 
-  public setTime(newTime: number): void {
-    this.timeProperty.value = newTime;
+  /**
+   * Where a given model time falls in the event schedule: which (cycle,
+   * event) is the next upcoming event at or after that time. Shared by
+   * setTime() and findSnappedEvent() so they can't drift apart.
+   */
+  private locateEvent(time: number): { cycle: number; event: number } {
     const cycleOffset = this.cycleOffsetProperty.value;
     const synodic = this.synodicPeriodProperty.value;
     const eventTimes = this.eventTimesListProperty.value;
 
-    const currentCycle = Math.floor((newTime - cycleOffset) / synodic);
-    this.currentCycleNumberProperty.value = currentCycle;
-
-    let timeInCycle = newTime - cycleOffset - currentCycle * synodic;
+    const cycle = Math.floor((time - cycleOffset) / synodic);
+    let timeInCycle = time - cycleOffset - cycle * synodic;
     if (timeInCycle < 0) {
       timeInCycle = 0;
     }
 
-    let nextEvt = 0;
-    while (nextEvt < 4 && timeInCycle >= (eventTimes[nextEvt] ?? 0)) {
-      nextEvt++;
+    let event = 0;
+    while (event < 4 && timeInCycle >= (eventTimes[event] ?? 0)) {
+      event++;
     }
 
-    if (nextEvt < 4) {
-      this.nextEventNumber = nextEvt;
-      this.nextCycleNumber = currentCycle;
-    } else {
-      this.nextEventNumber = 0;
-      this.nextCycleNumber = currentCycle + 1;
+    if (event < 4) {
+      return { cycle, event };
     }
+    return { cycle: cycle + 1, event: 0 };
+  }
 
-    this.nextEventTime = cycleOffset + this.nextCycleNumber * synodic + (eventTimes[this.nextEventNumber] ?? 0);
+  public setTime(newTime: number): void {
+    this.timeProperty.value = newTime;
+
+    const next = this.locateEvent(newTime);
+    this.nextCycleNumber = next.cycle;
+    this.nextEventNumber = next.event;
+    this.nextEventTime =
+      this.cycleOffsetProperty.value +
+      next.cycle * this.synodicPeriodProperty.value +
+      (this.eventTimesListProperty.value[next.event] ?? 0);
+
     this.lockedOnEventProperty.value = false;
     this.lockedEventIndexProperty.value = -1;
   }
@@ -331,7 +352,6 @@ export class ConfigurationsModel implements TModel {
     const eventTimes = this.eventTimesListProperty.value;
 
     this.timeProperty.value = cycleOffset + cycleNumber * synodic + (eventTimes[eventNumber] ?? 0);
-    this.currentCycleNumberProperty.value = cycleNumber;
 
     this.nextEventNumber = eventNumber + 1;
     this.nextCycleNumber = cycleNumber;
@@ -345,6 +365,11 @@ export class ConfigurationsModel implements TModel {
     this.lockedEventIndexProperty.value = noLock ? -1 : eventNumber;
   }
 
+  /**
+   * The nearest event (previous or next) to newTime, or null if none is
+   * within angleThreshold. "Previous" is derived from the same (cycle,
+   * event) pair locateEvent() returns for "next," rather than re-scanning.
+   */
   private findSnappedEvent(
     newTime: number,
     period: number,
@@ -354,30 +379,14 @@ export class ConfigurationsModel implements TModel {
     const synodic = this.synodicPeriodProperty.value;
     const eventTimes = this.eventTimesListProperty.value;
 
-    const cycle = Math.floor((newTime - cycleOffset) / synodic);
-    let timeInCycle = newTime - cycleOffset - cycle * synodic;
-    if (timeInCycle < 0) {
-      timeInCycle = 0;
-    }
+    const next = this.locateEvent(newTime);
+    // event 0 only comes from locateEvent()'s cycle-boundary rollover (event
+    // times always start at 0, so a scan can never land on event 0 otherwise).
+    const prevEvent = next.event === 0 ? 3 : next.event - 1;
+    const prevCycle = next.event === 0 ? next.cycle - 1 : next.cycle;
 
-    let nextEvt = 0;
-    while (nextEvt < 4 && timeInCycle >= (eventTimes[nextEvt] ?? 0)) {
-      nextEvt++;
-    }
-
-    const prevEvt = nextEvt - 1;
-    let nextCycleFinal = cycle;
-    let nextEvtFinal = nextEvt;
-    if (nextEvt >= 4) {
-      nextEvtFinal = 0;
-      nextCycleFinal = cycle + 1;
-    }
-
-    const prevTime =
-      prevEvt >= 0
-        ? cycleOffset + cycle * synodic + (eventTimes[prevEvt] ?? 0)
-        : cycleOffset + (cycle - 1) * synodic + (eventTimes[3] ?? 0);
-    const nextTime = cycleOffset + nextCycleFinal * synodic + (eventTimes[nextEvtFinal] ?? 0);
+    const prevTime = cycleOffset + prevCycle * synodic + (eventTimes[prevEvent] ?? 0);
+    const nextTime = cycleOffset + next.cycle * synodic + (eventTimes[next.event] ?? 0);
 
     const prevDeltaAngle = (Math.abs(newTime - prevTime) * TWO_PI) / period;
     const nextDeltaAngle = (Math.abs(nextTime - newTime) * TWO_PI) / period;
@@ -387,11 +396,9 @@ export class ConfigurationsModel implements TModel {
       return null;
     }
     if (minDelta === nextDeltaAngle) {
-      return { cycle: nextCycleFinal, event: nextEvtFinal };
+      return { cycle: next.cycle, event: next.event };
     }
-    const effectivePrevEvt = prevEvt >= 0 ? prevEvt : 3;
-    const effectivePrevCycle = prevEvt >= 0 ? cycle : cycle - 1;
-    return { cycle: effectivePrevCycle, event: effectivePrevEvt };
+    return { cycle: prevCycle, event: prevEvent };
   }
 
   public setTimeByPlanetAngle(id: 1 | 2, newAngle: number, snapToEvents: boolean, angleThreshold: number): void {
@@ -463,7 +470,6 @@ export class ConfigurationsModel implements TModel {
         const snappedAngle = eventAngles[snappedEvent] as number;
         const newEpochAdj = mod2pi(snappedAngle - (TWO_PI * this.timeProperty.value) / period);
         epochProp.value = newEpochAdj;
-        this.calculateSystemProperties();
 
         const eventTimes = this.eventTimesListProperty.value;
         const snappedEvtTime = eventTimes[snappedEvent] as number;
@@ -478,7 +484,6 @@ export class ConfigurationsModel implements TModel {
 
     const newEpoch = mod2pi(newAngle - (TWO_PI * this.timeProperty.value) / period);
     epochProp.value = newEpoch;
-    this.calculateSystemProperties();
     this.setTime(this.timeProperty.value);
   }
 
@@ -492,28 +497,26 @@ export class ConfigurationsModel implements TModel {
       return;
     }
 
-    this.slewActive = true;
+    this.animationState = "slewing";
     this.slewElapsed = 0;
     this.slewStartModelTime = this.timeProperty.value;
     this.slewDeltaModelTime = targetTime - this.slewStartModelTime;
     this.slewTargetCycle = cycleNumber;
     this.slewTargetEvent = eventNumber;
     this.timer.isPlayingProperty.value = false;
-    this.countdownElapsed = -1;
     this.countdownRemainingProperty.value = 0;
   }
 
   public resetTime(): void {
-    this.slewActive = false;
-    this.countdownElapsed = -1;
+    this.animationState = "idle";
     this.countdownRemainingProperty.value = 0;
     this.epochAngle1Property.value = 0;
     this.epochAngle2Property.value = 0;
-    this.calculateSystemProperties();
     this.setTime(0);
   }
 
   private startCountdown(): void {
+    this.animationState = "countingDown";
     this.countdownElapsed = 0;
     this.countdownRemainingProperty.value = this.pauseTimeProperty.value;
   }
@@ -525,7 +528,7 @@ export class ConfigurationsModel implements TModel {
       const ease = 1 - (1 - u) ** 3;
       this.timeProperty.value = this.slewStartModelTime + ease * this.slewDeltaModelTime;
     } else {
-      this.slewActive = false;
+      this.animationState = "idle";
       this.setTimeByCycleAndEventNumbers(this.slewTargetCycle, this.slewTargetEvent);
     }
   }
@@ -534,7 +537,7 @@ export class ConfigurationsModel implements TModel {
     this.countdownElapsed += dt;
     const remaining = this.pauseTimeProperty.value - this.countdownElapsed;
     if (remaining <= 0) {
-      this.countdownElapsed = -1;
+      this.animationState = "idle";
       this.countdownRemainingProperty.value = 0;
       this.timer.isPlayingProperty.value = true;
     } else {
@@ -543,11 +546,11 @@ export class ConfigurationsModel implements TModel {
   }
 
   public step(dt: number): void {
-    if (this.slewActive) {
+    if (this.animationState === "slewing") {
       this.advanceSlew(dt);
       return;
     }
-    if (this.countdownElapsed >= 0 && this.countdownRemainingProperty.value > 0) {
+    if (this.animationState === "countingDown") {
       this.advanceCountdown(dt);
       return;
     }
@@ -591,8 +594,7 @@ export class ConfigurationsModel implements TModel {
 
   public reset(): void {
     this.timer.reset();
-    this.slewActive = false;
-    this.countdownElapsed = -1;
+    this.animationState = "idle";
 
     // Reset to defaults (a1=1 Earth, a2=2.4)
     this.semimajorAxis1Property.value = 1;
@@ -611,7 +613,6 @@ export class ConfigurationsModel implements TModel {
     this.pauseTimeProperty.reset();
     this.countdownRemainingProperty.reset();
 
-    this.calculateSystemProperties();
     this.setTime(0);
   }
 }

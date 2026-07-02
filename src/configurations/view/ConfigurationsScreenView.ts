@@ -1,4 +1,5 @@
-import { Multilink } from "scenerystack/axon";
+import type { TReadOnlyProperty } from "scenerystack/axon";
+import { DerivedProperty, Multilink } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -41,8 +42,8 @@ function buildMvt(a1: number, a2: number): ModelViewTransform2 {
 
 export class ConfigurationsScreenView extends ScreenView {
   private readonly model: ConfigurationsModel;
-  // mvt changes when orbital radii change
-  private mvt: ModelViewTransform2;
+  // Rebuilt whenever the orbital radii change, so its scale always fits both orbits.
+  private readonly mvtProperty: TReadOnlyProperty<ModelViewTransform2>;
 
   public constructor(model: ConfigurationsModel, options?: ScreenViewOptions) {
     super({
@@ -51,7 +52,10 @@ export class ConfigurationsScreenView extends ScreenView {
     });
 
     this.model = model;
-    this.mvt = buildMvt(model.semimajorAxis1Property.value, model.semimajorAxis2Property.value);
+    this.mvtProperty = new DerivedProperty(
+      [model.semimajorAxis1Property, model.semimajorAxis2Property] as const,
+      (a1, a2) => buildMvt(a1, a2),
+    );
 
     const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
     const s = StringManager.getInstance().getConfigurationsStrings();
@@ -101,20 +105,18 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(orbitLabel2);
 
     // ── Elongation indicator (Phase 7) ──────────────────────────────────────
-    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvt);
+    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvtProperty);
     this.addChild(elongationIndicator);
 
     // ── Sun at origin ───────────────────────────────────────────────────────
     const sunNode = new Circle(12, { fill: SolarSystemModelsColors.sunColorProperty });
     this.addChild(sunNode);
-
-    const updateSunPos = () => {
-      sunNode.translation = this.mvt.modelToViewPosition(Vector2.ZERO);
-    };
-    updateSunPos();
+    this.mvtProperty.link((mvt) => {
+      sunNode.translation = mvt.modelToViewPosition(Vector2.ZERO);
+    });
 
     // ── Observer planet (blue) ──────────────────────────────────────────────
-    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvt, {
+    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvtProperty, {
       radius: 8,
       fill: SolarSystemModelsColors.observerPlanetColorProperty,
       cursor: "pointer",
@@ -126,7 +128,7 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(observerNode);
 
     // ── Target planet (grey) ────────────────────────────────────────────────
-    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvt, {
+    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvtProperty, {
       radius: 8,
       fill: SolarSystemModelsColors.targetPlanetColorProperty,
       cursor: "pointer",
@@ -147,7 +149,7 @@ export class ConfigurationsScreenView extends ScreenView {
           },
           drag: (event, listener) => {
             const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
-            const modelPos = this.mvt.viewToModelPosition(listener.modelPoint);
+            const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
             const angle = Math.atan2(modelPos.y, modelPos.x);
             const snap = model.snapToEventsProperty.value;
             if (shiftKey) {
@@ -162,29 +164,20 @@ export class ConfigurationsScreenView extends ScreenView {
     makePlanetDrag(1, observerNode);
     makePlanetDrag(2, targetNode);
 
-    // ── Update orbit circles + labels when radii change ─────────────────────
+    // ── Update orbit circles + labels when the transform or radii change ────
+    // observerNode/targetNode/elongationIndicator/sunNode each keep themselves
+    // in sync via their own link on mvtProperty above — this only needs to
+    // redraw the shapes that live directly in this view.
     const updateOrbits = () => {
+      const mvt = this.mvtProperty.value;
       const a1 = model.semimajorAxis1Property.value;
       const a2 = model.semimajorAxis2Property.value;
-      // Mutate the existing mvt's matrix in place (rather than replacing the
-      // object) so CelestialBodyNode's internal closure — captured once at
-      // construction — keeps reading the current transform on every future
-      // position update, not just the one right after this call.
-      this.mvt.setMatrix(buildMvt(a1, a2).matrix);
+      const center = mvt.modelToViewPosition(Vector2.ZERO);
 
-      // pos1Property/pos2Property may have already reacted to the axis change
-      // (and pushed stale-scale positions) before this listener ran, so
-      // explicitly re-sync the planet nodes and elongation indicator now.
-      observerNode.translation = this.mvt.modelToViewPosition(model.pos1Property.value);
-      targetNode.translation = this.mvt.modelToViewPosition(model.pos2Property.value);
-      elongationIndicator.setModelViewTransform(this.mvt);
-
-      const center = this.mvt.modelToViewPosition(Vector2.ZERO);
-
-      const r1 = this.mvt.modelToViewDeltaX(a1);
+      const r1 = mvt.modelToViewDeltaX(a1);
       orbit1Circle.shape = Shape.circle(center.x, center.y, r1);
 
-      const r2 = this.mvt.modelToViewDeltaX(a2);
+      const r2 = mvt.modelToViewDeltaX(a2);
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
       // Labels at top of orbit circles
@@ -196,14 +189,9 @@ export class ConfigurationsScreenView extends ScreenView {
       orbitLabel2.string = `${a2.toFixed(2)} ${au}`;
       orbitLabel2.centerX = center.x;
       orbitLabel2.bottom = center.y - r2 - 4;
-
-      // Update planet node positions to use new MVT
-      updateSunPos();
     };
 
-    Multilink.multilink([model.semimajorAxis1Property, model.semimajorAxis2Property, s.auStringProperty] as const, () =>
-      updateOrbits(),
-    );
+    Multilink.multilink([this.mvtProperty, s.auStringProperty] as const, () => updateOrbits());
 
     // ── Zodiac strip at bottom ──────────────────────────────────────────────
     const zodiacStrip = new ConfigurationsZodiacStrip(model);
@@ -253,9 +241,6 @@ export class ConfigurationsScreenView extends ScreenView {
         pdomOrder: [controlPanel, displayPanel, timeReadout, observerNode, targetNode, resetAllButton],
       }),
     );
-
-    // Trigger initial orbit draw
-    updateOrbits();
   }
 
   public reset(): void {

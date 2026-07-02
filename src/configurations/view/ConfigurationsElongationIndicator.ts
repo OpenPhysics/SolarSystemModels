@@ -1,3 +1,4 @@
+import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Multilink } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
@@ -9,18 +10,13 @@ import { CONFIGURATIONS_ELONGATION_ARC_RADIUS } from "../../SolarSystemModelsCon
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
 export class ConfigurationsElongationIndicator extends Node {
-  private mvt: ModelViewTransform2;
-  private readonly model: ConfigurationsModel;
   private readonly sunArrow: ArrowNode;
   private readonly planetArrow: ArrowNode;
   private readonly arcPath: Path;
   private readonly elongLabel: Text;
 
-  public constructor(model: ConfigurationsModel, mvt: ModelViewTransform2) {
+  public constructor(model: ConfigurationsModel, mvtProperty: TReadOnlyProperty<ModelViewTransform2>) {
     super({ visibleProperty: model.showElongationAngleProperty });
-
-    this.model = model;
-    this.mvt = mvt;
 
     this.sunArrow = new ArrowNode(0, 0, 1, 0, {
       stroke: null,
@@ -50,28 +46,27 @@ export class ConfigurationsElongationIndicator extends Node {
     this.addChild(this.planetArrow);
     this.addChild(this.elongLabel);
 
+    // Combining pos1/pos2/elongation with mvtProperty here (rather than the
+    // screen view manually pushing an update after rebuilding the transform)
+    // means this node always redraws itself consistently, whichever of its
+    // dependencies changed.
     Multilink.multilink(
-      [model.pos1Property, model.pos2Property, model.elongationDegProperty, model.elongationLabelProperty] as const,
-      (p1, p2, elongDeg, elongLabel_) => this.update(p1, p2, elongDeg, elongLabel_),
+      [
+        model.pos1Property,
+        model.pos2Property,
+        model.elongationDegProperty,
+        model.elongationLabelProperty,
+        mvtProperty,
+      ] as const,
+      (p1, p2, elongDeg, elongLabel_, mvt) => this.update(p1, p2, elongDeg, elongLabel_, mvt),
     );
   }
 
-  /** Called by the screen view when the orbit scale changes and a new transform is built. */
-  public setModelViewTransform(mvt: ModelViewTransform2): void {
-    this.mvt = mvt;
-    this.update(
-      this.model.pos1Property.value,
-      this.model.pos2Property.value,
-      this.model.elongationDegProperty.value,
-      this.model.elongationLabelProperty.value,
-    );
-  }
-
-  private update(p1: Vector2, p2: Vector2, elongDeg: number, elongLabel_: string): void {
+  private update(p1: Vector2, p2: Vector2, elongDeg: number, elongLabel_: string, mvt: ModelViewTransform2): void {
     // Convert model positions to view
-    const vp1 = this.mvt.modelToViewPosition(p1);
-    const vp2 = this.mvt.modelToViewPosition(p2);
-    const vSun = this.mvt.modelToViewPosition(Vector2.ZERO);
+    const vp1 = mvt.modelToViewPosition(p1);
+    const vp2 = mvt.modelToViewPosition(p2);
+    const vSun = mvt.modelToViewPosition(Vector2.ZERO);
 
     // Direction from p1 toward Sun (view)
     const sunDir = Math.atan2(vSun.y - vp1.y, vSun.x - vp1.x);

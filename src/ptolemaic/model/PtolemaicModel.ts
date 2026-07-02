@@ -17,6 +17,12 @@ import {
 import type { PlanetPresetKey } from "./PtolemaicPlanet.js";
 import { PLANET_PRESETS, PlanetType, PRESET_KEYS } from "./PtolemaicPlanet.js";
 
+const TWO_PI = 2 * Math.PI;
+
+function mod2pi(x: number): number {
+  return ((x % TWO_PI) + TWO_PI) % TWO_PI;
+}
+
 type MemorySnapshot = {
   epicycleSize: number;
   eccentricity: number;
@@ -60,7 +66,6 @@ export class PtolemaicModel implements TModel {
   public readonly planetPositionProperty: TReadOnlyProperty<Vector2>;
   public readonly sunPositionProperty: TReadOnlyProperty<Vector2>;
   public readonly eclipticLongitudeProperty: TReadOnlyProperty<number>;
-  public readonly sunLongitudeProperty: TReadOnlyProperty<number>;
 
   private memory: MemorySnapshot | null = null;
 
@@ -112,15 +117,15 @@ export class PtolemaicModel implements TModel {
       this.anomalyProperty,
     ] as const;
 
-    this.deferentCenterProperty = new DerivedProperty(geomDeps, (_re, ecc, apogDeg, _type, _sun, _an) => {
-      const ap = (apogDeg * Math.PI) / 180;
-      return new Vector2(ecc * Math.cos(ap), ecc * Math.sin(ap));
-    });
+    this.deferentCenterProperty = new DerivedProperty(geomDeps, (_re, ecc, apogDeg) =>
+      PtolemaicModel.computeDeferentCenter(ecc, apogDeg),
+    );
 
-    this.equantPositionProperty = new DerivedProperty(geomDeps, (_re, ecc, apogDeg, _type, _sun, _an) => {
-      const ap = (apogDeg * Math.PI) / 180;
-      return new Vector2(2 * ecc * Math.cos(ap), 2 * ecc * Math.sin(ap));
-    });
+    // The equant is the deferent center's mirror point across the Earth-centered
+    // deferent circle: twice as far from Earth, along the same apogee direction.
+    this.equantPositionProperty = new DerivedProperty(geomDeps, (_re, ecc, apogDeg) =>
+      PtolemaicModel.computeDeferentCenter(ecc, apogDeg).timesScalar(2),
+    );
 
     this.epicycleCenterProperty = new DerivedProperty(geomDeps, (_re, ecc, apogDeg, type, sun, anomaly) => {
       return PtolemaicModel.computeEpicycleCenter(ecc, apogDeg, type, sun, anomaly);
@@ -141,8 +146,6 @@ export class PtolemaicModel implements TModel {
       Math.atan2(pos.y, pos.x),
     );
 
-    this.sunLongitudeProperty = new DerivedProperty([this.sunAngleProperty], (sun) => sun);
-
     // Apply Mars preset to keep presetKeyProperty in sync
     this.presetKeyProperty.lazyLink((idx) => {
       const key = PRESET_KEYS[idx];
@@ -154,6 +157,11 @@ export class PtolemaicModel implements TModel {
 
   // ── Geometry helpers ───────────────────────────────────────────────────────
 
+  private static computeDeferentCenter(ecc: number, apogDeg: number): Vector2 {
+    const ap = (apogDeg * Math.PI) / 180;
+    return new Vector2(ecc * Math.cos(ap), ecc * Math.sin(ap));
+  }
+
   private static computeEpicycleCenter(
     ecc: number,
     apogDeg: number,
@@ -162,7 +170,7 @@ export class PtolemaicModel implements TModel {
     anomaly: number,
   ): Vector2 {
     const ap = (apogDeg * Math.PI) / 180;
-    const deferentCenter = new Vector2(ecc * Math.cos(ap), ecc * Math.sin(ap));
+    const deferentCenter = PtolemaicModel.computeDeferentCenter(ecc, apogDeg);
     const equantAngle = ap;
     const equantDistance = ecc;
 
@@ -234,8 +242,10 @@ export class PtolemaicModel implements TModel {
     const anomalyRate = (this.motionRateProperty.value * Math.PI) / 180;
 
     this.ptolemaicTimeProperty.value += dtDays;
-    this.sunAngleProperty.value += sunRate * dtDays;
-    this.anomalyProperty.value += anomalyRate * dtDays;
+    // Wrapped to [0, 2π) so these angles don't lose float precision over a
+    // long play session — matches ConfigurationsModel's angle convention.
+    this.sunAngleProperty.value = mod2pi(this.sunAngleProperty.value + sunRate * dtDays);
+    this.anomalyProperty.value = mod2pi(this.anomalyProperty.value + anomalyRate * dtDays);
   }
 
   public reset(): void {
