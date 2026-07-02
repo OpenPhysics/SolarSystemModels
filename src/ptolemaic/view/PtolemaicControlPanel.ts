@@ -3,6 +3,10 @@ import { HBox, type Node, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, ComboBox, RectangularPushButton } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
+import {
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
+} from "../../common/SolarSystemModelsButtonOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -48,6 +52,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     });
 
     const presetComboBox = new ComboBox(model.presetKeyProperty, comboItems, listParent, {
+      ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
       accessibleName: a11y.controls.planetPresetStringProperty,
     });
 
@@ -135,6 +140,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       }),
       listener: () => model.storeMemory(),
       accessibleName: a11y.controls.memoryStoreStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const recallButton = new RectangularPushButton({
       content: new Text(strings.memoryRecallStringProperty, {
@@ -143,6 +149,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       }),
       listener: () => model.recallMemory(),
       accessibleName: a11y.controls.memoryRecallStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     const content = new VBox({
