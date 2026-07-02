@@ -3,7 +3,7 @@ import { Shape } from "scenerystack/kite";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Node, Path } from "scenerystack/scenery";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { DAYS_PER_YEAR } from "../../SolarSystemModelsConstants.js";
+import { PATH_DURATION_RANGE } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 
 const MAX_POINTS = 2000;
@@ -41,11 +41,10 @@ export class PtolemaicPathTrail extends Node {
     const viewPos = this.mvt.modelToViewPosition(modelPos);
     this.points.push(viewPos);
 
-    // Cap buffer: keep only as many points as correspond to pathDuration years
-    const maxPts = Math.max(
-      1,
-      Math.round((model.pathDurationProperty.value * DAYS_PER_YEAR * MAX_POINTS) / (5 * 365.25)),
-    );
+    // Cap buffer: keep only as many points as correspond to pathDuration years,
+    // scaled against the longest selectable path duration (which fills the
+    // whole MAX_POINTS buffer).
+    const maxPts = Math.max(1, Math.round((model.pathDurationProperty.value * MAX_POINTS) / PATH_DURATION_RANGE.max));
     if (this.points.length > MAX_POINTS || this.points.length > maxPts) {
       this.points.shift();
     }

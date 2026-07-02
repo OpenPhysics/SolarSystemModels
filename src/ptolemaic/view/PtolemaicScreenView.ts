@@ -1,4 +1,4 @@
-import { Multilink } from "scenerystack/axon";
+import { Multilink, Property } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -70,6 +70,9 @@ export class PtolemaicScreenView extends ScreenView {
     );
 
     const mvt = this.mvt;
+    // Ptolemaic's transform never changes (no adjustable orbit radii on this
+    // screen), so CelestialBodyNode's mvtProperty is a constant Property.
+    const mvtProperty = new Property(mvt);
 
     // ── Background ─────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -248,7 +251,7 @@ export class PtolemaicScreenView extends ScreenView {
     this.addChild(earthNode);
 
     // ── Sun node (draggable) ───────────────────────────────────────────────
-    const sunNode = new CelestialBodyNode(model.sunPositionProperty, mvt, {
+    const sunNode = new CelestialBodyNode(model.sunPositionProperty, mvtProperty, {
       radius: 11,
       fill: SolarSystemModelsColors.sunColorProperty,
       cursor: "pointer",
@@ -269,7 +272,7 @@ export class PtolemaicScreenView extends ScreenView {
     );
 
     // ── Planet node ────────────────────────────────────────────────────────
-    const planetNode = new CelestialBodyNode(model.planetPositionProperty, mvt, {
+    const planetNode = new CelestialBodyNode(model.planetPositionProperty, mvtProperty, {
       radius: 7,
       fill: SolarSystemModelsColors.planetColorProperty,
     });
