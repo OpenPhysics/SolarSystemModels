@@ -34,11 +34,11 @@ const SolarSystemModelsColors = {
     projector: "#0033cc",
   }),
   planetColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "planet", {
-    default: "#ff8844",
+    default: "#ff6666",
     projector: "#cc4400",
   }),
   observerPlanetColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "observerPlanet", {
-    default: "#8398bc",
+    default: "#83a2fc",
     projector: "#334466",
   }),
   targetPlanetColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "targetPlanet", {
@@ -72,6 +72,10 @@ const SolarSystemModelsColors = {
   elongationColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "elongation", {
     default: "#ffcc02",
     projector: "#cc9900",
+  }),
+  activeConstellationColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "activeConstellation", {
+    default: "#1b6f4b",
+    projector: "#1b6f4b",
   }),
   zodiacBandColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacBand", {
     default: "#1e293b",

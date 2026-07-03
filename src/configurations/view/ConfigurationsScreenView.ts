@@ -1,4 +1,3 @@
-import type { TReadOnlyProperty } from "scenerystack/axon";
 import { DerivedProperty, Multilink } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
@@ -7,9 +6,9 @@ import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
+import { RectangularPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
-import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SolarSystemModelsButtonOptions.js";
 import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -43,8 +42,8 @@ function buildMvt(a1: number, a2: number): ModelViewTransform2 {
 
 export class ConfigurationsScreenView extends ScreenView {
   private readonly model: ConfigurationsModel;
-  // Rebuilt whenever the orbital radii change, so its scale always fits both orbits.
-  private readonly mvtProperty: TReadOnlyProperty<ModelViewTransform2>;
+  // mvt changes when orbital radii change
+  private mvt: ModelViewTransform2;
 
   public constructor(model: ConfigurationsModel, options?: ScreenViewOptions) {
     super({
@@ -53,13 +52,9 @@ export class ConfigurationsScreenView extends ScreenView {
     });
 
     this.model = model;
-    this.mvtProperty = new DerivedProperty(
-      [model.semimajorAxis1Property, model.semimajorAxis2Property] as const,
-      (a1, a2) => buildMvt(a1, a2),
-    );
+    this.mvt = buildMvt(model.semimajorAxis1Property.value, model.semimajorAxis2Property.value);
 
     const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
-    const s = StringManager.getInstance().getConfigurationsStrings();
 
     // ── Background ──────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -69,7 +64,7 @@ export class ConfigurationsScreenView extends ScreenView {
 
     // ── Orbit area background ───────────────────────────────────────────────
     const orbitAreaBg = new Rectangle(0, 0, ORBIT_AREA_SIZE, this.layoutBounds.height, {
-      fill: SolarSystemModelsColors.orbitAreaBackgroundColorProperty,
+      fill: "#060d1a",
     });
     this.addChild(orbitAreaBg);
 
@@ -77,16 +72,14 @@ export class ConfigurationsScreenView extends ScreenView {
     const constellationNode = new ZodiacConstellationNode(CONFIGURATIONS_ORBIT_CENTER_X, CONFIGURATIONS_ORBIT_CENTER_Y);
     this.addChild(constellationNode);
 
-    // ── Orbit circles ───────────────────────────────────────────────────────
+    // ── Orbit circles (solid, matching AS) ──────────────────────────────────
     const orbit1Circle = new Path(null, {
       stroke: SolarSystemModelsColors.observerPlanetColorProperty,
       lineWidth: 1,
-      lineDash: [4, 4],
     });
     const orbit2Circle = new Path(null, {
       stroke: SolarSystemModelsColors.targetPlanetColorProperty,
       lineWidth: 1,
-      lineDash: [4, 4],
     });
     this.addChild(orbit1Circle);
     this.addChild(orbit2Circle);
@@ -106,51 +99,54 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(orbitLabel2);
 
     // ── Elongation indicator (Phase 7) ──────────────────────────────────────
-    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvtProperty);
+    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvt);
     this.addChild(elongationIndicator);
 
     // ── Sun at origin ───────────────────────────────────────────────────────
     const sunNode = new Circle(12, { fill: SolarSystemModelsColors.sunColorProperty });
     this.addChild(sunNode);
-    this.mvtProperty.link((mvt) => {
-      sunNode.translation = mvt.modelToViewPosition(Vector2.ZERO);
-    });
+
+    const updateSunPos = () => {
+      sunNode.translation = this.mvt.modelToViewPosition(Vector2.ZERO);
+    };
+    updateSunPos();
 
     // ── Observer planet (blue) ──────────────────────────────────────────────
-    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvtProperty, {
+    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvt, {
       radius: 8,
       fill: SolarSystemModelsColors.observerPlanetColorProperty,
       cursor: "pointer",
       tagName: "div",
       focusable: true,
       accessibleName: a11y.controls.observerDragStringProperty,
-      accessibleHelpText: a11y.controls.observerShiftDragStringProperty,
     });
     this.addChild(observerNode);
 
     // ── Target planet (grey) ────────────────────────────────────────────────
-    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvtProperty, {
+    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvt, {
       radius: 8,
       fill: SolarSystemModelsColors.targetPlanetColorProperty,
       cursor: "pointer",
       tagName: "div",
       focusable: true,
       accessibleName: a11y.controls.targetDragStringProperty,
-      accessibleHelpText: a11y.controls.targetShiftDragStringProperty,
     });
     this.addChild(targetNode);
 
-    // ── Planet drag listeners ───────────────────────────────────────────────
+    // ── Planet drag listeners (freeze/thaw animation during drag, matching AS) ─
     const makePlanetDrag = (id: 1 | 2, node: Node) => {
+      let wasPlaying = false;
       node.addInputListener(
         new DragListener({
           tandem: Tandem.OPT_OUT,
           press: () => {
+            wasPlaying = model.timer.isPlayingProperty.value;
+            model.freezeAnimation();
             model.timer.isPlayingProperty.value = false;
           },
           drag: (event, listener) => {
             const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
-            const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
+            const modelPos = this.mvt.viewToModelPosition(listener.modelPoint);
             const angle = Math.atan2(modelPos.y, modelPos.x);
             const snap = model.snapToEventsProperty.value;
             if (shiftKey) {
@@ -159,40 +155,45 @@ export class ConfigurationsScreenView extends ScreenView {
               model.setTimeByPlanetAngle(id, angle, snap, Math.PI / 12);
             }
           },
+          release: () => {
+            model.thawAnimation(wasPlaying);
+          },
         }),
       );
     };
     makePlanetDrag(1, observerNode);
     makePlanetDrag(2, targetNode);
 
-    // ── Update orbit circles + labels when the transform or radii change ────
-    // observerNode/targetNode/elongationIndicator/sunNode each keep themselves
-    // in sync via their own link on mvtProperty above — this only needs to
-    // redraw the shapes that live directly in this view.
+    // ── Update orbit circles + labels when radii change ─────────────────────
     const updateOrbits = () => {
-      const mvt = this.mvtProperty.value;
       const a1 = model.semimajorAxis1Property.value;
       const a2 = model.semimajorAxis2Property.value;
-      const center = mvt.modelToViewPosition(Vector2.ZERO);
+      this.mvt = buildMvt(a1, a2);
 
-      const r1 = mvt.modelToViewDeltaX(a1);
+      // Update elongation indicator's MVT reference
+      // (It holds a closure over mvt, so we need to re-link — simplest: rebuild shape via update)
+      const center = this.mvt.modelToViewPosition(Vector2.ZERO);
+
+      const r1 = this.mvt.modelToViewDeltaX(a1);
       orbit1Circle.shape = Shape.circle(center.x, center.y, r1);
 
-      const r2 = mvt.modelToViewDeltaX(a2);
+      const r2 = this.mvt.modelToViewDeltaX(a2);
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
       // Labels at top of orbit circles
-      const au = s.auStringProperty.value;
-      orbitLabel1.string = `${a1.toFixed(2)} ${au}`;
+      orbitLabel1.string = `${a1.toFixed(2)} AU`;
       orbitLabel1.centerX = center.x;
       orbitLabel1.bottom = center.y - r1 - 4;
 
-      orbitLabel2.string = `${a2.toFixed(2)} ${au}`;
+      orbitLabel2.string = `${a2.toFixed(2)} AU`;
       orbitLabel2.centerX = center.x;
       orbitLabel2.bottom = center.y - r2 - 4;
+
+      // Update planet node positions to use new MVT
+      updateSunPos();
     };
 
-    Multilink.multilink([this.mvtProperty, s.auStringProperty] as const, () => updateOrbits());
+    Multilink.multilink([model.semimajorAxis1Property, model.semimajorAxis2Property] as const, updateOrbits);
 
     // ── Zodiac strip at bottom ──────────────────────────────────────────────
     const zodiacStrip = new ConfigurationsZodiacStrip(model);
@@ -221,6 +222,22 @@ export class ConfigurationsScreenView extends ScreenView {
     timeReadout.top = displayPanel.bottom + 8;
     this.addChild(timeReadout);
 
+    // ── Countdown cancel button (AS: clickToCancelMC) ───────────────────────
+    const s = StringManager.getInstance().getConfigurationsStrings();
+    const a11yCancel = StringManager.getInstance().getConfigurationsA11yStrings();
+    const cancelButton = new RectangularPushButton({
+      content: new Text(s.cancelCountdownStringProperty, {
+        font: new PhetFont(12),
+        fill: SolarSystemModelsColors.textColorProperty,
+      }),
+      listener: () => model.cancelCountdown(),
+      visibleProperty: new DerivedProperty([model.countdownRemainingProperty], (r) => r > 0),
+      accessibleName: a11yCancel.controls.cancelCountdownStringProperty,
+    });
+    cancelButton.centerX = CONFIGURATIONS_ORBIT_CENTER_X;
+    cancelButton.centerY = CONFIGURATIONS_ORBIT_CENTER_Y;
+    this.addChild(cancelButton);
+
     // Position timeline below time readout
     timeline.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
     timeline.top = timeReadout.bottom + 8;
@@ -233,7 +250,6 @@ export class ConfigurationsScreenView extends ScreenView {
       },
       right: this.layoutBounds.maxX - SCREEN_VIEW_MARGIN,
       bottom: this.layoutBounds.maxY - SCREEN_VIEW_MARGIN,
-      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 
@@ -243,6 +259,9 @@ export class ConfigurationsScreenView extends ScreenView {
         pdomOrder: [controlPanel, displayPanel, timeReadout, observerNode, targetNode, resetAllButton],
       }),
     );
+
+    // Trigger initial orbit draw
+    updateOrbits();
   }
 
   public reset(): void {

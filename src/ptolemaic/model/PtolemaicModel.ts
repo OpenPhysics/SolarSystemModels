@@ -10,7 +10,8 @@ import {
   EPICYCLE_SIZE_RANGE,
   MOTION_RATE_RANGE,
   PATH_DURATION_RANGE,
-  PTOLEMAIC_DAYS_PER_SECOND,
+  PTOLEMAIC_ANIMATION_RATE_RANGE,
+  PTOLEMAIC_DEFAULT_ANIMATION_RATE,
   PTOLEMAIC_DEFERENT_RADIUS,
   PTOLEMAIC_SUN_ORBIT_RADIUS,
 } from "../../SolarSystemModelsConstants.js";
@@ -29,11 +30,16 @@ type MemorySnapshot = {
   motionRate: number;
   apogeeAngle: number;
   planetType: PlanetType;
+  sunAngle: number;
+  anomaly: number;
 };
 
 export class PtolemaicModel implements TModel {
-  // ── Composed timing model ──────────────────────────────────────────────────
+  // ── Composed timing model (isPlaying + wall-clock time) ───────────────────
   public readonly timer: TimeModel;
+
+  // ── Animation rate: days-per-second (AS slider value 1–500) ───────────────
+  public readonly animationRateProperty: NumberProperty;
 
   // ── Physical parameters ────────────────────────────────────────────────────
   public readonly epicycleSizeProperty: NumberProperty;
@@ -67,10 +73,23 @@ export class PtolemaicModel implements TModel {
   public readonly sunPositionProperty: TReadOnlyProperty<Vector2>;
   public readonly eclipticLongitudeProperty: TReadOnlyProperty<number>;
 
+  /**
+   * Monotonically increasing counter bumped whenever the orbit trail should be
+   * cleared (parameter change, sun drag, reset). The view listens to this.
+   */
+  public readonly trailClearProperty: NumberProperty;
+
+  /** True when a stored memory snapshot exists (drives Recall button enabled state). */
+  public readonly hasMemoryProperty: BooleanProperty;
+
   private memory: MemorySnapshot | null = null;
 
   public constructor() {
     this.timer = new TimeModel(false);
+
+    this.animationRateProperty = new NumberProperty(PTOLEMAIC_DEFAULT_ANIMATION_RATE, {
+      range: new Range(PTOLEMAIC_ANIMATION_RATE_RANGE.min, PTOLEMAIC_ANIMATION_RATE_RANGE.max),
+    });
 
     this.epicycleSizeProperty = new NumberProperty(PLANET_PRESETS.mars.epicycleSize, {
       range: new Range(EPICYCLE_SIZE_RANGE.min, EPICYCLE_SIZE_RANGE.max),
@@ -106,6 +125,9 @@ export class PtolemaicModel implements TModel {
     this.pathDurationProperty = new NumberProperty(2.5, {
       range: new Range(PATH_DURATION_RANGE.min, PATH_DURATION_RANGE.max),
     });
+
+    this.trailClearProperty = new NumberProperty(0);
+    this.hasMemoryProperty = new BooleanProperty(false);
 
     // Shared dependencies array for geometry derived properties
     const geomDeps = [
@@ -153,6 +175,19 @@ export class PtolemaicModel implements TModel {
         this.applyPresetData(PLANET_PRESETS[key]);
       }
     });
+
+    // Any change to a trajectory parameter invalidates the trail (AS clearPath).
+    const clearTrailParams = [
+      this.epicycleSizeProperty,
+      this.eccentricityProperty,
+      this.apogeeAngleProperty,
+      this.planetTypeProperty,
+      this.motionRateProperty,
+      this.pathDurationProperty,
+    ] as const;
+    for (const prop of clearTrailParams) {
+      prop.lazyLink(() => this.clearTrail());
+    }
   }
 
   // ── Geometry helpers ───────────────────────────────────────────────────────
@@ -187,6 +222,30 @@ export class PtolemaicModel implements TModel {
     );
   }
 
+  /**
+   * Compute the planet position for an arbitrary (anomaly, sunAngle) pair using
+   * the *current* physical parameters. Used by the trail resampler so it can
+   * reconstruct the path at uniform time steps independent of frame rate.
+   */
+  public samplePlanetPosition(anomaly: number, sunAngle: number): Vector2 {
+    const re = this.epicycleSizeProperty.value;
+    const ecc = this.eccentricityProperty.value;
+    const apogDeg = this.apogeeAngleProperty.value;
+    const type = this.planetTypeProperty.value;
+    const epicCenter = PtolemaicModel.computeEpicycleCenter(ecc, apogDeg, type, sunAngle, anomaly);
+    const epiDrive = type === PlanetType.SUPERIOR ? sunAngle : anomaly;
+    return epicCenter.plusXY(re * Math.cos(epiDrive), re * Math.sin(epiDrive));
+  }
+
+  /** Current per-day angular rates (radians/day). */
+  public getSunRate(): number {
+    return TWO_PI / DAYS_PER_YEAR;
+  }
+
+  public getAnomalyRate(): number {
+    return (this.motionRateProperty.value * Math.PI) / 180;
+  }
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   public applyPreset(key: PlanetPresetKey): void {
@@ -204,13 +263,21 @@ export class PtolemaicModel implements TModel {
   }
 
   public setSunAngle(rad: number): void {
-    this.sunAngleProperty.value = rad;
+    // AS setSunAngle: wrap to [0, 2π) and clear the path trail.
+    this.sunAngleProperty.value = ((rad % TWO_PI) + TWO_PI) % TWO_PI;
+    this.clearTrail();
+  }
+
+  /** Bump the trail-clear signal (AS clearPath). */
+  public clearTrail(): void {
+    this.trailClearProperty.value += 1;
   }
 
   public resetTime(): void {
     this.ptolemaicTimeProperty.value = 0;
     this.sunAngleProperty.value = 0;
     this.anomalyProperty.value = 0;
+    this.clearTrail();
   }
 
   public storeMemory(): void {
@@ -220,16 +287,22 @@ export class PtolemaicModel implements TModel {
       motionRate: this.motionRateProperty.value,
       apogeeAngle: this.apogeeAngleProperty.value,
       planetType: this.planetTypeProperty.value,
+      sunAngle: this.sunAngleProperty.value,
+      anomaly: this.anomalyProperty.value,
     };
+    this.hasMemoryProperty.value = true;
   }
 
   public recallMemory(): void {
     if (this.memory !== null) {
+      this.timer.isPlayingProperty.value = false;
       this.epicycleSizeProperty.value = this.memory.epicycleSize;
       this.eccentricityProperty.value = this.memory.eccentricity;
       this.motionRateProperty.value = this.memory.motionRate;
       this.apogeeAngleProperty.value = this.memory.apogeeAngle;
       this.planetTypeProperty.value = this.memory.planetType;
+      this.sunAngleProperty.value = this.memory.sunAngle;
+      this.anomalyProperty.value = this.memory.anomaly;
     }
   }
 
@@ -237,9 +310,9 @@ export class PtolemaicModel implements TModel {
     if (!this.timer.isPlayingProperty.value) {
       return;
     }
-    const dtDays = dt * PTOLEMAIC_DAYS_PER_SECOND * this.timer.animationRateProperty.value;
-    const sunRate = (2 * Math.PI) / DAYS_PER_YEAR;
-    const anomalyRate = (this.motionRateProperty.value * Math.PI) / 180;
+    const dtDays = dt * this.animationRateProperty.value;
+    const sunRate = this.getSunRate();
+    const anomalyRate = this.getAnomalyRate();
 
     this.ptolemaicTimeProperty.value += dtDays;
     // Wrapped to [0, 2π) so these angles don't lose float precision over a
@@ -250,6 +323,7 @@ export class PtolemaicModel implements TModel {
 
   public reset(): void {
     this.timer.reset();
+    this.animationRateProperty.reset();
     this.epicycleSizeProperty.reset();
     this.eccentricityProperty.reset();
     this.motionRateProperty.reset();
@@ -267,7 +341,9 @@ export class PtolemaicModel implements TModel {
     this.showEpicyclePlanetLineProperty.reset();
     this.pathDurationProperty.reset();
     this.memory = null;
+    this.hasMemoryProperty.reset();
     // restore Mars defaults (index 1)
     this.applyPresetData(PLANET_PRESETS.mars);
+    this.clearTrail();
   }
 }

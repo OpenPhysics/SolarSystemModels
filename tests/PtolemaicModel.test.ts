@@ -42,7 +42,7 @@ describe("PtolemaicModel", () => {
     // Simulate ~780 days (Mars synodic period) in steps of 5 days
     const dtDays = 5;
     const steps = Math.ceil(780 / dtDays);
-    const dtWall = dtDays / (40 * 1); // PTOLEMAIC_DAYS_PER_SECOND * animationRate=1
+    const dtWall = dtDays / model.animationRateProperty.value; // days / (days/sec) = sec
 
     const longitudes: number[] = [];
     for (let i = 0; i < steps; i++) {
@@ -130,11 +130,10 @@ describe("PtolemaicModel", () => {
   it("step() advances time correctly when playing", () => {
     const model = new PtolemaicModel();
     model.timer.isPlayingProperty.value = true;
-    model.timer.animationRateProperty.value = 1;
     model.motionRateProperty.value = PLANET_PRESETS.mars.motionRate;
 
     const dt = 0.1; // wall-clock seconds
-    const dtDays = dt * 40 * 1; // PTOLEMAIC_DAYS_PER_SECOND * animationRate
+    const dtDays = dt * model.animationRateProperty.value; // sec * days/sec = days
     model.step(dt);
 
     expect(model.ptolemaicTimeProperty.value).toBeCloseTo(dtDays, 8);

@@ -12,7 +12,12 @@ import {
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { ANIMATION_RATE_RANGE, PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
+import {
+  ANIMATION_RATE_RANGE,
+  PANEL_WIDTH,
+  PAUSE_TIME_RANGE,
+  SEMIMAJOR_AXIS_RANGE,
+} from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 import { PRESET_KEYS } from "../model/ConfigurationsPlanet.js";
 import { EventAction } from "../model/EventAction.js";
@@ -43,17 +48,32 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       s.saturnStringProperty,
     ];
 
-    const observer1Items = PRESET_KEYS.map((key, i) => ({
-      value: i,
-      createNode: (_tandem: Tandem) => new Text(presetLabels[i] ?? s.earthStringProperty, { ...labelOpts }),
-      tandemName: `${key}Observer1Item`,
-    }));
+    // ── Observer planet preset ComboBox ───────────────────────────────────
+    // Item value −1 is the `<presets>` placeholder (non-selectable prompt),
+    // matching the AS ComboBox that starts at index 0 = "<presets>".
+    const makePlaceholder = (tandemName: string) => ({
+      value: -1,
+      createNode: (_tandem: Tandem) => new Text(s.presetsStringProperty, { ...labelOpts }),
+      tandemName,
+    });
 
-    const observer2Items = PRESET_KEYS.map((key, i) => ({
-      value: i,
-      createNode: (_tandem: Tandem) => new Text(presetLabels[i] ?? s.earthStringProperty, { ...labelOpts }),
-      tandemName: `${key}Observer2Item`,
-    }));
+    const observer1Items = [
+      makePlaceholder("presetsObserver1Item"),
+      ...PRESET_KEYS.map((key, i) => ({
+        value: i,
+        createNode: (_tandem: Tandem) => new Text(presetLabels[i] ?? s.earthStringProperty, { ...labelOpts }),
+        tandemName: `${key}Observer1Item`,
+      })),
+    ];
+
+    const observer2Items = [
+      makePlaceholder("presetsObserver2Item"),
+      ...PRESET_KEYS.map((key, i) => ({
+        value: i,
+        createNode: (_tandem: Tandem) => new Text(presetLabels[i] ?? s.earthStringProperty, { ...labelOpts }),
+        tandemName: `${key}Observer2Item`,
+      })),
+    ];
 
     const preset1Combo = new ComboBox(model.preset1IndexProperty, observer1Items, listParent, {
       ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
@@ -85,7 +105,7 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
     const axis1Control = new NumberControl(
       s.semimajorAxisStringProperty,
       model.semimajorAxis1Property,
-      new Range(0.1, 15),
+      new Range(SEMIMAJOR_AXIS_RANGE.min, SEMIMAJOR_AXIS_RANGE.max),
       {
         titleNodeOptions: { ...labelOpts },
         delta: 0.01,
@@ -96,7 +116,7 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
     const axis2Control = new NumberControl(
       s.semimajorAxisStringProperty,
       model.semimajorAxis2Property,
-      new Range(0.1, 15),
+      new Range(SEMIMAJOR_AXIS_RANGE.min, SEMIMAJOR_AXIS_RANGE.max),
       {
         titleNodeOptions: { ...labelOpts },
         delta: 0.01,
@@ -163,8 +183,8 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
         createNode: (_t: Tandem) => new Text(s.pauseStringProperty, labelOpts),
       },
       {
-        value: EventAction.LOCK,
-        createNode: (_t: Tandem) => new Text(s.lockStringProperty, labelOpts),
+        value: EventAction.STOP,
+        createNode: (_t: Tandem) => new Text(s.stopStringProperty, labelOpts),
       },
     ];
     const eventActionGroup = new AquaRadioButtonGroup(model.eventActionProperty, eventActionItems, {
@@ -172,12 +192,17 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
     });
 
     // ── Pause time control ────────────────────────────────────────────────
-    const pauseTimeControl = new NumberControl(s.pauseTimeStringProperty, model.pauseTimeProperty, new Range(1, 30), {
-      titleNodeOptions: { ...labelOpts },
-      delta: 1,
-      numberDisplayOptions: { decimalPlaces: 0 },
-      accessibleName: a11y.controls.pauseTimeStringProperty,
-    });
+    const pauseTimeControl = new NumberControl(
+      s.pauseTimeStringProperty,
+      model.pauseTimeProperty,
+      new Range(PAUSE_TIME_RANGE.min, PAUSE_TIME_RANGE.max),
+      {
+        titleNodeOptions: { ...labelOpts },
+        delta: 1,
+        numberDisplayOptions: { decimalPlaces: 0 },
+        accessibleName: a11y.controls.pauseTimeStringProperty,
+      },
+    );
 
     const content = new VBox({
       children: [

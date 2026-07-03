@@ -9,7 +9,7 @@ import {
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { ANIMATION_RATE_RANGE, PANEL_WIDTH, PATH_DURATION_RANGE } from "../../SolarSystemModelsConstants.js";
+import { PANEL_WIDTH, PATH_DURATION_RANGE, PTOLEMAIC_ANIMATION_RATE_RANGE } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 
 const LABEL_FONT = new PhetFont(12);
@@ -41,8 +41,8 @@ export class PtolemaicTimeControls extends SolarSystemModelsPanel {
       maxWidth: MAX_LABEL_WIDTH,
     });
     const animRateSlider = new HSlider(
-      model.timer.animationRateProperty,
-      new Range(ANIMATION_RATE_RANGE.min, ANIMATION_RATE_RANGE.max),
+      model.animationRateProperty,
+      new Range(PTOLEMAIC_ANIMATION_RATE_RANGE.min, PTOLEMAIC_ANIMATION_RATE_RANGE.max),
       {
         trackSize: TRACK_SIZE,
         accessibleName: a11y.controls.animationRateStringProperty,

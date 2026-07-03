@@ -3,10 +3,6 @@ import { HBox, type Node, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, ComboBox, RectangularPushButton } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
-import {
-  FLAT_RECTANGULAR_BUTTON_OPTIONS,
-  SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
-} from "../../common/SolarSystemModelsButtonOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -18,7 +14,9 @@ import {
   PANEL_WIDTH,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
-import { PlanetType, PRESET_KEYS } from "../model/PtolemaicPlanet.js";
+import { PtolemaicModel as PtolemaicModelClass } from "../model/PtolemaicModel.js";
+import type { PlanetPresetKey } from "../model/PtolemaicPlanet.js";
+import { PlanetType } from "../model/PtolemaicPlanet.js";
 
 const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
 const LABEL_FONT = new PhetFont(13);
@@ -30,6 +28,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     const a11y = StringManager.getInstance().getPtolemaicA11yStrings();
 
     // ── Planet preset ComboBox ─────────────────────────────────────────────
+    const presetKeys: PlanetPresetKey[] = ["venus", "mars", "jupiter", "saturn"];
     const presetLabels = [
       strings.venusStringProperty,
       strings.marsStringProperty,
@@ -37,7 +36,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       strings.saturnStringProperty,
     ];
 
-    const comboItems = PRESET_KEYS.map((key, i) => {
+    const comboItems = presetKeys.map((key, i) => {
       const labelProp = presetLabels[i] ?? strings.marsStringProperty;
       return {
         value: i,
@@ -52,7 +51,6 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     });
 
     const presetComboBox = new ComboBox(model.presetKeyProperty, comboItems, listParent, {
-      ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
       accessibleName: a11y.controls.planetPresetStringProperty,
     });
 
@@ -140,7 +138,6 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       }),
       listener: () => model.storeMemory(),
       accessibleName: a11y.controls.memoryStoreStringProperty,
-      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const recallButton = new RectangularPushButton({
       content: new Text(strings.memoryRecallStringProperty, {
@@ -148,8 +145,24 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
         fill: SolarSystemModelsColors.textColorProperty,
       }),
       listener: () => model.recallMemory(),
+      // Disabled until a snapshot is stored (AS: memoryRecallButton.setEnabled(false)).
+      enabledProperty: model.hasMemoryProperty,
       accessibleName: a11y.controls.memoryRecallStringProperty,
-      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+    });
+
+    // ── OK / re-apply selected preset button (AS setPresets "OK") ──────────
+    const okButton = new RectangularPushButton({
+      content: new Text(strings.okStringProperty, {
+        font: LABEL_FONT,
+        fill: SolarSystemModelsColors.textColorProperty,
+      }),
+      listener: () => {
+        const key = PtolemaicModelClass.PRESET_KEYS[model.presetKeyProperty.value];
+        if (key !== undefined) {
+          model.applyPreset(key);
+        }
+      },
+      accessibleName: a11y.controls.setPresetStringProperty,
     });
 
     const content = new VBox({
@@ -159,6 +172,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
           fill: SolarSystemModelsColors.textColorProperty,
         }),
         presetComboBox,
+        okButton,
         epicycleSizeControl,
         eccentricityControl,
         motionRateControl,

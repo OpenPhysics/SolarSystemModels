@@ -1,10 +1,10 @@
-import { DerivedProperty } from "scenerystack/axon";
+import { Multilink } from "scenerystack/axon";
 import { Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { DAYS_PER_YEAR, PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
+import { DISPLAY_DAYS_PER_YEAR, PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
 const READOUT_FONT = new PhetFont(13);
@@ -16,46 +16,36 @@ const FONT_OPTS = {
 
 export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
   public constructor(model: ConfigurationsModel) {
-    const s = StringManager.getInstance().getConfigurationsStrings();
+    StringManager.getInstance().getConfigurationsStrings();
 
-    const timeStringProperty = new DerivedProperty(
-      [model.timeProperty, s.yearsStringProperty, s.daysStringProperty] as const,
-      (time, yr, d) => {
-        const absTime = Math.abs(time);
-        const totalDays = absTime * DAYS_PER_YEAR;
-        const yrs = Math.floor(absTime);
-        const days = totalDays - yrs * DAYS_PER_YEAR;
-        const sign = time < 0 ? "-" : "";
-        return `${sign}${absTime.toFixed(3)} ${yr} (${sign}${yrs} ${yr}, ${sign}${days.toFixed(1)} ${d})`;
-      },
-    );
+    const timeText = new Text("", FONT_OPTS);
+    const synodicText = new Text("", FONT_OPTS);
+    const configText = new Text("", FONT_OPTS);
+    const countdownText = new Text("", FONT_OPTS);
 
-    const synodicStringProperty = new DerivedProperty(
-      [model.synodicPeriodProperty, s.synodicPeriodStringProperty, s.yearsStringProperty] as const,
-      (synodic, label, yr) => `${label} ${synodic.toFixed(3)} ${yr}`,
-    );
+    Multilink.multilink([model.timeProperty, model.synodicPeriodProperty], (time, synodic) => {
+      const absTime = Math.abs(time);
+      const totalDays = absTime * DISPLAY_DAYS_PER_YEAR;
+      const yrs = Math.floor(absTime);
+      const days = totalDays - yrs * DISPLAY_DAYS_PER_YEAR;
+      const sign = time < 0 ? "-" : "";
+      timeText.string = `${sign}${absTime.toFixed(3)} yr (${sign}${yrs} yr, ${sign}${days.toFixed(1)} d)`;
+      synodicText.string = `Synodic: ${synodic.toFixed(3)} yr`;
+    });
 
-    const countdownStringProperty = new DerivedProperty(
-      [
-        model.countdownRemainingProperty,
-        s.pausedForStringProperty,
-        s.secondStringProperty,
-        s.secondsStringProperty,
-      ] as const,
-      (remaining, pausedFor, second, seconds) => {
-        if (remaining <= 0) {
-          return "";
-        }
+    model.currentConfigurationProperty.link((cfg) => {
+      configText.string = cfg.length > 0 ? cfg : "";
+    });
+
+    model.countdownRemainingProperty.link((remaining) => {
+      if (remaining > 0) {
         const secs = Math.ceil(remaining);
-        const unit = secs === 1 ? second : seconds;
-        return pausedFor.replace("{0}", String(secs)).replace("{1}", unit);
-      },
-    );
-
-    const timeText = new Text(timeStringProperty, FONT_OPTS);
-    const synodicText = new Text(synodicStringProperty, FONT_OPTS);
-    const configText = new Text(model.currentConfigurationProperty, FONT_OPTS);
-    const countdownText = new Text(countdownStringProperty, FONT_OPTS);
+        const unit = secs === 1 ? "second" : "seconds";
+        countdownText.string = `Paused for ${secs} more ${unit}`;
+      } else {
+        countdownText.string = "";
+      }
+    });
 
     const content = new VBox({
       children: [timeText, synodicText, configText, countdownText],

@@ -1,4 +1,4 @@
-import { Multilink, Property } from "scenerystack/axon";
+import { Multilink } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -8,7 +8,6 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
-import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SolarSystemModelsButtonOptions.js";
 import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -19,19 +18,20 @@ import {
   PTOLEMAIC_DEFERENT_RADIUS,
   PTOLEMAIC_SUN_ORBIT_RADIUS,
   SCREEN_VIEW_MARGIN,
-  ZODIAC_LABEL_MAX_WIDTH,
   ZODIAC_LABEL_RADIUS,
-  ZODIAC_TICK_INNER_RADIUS,
-  ZODIAC_TICK_OUTER_RADIUS,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 import { PtolemaicControlPanel } from "./PtolemaicControlPanel.js";
 import { PtolemaicDisplayPanel } from "./PtolemaicDisplayPanel.js";
+import { PtolemaicKeyPanel } from "./PtolemaicKeyPanel.js";
 import { PtolemaicPathTrail } from "./PtolemaicPathTrail.js";
 import { PtolemaicScreenSummaryContent } from "./PtolemaicScreenSummaryContent.js";
 import { PtolemaicTimeControls } from "./PtolemaicTimeControls.js";
 import { PtolemaicTimeReadout } from "./PtolemaicTimeReadout.js";
 import { PtolemaicZodiacStrip } from "./PtolemaicZodiacStrip.js";
+
+// Zodiac glyphs (Unicode), Aries→Pisces — matches the Flash symbol-font ring.
+const ZODIAC_SIGNS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
 
 export class PtolemaicScreenView extends ScreenView {
   private readonly pathTrail: PtolemaicPathTrail;
@@ -46,22 +46,6 @@ export class PtolemaicScreenView extends ScreenView {
 
     this.model = model;
 
-    const zodiacStrings = StringManager.getInstance().getZodiacStrings();
-    const ZODIAC_SIGN_PROPS = [
-      zodiacStrings.ariesStringProperty,
-      zodiacStrings.taurusStringProperty,
-      zodiacStrings.geminiStringProperty,
-      zodiacStrings.cancerStringProperty,
-      zodiacStrings.leoStringProperty,
-      zodiacStrings.virgoStringProperty,
-      zodiacStrings.libraStringProperty,
-      zodiacStrings.scorpiusStringProperty,
-      zodiacStrings.sagittariusStringProperty,
-      zodiacStrings.capricornStringProperty,
-      zodiacStrings.aquariusStringProperty,
-      zodiacStrings.piscesStringProperty,
-    ];
-
     // ── Model–view transform ───────────────────────────────────────────────
     // Earth at model origin → view center-left; y inverted (Flash screen-y down)
     this.mvt = ModelViewTransform2.createSinglePointScaleInvertedYMapping(
@@ -71,9 +55,6 @@ export class PtolemaicScreenView extends ScreenView {
     );
 
     const mvt = this.mvt;
-    // Ptolemaic's transform never changes (no adjustable orbit radii on this
-    // screen), so CelestialBodyNode's mvtProperty is a constant Property.
-    const mvtProperty = new Property(mvt);
 
     // ── Background ─────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -83,7 +64,7 @@ export class PtolemaicScreenView extends ScreenView {
 
     // ── Orbital area background ────────────────────────────────────────────
     const orbitAreaBg = new Rectangle(0, 0, ORBIT_VIEW_CENTER_X * 2 + 20, this.layoutBounds.height, {
-      fill: SolarSystemModelsColors.orbitAreaBackgroundColorProperty,
+      fill: "#0a0a18",
     });
     this.addChild(orbitAreaBg);
 
@@ -92,35 +73,37 @@ export class PtolemaicScreenView extends ScreenView {
     this.addChild(constellationNode);
 
     // ── Zodiac sign border tick marks at sign boundaries ─────────────────
+    const tickInnerR = 250;
+    const tickOuterR = 270;
     for (let i = 0; i < 12; i++) {
       const angle = (i * Math.PI) / 6; // 0°, 30°, 60°, ... (sign boundaries)
       const tick = new Path(null, {
-        stroke: SolarSystemModelsColors.zodiacTickColorProperty,
+        stroke: "#888899",
         lineWidth: 1,
       });
-      const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_TICK_INNER_RADIUS;
-      const y1 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_TICK_INNER_RADIUS;
-      const x2 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_TICK_OUTER_RADIUS;
-      const y2 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_TICK_OUTER_RADIUS;
+      const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickInnerR;
+      const y1 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * tickInnerR;
+      const x2 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickOuterR;
+      const y2 = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * tickOuterR;
       tick.shape = new Shape().moveTo(x1, y1).lineTo(x2, y2);
       this.addChild(tick);
     }
 
     // ── Zodiac sign labels at sign centers (+15°) ─────────────────────────
-    ZODIAC_SIGN_PROPS.forEach((signStringProperty, i) => {
+    for (let i = 0; i < 12; i++) {
       const angle = ((i + 0.5) * Math.PI) / 6; // 15°, 45°, 75°, ... (sign centers)
       const vx = ORBIT_VIEW_CENTER_X + Math.cos(angle) * ZODIAC_LABEL_RADIUS;
       // Inverted Y: positive y in model = up in view, so negate for angle
       const vy = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_LABEL_RADIUS;
-      const label = new Text(signStringProperty, {
+      const label = new Text(ZODIAC_SIGNS[i] ?? "", {
         font: new PhetFont(10),
-        fill: SolarSystemModelsColors.zodiacLabelColorProperty,
-        maxWidth: ZODIAC_LABEL_MAX_WIDTH,
+        fill: "#aabbcc",
+        centerX: vx,
+        centerY: vy,
+        maxWidth: 55,
       });
-      label.centerX = vx;
-      label.centerY = vy;
       this.addChild(label);
-    });
+    }
 
     // ── Path trail (behind orbit circles) ─────────────────────────────────
     this.pathTrail = new PtolemaicPathTrail(model, mvt);
@@ -158,27 +141,41 @@ export class PtolemaicScreenView extends ScreenView {
     const sunOrbitVr = ORBIT_VIEW_SCALE * PTOLEMAIC_SUN_ORBIT_RADIUS;
     const sunOrbitViewCenter = mvt.modelToViewPosition(Vector2.ZERO);
     const sunOrbitCircle = new Path(Shape.circle(sunOrbitViewCenter.x, sunOrbitViewCenter.y, sunOrbitVr), {
-      stroke: SolarSystemModelsColors.sunOrbitReferenceColorProperty,
+      stroke: "#333355",
       lineWidth: 1,
     });
     this.addChild(sunOrbitCircle);
 
-    // ── Equant crosshair ───────────────────────────────────────────────────
-    const equantCross = new Path(null, {
+    // ── Equant point marker (always visible) ───────────────────────────────
+    const equantMarker = new Path(null, {
       stroke: SolarSystemModelsColors.equantColorProperty,
       lineWidth: 1.5,
-      visibleProperty: model.showEquantVectorProperty,
     });
-    this.addChild(equantCross);
+    this.addChild(equantMarker);
 
     model.equantPositionProperty.link((eq) => {
       const ve = mvt.modelToViewPosition(eq);
       const arm = 6;
-      equantCross.shape = new Shape()
+      equantMarker.shape = new Shape()
         .moveTo(ve.x - arm, ve.y)
         .lineTo(ve.x + arm, ve.y)
         .moveTo(ve.x, ve.y - arm)
         .lineTo(ve.x, ve.y + arm);
+    });
+
+    // ── Equant→epicycle vector line (toggle) ───────────────────────────────
+    // AS _equantVectorMC: lineStyle(1, 0xA0A0A0) from equant point to epicycle center.
+    const equantLine = new Path(null, {
+      stroke: SolarSystemModelsColors.vectorColorProperty,
+      lineWidth: 1,
+      visibleProperty: model.showEquantVectorProperty,
+    });
+    this.addChild(equantLine);
+
+    Multilink.multilink([model.equantPositionProperty, model.epicycleCenterProperty], (eq, epi) => {
+      const ve = mvt.modelToViewPosition(eq);
+      const vc = mvt.modelToViewPosition(epi);
+      equantLine.shape = new Shape().moveTo(ve.x, ve.y).lineTo(vc.x, vc.y);
     });
 
     // ── Eccentric (deferent) center dot ────────────────────────────────────
@@ -225,7 +222,8 @@ export class PtolemaicScreenView extends ScreenView {
       epicyclePlanetArrow.setTailAndTip(ve.x, ve.y, vp.x, vp.y);
     });
 
-    // ── Planet vector arrow (Earth→planet) ────────────────────────────────
+    // ── Planet vector arrow (Earth→planet line of sight) ──────────────────
+    // AS extends the line of sight to 250 px (out to the zodiac ring).
     const planetVectorArrow = new ArrowNode(0, 0, 1, 0, {
       stroke: null,
       fill: SolarSystemModelsColors.vectorColorProperty,
@@ -239,7 +237,12 @@ export class PtolemaicScreenView extends ScreenView {
     model.planetPositionProperty.link((planet) => {
       const vEarth = mvt.modelToViewPosition(Vector2.ZERO);
       const vp = mvt.modelToViewPosition(planet);
-      planetVectorArrow.setTailAndTip(vEarth.x, vEarth.y, vp.x, vp.y);
+      const dirX = vp.x - vEarth.x;
+      const dirY = vp.y - vEarth.y;
+      const len = Math.hypot(dirX, dirY) || 1;
+      const targetX = vEarth.x + (dirX / len) * 250;
+      const targetY = vEarth.y + (dirY / len) * 250;
+      planetVectorArrow.setTailAndTip(vEarth.x, vEarth.y, targetX, targetY);
     });
 
     // ── Earth at origin (static) ───────────────────────────────────────────
@@ -252,7 +255,7 @@ export class PtolemaicScreenView extends ScreenView {
     this.addChild(earthNode);
 
     // ── Sun node (draggable) ───────────────────────────────────────────────
-    const sunNode = new CelestialBodyNode(model.sunPositionProperty, mvtProperty, {
+    const sunNode = new CelestialBodyNode(model.sunPositionProperty, mvt, {
       radius: 11,
       fill: SolarSystemModelsColors.sunColorProperty,
       cursor: "pointer",
@@ -273,7 +276,7 @@ export class PtolemaicScreenView extends ScreenView {
     );
 
     // ── Planet node ────────────────────────────────────────────────────────
-    const planetNode = new CelestialBodyNode(model.planetPositionProperty, mvtProperty, {
+    const planetNode = new CelestialBodyNode(model.planetPositionProperty, mvt, {
       radius: 7,
       fill: SolarSystemModelsColors.planetColorProperty,
     });
@@ -284,6 +287,23 @@ export class PtolemaicScreenView extends ScreenView {
     zodiacStrip.left = 0;
     zodiacStrip.bottom = this.layoutBounds.maxY - SCREEN_VIEW_MARGIN;
     this.addChild(zodiacStrip);
+
+    // Reconstruct the orbit trail + zodiac ghosting whenever the trajectory-
+    // determining state changes (covers animation, sun-drag, and param edits).
+    const trailDeps = [
+      model.anomalyProperty,
+      model.sunAngleProperty,
+      model.epicycleSizeProperty,
+      model.eccentricityProperty,
+      model.apogeeAngleProperty,
+      model.planetTypeProperty,
+      model.motionRateProperty,
+      model.pathDurationProperty,
+    ] as const;
+    Multilink.multilink(trailDeps, () => {
+      this.pathTrail.update(model);
+      zodiacStrip.updateGhosting(this.pathTrail.lonArray);
+    });
 
     // ── Right-side panels ──────────────────────────────────────────────────
     const controlPanel = new PtolemaicControlPanel(model, this);
@@ -306,6 +326,11 @@ export class PtolemaicScreenView extends ScreenView {
     timeReadout.top = timeControls.bottom + 8;
     this.addChild(timeReadout);
 
+    const keyPanel = new PtolemaicKeyPanel();
+    keyPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    keyPanel.top = timeReadout.bottom + 8;
+    this.addChild(keyPanel);
+
     // ── Reset All button ───────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
       listener: () => {
@@ -314,7 +339,6 @@ export class PtolemaicScreenView extends ScreenView {
       },
       right: this.layoutBounds.maxX - SCREEN_VIEW_MARGIN,
       bottom: this.layoutBounds.maxY - SCREEN_VIEW_MARGIN,
-      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
     });
     this.addChild(resetAllButton);
 
@@ -327,13 +351,10 @@ export class PtolemaicScreenView extends ScreenView {
   }
 
   public reset(): void {
-    // Path trail clears automatically via model param change listeners
+    // Trail + ghosting rebuild automatically via the Multilink on model state.
   }
 
   public override step(dt: number): void {
     this.model.step(dt);
-    if (this.model.timer.isPlayingProperty.value) {
-      this.pathTrail.addPoint(this.model.planetPositionProperty.value, this.model);
-    }
   }
 }
