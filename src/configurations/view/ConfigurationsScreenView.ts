@@ -1,4 +1,4 @@
-import { DerivedProperty, Multilink } from "scenerystack/axon";
+import { DerivedProperty, Multilink, type TReadOnlyProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -43,7 +43,7 @@ function buildMvt(a1: number, a2: number): ModelViewTransform2 {
 export class ConfigurationsScreenView extends ScreenView {
   private readonly model: ConfigurationsModel;
   // Rebuilt whenever the orbital radii change, so its scale always fits both orbits.
-  private readonly mvtProperty: DerivedProperty<ModelViewTransform2>;
+  private readonly mvtProperty: TReadOnlyProperty<ModelViewTransform2>;
 
   public constructor(model: ConfigurationsModel, options?: ScreenViewOptions) {
     super({
@@ -52,7 +52,7 @@ export class ConfigurationsScreenView extends ScreenView {
     });
 
     this.model = model;
-    this.mvtPropertyProperty = new DerivedProperty(
+    this.mvtProperty = new DerivedProperty(
       [model.semimajorAxis1Property, model.semimajorAxis2Property] as const,
       (a1, a2) => buildMvt(a1, a2),
     );
@@ -167,20 +167,17 @@ export class ConfigurationsScreenView extends ScreenView {
     makePlanetDrag(1, observerNode);
     makePlanetDrag(2, targetNode);
 
-    // ── Update orbit circles + labels when radii change ─────────────────────
+    // ── Update orbit circles + labels when the transform or radii change ────
     const updateOrbits = () => {
+      const mvt = this.mvtProperty.value;
       const a1 = model.semimajorAxis1Property.value;
       const a2 = model.semimajorAxis2Property.value;
-      this.mvtProperty = buildMvt(a1, a2);
+      const center = mvt.modelToViewPosition(Vector2.ZERO);
 
-      // Update elongation indicator's MVT reference
-      // (It holds a closure over mvt, so we need to re-link — simplest: rebuild shape via update)
-      const center = this.mvtProperty.modelToViewPosition(Vector2.ZERO);
-
-      const r1 = this.mvtProperty.modelToViewDeltaX(a1);
+      const r1 = mvt.modelToViewDeltaX(a1);
       orbit1Circle.shape = Shape.circle(center.x, center.y, r1);
 
-      const r2 = this.mvtProperty.modelToViewDeltaX(a2);
+      const r2 = mvt.modelToViewDeltaX(a2);
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
       // Labels at top of orbit circles
@@ -196,7 +193,10 @@ export class ConfigurationsScreenView extends ScreenView {
       updateSunPos();
     };
 
-    Multilink.multilink([model.semimajorAxis1Property, model.semimajorAxis2Property] as const, updateOrbits);
+    Multilink.multilink(
+      [this.mvtProperty, model.semimajorAxis1Property, model.semimajorAxis2Property] as const,
+      updateOrbits,
+    );
 
     // ── Zodiac strip at bottom ──────────────────────────────────────────────
     const zodiacStrip = new ConfigurationsZodiacStrip(model);

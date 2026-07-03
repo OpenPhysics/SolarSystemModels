@@ -1,4 +1,4 @@
-import { DerivedProperty, Multilink } from "scenerystack/axon";
+import { DerivedProperty, Multilink, type TReadOnlyProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -36,7 +36,7 @@ const ZODIAC_SIGNS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "�
 export class PtolemaicScreenView extends ScreenView {
   private readonly pathTrail: PtolemaicPathTrail;
   private readonly model: PtolemaicModel;
-  private readonly mvtProperty: DerivedProperty<ModelViewTransform2>;
+  private readonly mvtProperty: TReadOnlyProperty<ModelViewTransform2>;
 
   public constructor(model: PtolemaicModel, options?: ScreenViewOptions) {
     super({
@@ -52,7 +52,7 @@ export class PtolemaicScreenView extends ScreenView {
       new Vector2(ORBIT_VIEW_CENTER_X, ORBIT_VIEW_CENTER_Y),
       ORBIT_VIEW_SCALE,
     );
-    this.mvtProperty = new DerivedProperty([], () => mvt);
+    this.mvtProperty = new DerivedProperty([model.animationRateProperty] as const, () => mvt);
 
     // ── Background ─────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {

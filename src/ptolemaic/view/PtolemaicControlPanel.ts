@@ -14,6 +14,7 @@ import {
   PANEL_WIDTH,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
+import type { PlanetPresetKey } from "../model/PtolemaicPlanet.js";
 import { PlanetType, PRESET_KEYS } from "../model/PtolemaicPlanet.js";
 
 const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
