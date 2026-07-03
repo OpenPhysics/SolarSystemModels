@@ -14,9 +14,7 @@ import {
   PANEL_WIDTH,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
-import { PtolemaicModel as PtolemaicModelClass } from "../model/PtolemaicModel.js";
-import type { PlanetPresetKey } from "../model/PtolemaicPlanet.js";
-import { PlanetType } from "../model/PtolemaicPlanet.js";
+import { PlanetType, PRESET_KEYS } from "../model/PtolemaicPlanet.js";
 
 const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
 const LABEL_FONT = new PhetFont(13);
@@ -157,7 +155,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
         fill: SolarSystemModelsColors.textColorProperty,
       }),
       listener: () => {
-        const key = PtolemaicModelClass.PRESET_KEYS[model.presetKeyProperty.value];
+        const key = PRESET_KEYS[model.presetKeyProperty.value];
         if (key !== undefined) {
           model.applyPreset(key);
         }

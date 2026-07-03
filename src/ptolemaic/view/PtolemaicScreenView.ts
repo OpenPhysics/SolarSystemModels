@@ -1,4 +1,4 @@
-import { Multilink } from "scenerystack/axon";
+import { DerivedProperty, Multilink } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -36,7 +36,7 @@ const ZODIAC_SIGNS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "�
 export class PtolemaicScreenView extends ScreenView {
   private readonly pathTrail: PtolemaicPathTrail;
   private readonly model: PtolemaicModel;
-  private readonly mvt: ModelViewTransform2;
+  private readonly mvtProperty: DerivedProperty<ModelViewTransform2>;
 
   public constructor(model: PtolemaicModel, options?: ScreenViewOptions) {
     super({
@@ -46,15 +46,13 @@ export class PtolemaicScreenView extends ScreenView {
 
     this.model = model;
 
-    // ── Model–view transform ───────────────────────────────────────────────
-    // Earth at model origin → view center-left; y inverted (Flash screen-y down)
-    this.mvt = ModelViewTransform2.createSinglePointScaleInvertedYMapping(
+    // ── Model–view transform (constant for Ptolemaic) ──────────────────────
+    const mvt = ModelViewTransform2.createSinglePointScaleInvertedYMapping(
       Vector2.ZERO,
       new Vector2(ORBIT_VIEW_CENTER_X, ORBIT_VIEW_CENTER_Y),
       ORBIT_VIEW_SCALE,
     );
-
-    const mvt = this.mvt;
+    this.mvtProperty = new DerivedProperty([], () => mvt);
 
     // ── Background ─────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -255,7 +253,7 @@ export class PtolemaicScreenView extends ScreenView {
     this.addChild(earthNode);
 
     // ── Sun node (draggable) ───────────────────────────────────────────────
-    const sunNode = new CelestialBodyNode(model.sunPositionProperty, mvt, {
+    const sunNode = new CelestialBodyNode(model.sunPositionProperty, this.mvtProperty, {
       radius: 11,
       fill: SolarSystemModelsColors.sunColorProperty,
       cursor: "pointer",
@@ -276,7 +274,7 @@ export class PtolemaicScreenView extends ScreenView {
     );
 
     // ── Planet node ────────────────────────────────────────────────────────
-    const planetNode = new CelestialBodyNode(model.planetPositionProperty, mvt, {
+    const planetNode = new CelestialBodyNode(model.planetPositionProperty, this.mvtProperty, {
       radius: 7,
       fill: SolarSystemModelsColors.planetColorProperty,
     });

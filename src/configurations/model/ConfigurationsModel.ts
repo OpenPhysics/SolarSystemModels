@@ -635,9 +635,9 @@ export class ConfigurationsModel implements TModel {
     }
   }
 
-  public applyPreset(id: 1 | 2, key: PlanetPresetKey): void {
+  public applyPreset(id: 1 | 2, key: PlanetPresetKey): boolean {
     // setSemimajorAxis → syncPresetIndices updates the combobox index automatically.
-    this.setSemimajorAxis(id, PLANET_PRESETS[key], false);
+    return this.setSemimajorAxis(id, PLANET_PRESETS[key], false);
   }
 
   public reset(): void {

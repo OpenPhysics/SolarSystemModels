@@ -42,8 +42,8 @@ function buildMvt(a1: number, a2: number): ModelViewTransform2 {
 
 export class ConfigurationsScreenView extends ScreenView {
   private readonly model: ConfigurationsModel;
-  // mvt changes when orbital radii change
-  private mvt: ModelViewTransform2;
+  // Rebuilt whenever the orbital radii change, so its scale always fits both orbits.
+  private readonly mvtProperty: DerivedProperty<ModelViewTransform2>;
 
   public constructor(model: ConfigurationsModel, options?: ScreenViewOptions) {
     super({
@@ -52,7 +52,10 @@ export class ConfigurationsScreenView extends ScreenView {
     });
 
     this.model = model;
-    this.mvt = buildMvt(model.semimajorAxis1Property.value, model.semimajorAxis2Property.value);
+    this.mvtPropertyProperty = new DerivedProperty(
+      [model.semimajorAxis1Property, model.semimajorAxis2Property] as const,
+      (a1, a2) => buildMvt(a1, a2),
+    );
 
     const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
 
@@ -99,7 +102,7 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(orbitLabel2);
 
     // ── Elongation indicator (Phase 7) ──────────────────────────────────────
-    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvt);
+    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvtProperty);
     this.addChild(elongationIndicator);
 
     // ── Sun at origin ───────────────────────────────────────────────────────
@@ -107,12 +110,12 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(sunNode);
 
     const updateSunPos = () => {
-      sunNode.translation = this.mvt.modelToViewPosition(Vector2.ZERO);
+      sunNode.translation = this.mvtProperty.modelToViewPosition(Vector2.ZERO);
     };
     updateSunPos();
 
     // ── Observer planet (blue) ──────────────────────────────────────────────
-    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvt, {
+    const observerNode = new CelestialBodyNode(model.pos1Property, this.mvtProperty, {
       radius: 8,
       fill: SolarSystemModelsColors.observerPlanetColorProperty,
       cursor: "pointer",
@@ -123,7 +126,7 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(observerNode);
 
     // ── Target planet (grey) ────────────────────────────────────────────────
-    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvt, {
+    const targetNode = new CelestialBodyNode(model.pos2Property, this.mvtProperty, {
       radius: 8,
       fill: SolarSystemModelsColors.targetPlanetColorProperty,
       cursor: "pointer",
@@ -146,7 +149,7 @@ export class ConfigurationsScreenView extends ScreenView {
           },
           drag: (event, listener) => {
             const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
-            const modelPos = this.mvt.viewToModelPosition(listener.modelPoint);
+            const modelPos = this.mvtProperty.viewToModelPosition(listener.modelPoint);
             const angle = Math.atan2(modelPos.y, modelPos.x);
             const snap = model.snapToEventsProperty.value;
             if (shiftKey) {
@@ -168,16 +171,16 @@ export class ConfigurationsScreenView extends ScreenView {
     const updateOrbits = () => {
       const a1 = model.semimajorAxis1Property.value;
       const a2 = model.semimajorAxis2Property.value;
-      this.mvt = buildMvt(a1, a2);
+      this.mvtProperty = buildMvt(a1, a2);
 
       // Update elongation indicator's MVT reference
       // (It holds a closure over mvt, so we need to re-link — simplest: rebuild shape via update)
-      const center = this.mvt.modelToViewPosition(Vector2.ZERO);
+      const center = this.mvtProperty.modelToViewPosition(Vector2.ZERO);
 
-      const r1 = this.mvt.modelToViewDeltaX(a1);
+      const r1 = this.mvtProperty.modelToViewDeltaX(a1);
       orbit1Circle.shape = Shape.circle(center.x, center.y, r1);
 
-      const r2 = this.mvt.modelToViewDeltaX(a2);
+      const r2 = this.mvtProperty.modelToViewDeltaX(a2);
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
       // Labels at top of orbit circles
