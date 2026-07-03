@@ -110,7 +110,7 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(sunNode);
 
     const updateSunPos = () => {
-      sunNode.translation = this.mvtProperty.modelToViewPosition(Vector2.ZERO);
+      sunNode.translation = this.mvtProperty.value.modelToViewPosition(Vector2.ZERO);
     };
     updateSunPos();
 
@@ -149,7 +149,7 @@ export class ConfigurationsScreenView extends ScreenView {
           },
           drag: (event, listener) => {
             const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
-            const modelPos = this.mvtProperty.viewToModelPosition(listener.modelPoint);
+            const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
             const angle = Math.atan2(modelPos.y, modelPos.x);
             const snap = model.snapToEventsProperty.value;
             if (shiftKey) {
