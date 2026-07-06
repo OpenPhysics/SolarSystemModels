@@ -1,7 +1,7 @@
 import { Shape } from "scenerystack/kite";
 import { Circle, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
+import SolarSystemModelsColors, { zodiacGhostBarColor } from "../../SolarSystemModelsColors.js";
 import { ZODIAC_STRIP_HEIGHT, ZODIAC_STRIP_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 
@@ -55,13 +55,8 @@ function addBar(shape: Shape, prevX: number, curX: number, top: number, bottom: 
 }
 
 /** Ghosting bar color from the apparent angular step (Flash lines 80–86). */
-function speedColor(deltaPx: number): string {
-  let factor = 1 - deltaPx / 3;
-  if (factor < 0) {
-    factor = 0;
-  }
-  const g = Math.floor(216 - 112 * factor);
-  return `rgb(${21 + g},${g},${g})`;
+function speedColor(deltaPx: number) {
+  return zodiacGhostBarColor(deltaPx);
 }
 
 export class PtolemaicZodiacStrip extends Node {

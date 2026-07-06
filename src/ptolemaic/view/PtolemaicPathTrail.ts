@@ -13,7 +13,6 @@ import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 // planet's current position. This is frame-rate independent.
 const NUM_SEGMENTS = 20;
 const SAMPLING_INTERVAL = 1.5; // days
-const RED_SEGMENT_COLOR = "#ff0000";
 
 export class PtolemaicPathTrail extends Node {
   private readonly mvt: ModelViewTransform2;
@@ -38,7 +37,7 @@ export class PtolemaicPathTrail extends Node {
     }
 
     this.tempSegment = new Path(null, {
-      stroke: RED_SEGMENT_COLOR,
+      stroke: SolarSystemModelsColors.pathTrailLiveSegmentColorProperty,
       lineWidth: 1,
     });
     this.addChild(this.tempSegment);

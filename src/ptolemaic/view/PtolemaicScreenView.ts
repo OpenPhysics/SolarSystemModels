@@ -62,7 +62,7 @@ export class PtolemaicScreenView extends ScreenView {
 
     // ── Orbital area background ────────────────────────────────────────────
     const orbitAreaBg = new Rectangle(0, 0, ORBIT_VIEW_CENTER_X * 2 + 20, this.layoutBounds.height, {
-      fill: "#0a0a18",
+      fill: SolarSystemModelsColors.orbitAreaBackgroundColorProperty,
     });
     this.addChild(orbitAreaBg);
 
@@ -76,7 +76,7 @@ export class PtolemaicScreenView extends ScreenView {
     for (let i = 0; i < 12; i++) {
       const angle = (i * Math.PI) / 6; // 0°, 30°, 60°, ... (sign boundaries)
       const tick = new Path(null, {
-        stroke: "#888899",
+        stroke: SolarSystemModelsColors.zodiacTickColorProperty,
         lineWidth: 1,
       });
       const x1 = ORBIT_VIEW_CENTER_X + Math.cos(angle) * tickInnerR;
@@ -95,7 +95,7 @@ export class PtolemaicScreenView extends ScreenView {
       const vy = ORBIT_VIEW_CENTER_Y - Math.sin(angle) * ZODIAC_LABEL_RADIUS;
       const label = new Text(ZODIAC_SIGNS[i] ?? "", {
         font: new PhetFont(10),
-        fill: "#aabbcc",
+        fill: SolarSystemModelsColors.zodiacLabelColorProperty,
         centerX: vx,
         centerY: vy,
         maxWidth: 55,
@@ -139,7 +139,7 @@ export class PtolemaicScreenView extends ScreenView {
     const sunOrbitVr = ORBIT_VIEW_SCALE * PTOLEMAIC_SUN_ORBIT_RADIUS;
     const sunOrbitViewCenter = mvt.modelToViewPosition(Vector2.ZERO);
     const sunOrbitCircle = new Path(Shape.circle(sunOrbitViewCenter.x, sunOrbitViewCenter.y, sunOrbitVr), {
-      stroke: "#333355",
+      stroke: SolarSystemModelsColors.sunOrbitReferenceColorProperty,
       lineWidth: 1,
     });
     this.addChild(sunOrbitCircle);

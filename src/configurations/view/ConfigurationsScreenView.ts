@@ -67,7 +67,7 @@ export class ConfigurationsScreenView extends ScreenView {
 
     // ── Orbit area background ───────────────────────────────────────────────
     const orbitAreaBg = new Rectangle(0, 0, ORBIT_AREA_SIZE, this.layoutBounds.height, {
-      fill: "#060d1a",
+      fill: SolarSystemModelsColors.configurationsOrbitAreaBackgroundColorProperty,
     });
     this.addChild(orbitAreaBg);
 

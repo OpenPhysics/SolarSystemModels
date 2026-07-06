@@ -1,4 +1,4 @@
-import { ProfileColorProperty } from "scenerystack/scenery";
+import { Color, ProfileColorProperty } from "scenerystack/scenery";
 import SolarSystemModelsNamespace from "./SolarSystemModelsNamespace.js";
 
 const SolarSystemModelsColors = {
@@ -88,6 +88,14 @@ const SolarSystemModelsColors = {
     default: "#0a0a18",
     projector: "#edf0f5",
   }),
+  configurationsOrbitAreaBackgroundColorProperty: new ProfileColorProperty(
+    SolarSystemModelsNamespace,
+    "configurationsOrbitAreaBackground",
+    {
+      default: "#060d1a",
+      projector: "#e8ecf2",
+    },
+  ),
 
   // ── Zodiac ring decorations ────────────────────────────────────────────────
 
@@ -107,6 +115,22 @@ const SolarSystemModelsColors = {
     default: "#444455",
     projector: "#9999bb",
   }),
+  configurationsZodiacGlyphColorProperty: new ProfileColorProperty(
+    SolarSystemModelsNamespace,
+    "configurationsZodiacGlyph",
+    {
+      default: "#aaaacc",
+      projector: "#445566",
+    },
+  ),
+  configurationsZodiacDividerColorProperty: new ProfileColorProperty(
+    SolarSystemModelsNamespace,
+    "configurationsZodiacDivider",
+    {
+      default: "#334455",
+      projector: "#99aabb",
+    },
+  ),
 
   // ── Constellation decorations ──────────────────────────────────────────────
 
@@ -136,10 +160,22 @@ const SolarSystemModelsColors = {
     default: "#334466",
     projector: "#aabbcc",
   }),
+  timelineAxisColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineAxis", {
+    default: "#1a2a44",
+    projector: "#ccd8e8",
+  }),
   timelineEventColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineEvent", {
     default: "#446688",
     projector: "#334466",
   }),
+  timelineSelectedHighlightColorProperty: new ProfileColorProperty(
+    SolarSystemModelsNamespace,
+    "timelineSelectedHighlight",
+    {
+      default: "#335577aa",
+      projector: "#8899bb88",
+    },
+  ),
   timelineSelectedColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineSelected", {
     default: "#223355",
     projector: "#ccd8e8",
@@ -148,10 +184,39 @@ const SolarSystemModelsColors = {
     default: "#aabbcc",
     projector: "#334466",
   }),
+  timelineDirectionLabelColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineDirectionLabel", {
+    default: "#5577aa",
+    projector: "#334466",
+  }),
+  timelineEventNameLabelColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineEventNameLabel", {
+    default: "#99aabb",
+    projector: "#445566",
+  }),
+  timelineTickLabelColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineTickLabel", {
+    default: "#556677",
+    projector: "#667788",
+  }),
   timelineLabelColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineLabel", {
     default: "#9999bb",
     projector: "#445566",
   }),
+
+  // ── Ptolemaic path trail ───────────────────────────────────────────────────
+
+  pathTrailLiveSegmentColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "pathTrailLiveSegment", {
+    default: "#ff0000",
+    projector: "#cc0000",
+  }),
 };
+
+/** Ghosting bar tint from apparent zodiac-strip angular step (Flash Zodiac Strip.as). */
+export function zodiacGhostBarColor(deltaPx: number): Color {
+  let factor = 1 - deltaPx / 3;
+  if (factor < 0) {
+    factor = 0;
+  }
+  const g = Math.floor(216 - 112 * factor);
+  return new Color(21 + g, g, g);
+}
 
 export default SolarSystemModelsColors;

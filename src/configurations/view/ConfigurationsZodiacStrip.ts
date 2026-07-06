@@ -23,7 +23,7 @@ export class ConfigurationsZodiacStrip extends Node {
     // Band background
     const band = new Rectangle(0, 0, STRIP_WIDTH, STRIP_HEIGHT, {
       fill: SolarSystemModelsColors.zodiacBandColorProperty,
-      stroke: "#555577",
+      stroke: SolarSystemModelsColors.zodiacBorderColorProperty,
       lineWidth: 1,
     });
     this.addChild(band);
@@ -33,7 +33,7 @@ export class ConfigurationsZodiacStrip extends Node {
     for (let i = 0; i < 12; i++) {
       const label = new Text(ZODIAC_GLYPHS[i] ?? "", {
         font: new PhetFont(14),
-        fill: "#aaaacc",
+        fill: SolarSystemModelsColors.configurationsZodiacGlyphColorProperty,
         maxWidth: segW - 2,
       });
       label.centerX = (i + 0.5) * segW;
@@ -41,7 +41,9 @@ export class ConfigurationsZodiacStrip extends Node {
       this.addChild(label);
 
       if (i > 0) {
-        const divider = new Rectangle(i * segW, 0, 1, STRIP_HEIGHT, { fill: "#334455" });
+        const divider = new Rectangle(i * segW, 0, 1, STRIP_HEIGHT, {
+          fill: SolarSystemModelsColors.configurationsZodiacDividerColorProperty,
+        });
         this.addChild(divider);
       }
     }

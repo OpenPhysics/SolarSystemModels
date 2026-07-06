@@ -18,7 +18,7 @@ Shared code keeps the `SolarSystemModels` prefix; per-screen code uses the
 
 | File | Purpose |
 |---|---|
-| `src/SolarSystemModelsColors.ts` | All `ProfileColorProperty` instances (default + projector) |
+| `src/SolarSystemModelsColors.ts` | All `ProfileColorProperty` instances (default + projector profiles); includes timeline/zodiac orbit-area keys and exported `zodiacGhostBarColor()` for speed-based Ptolemaic ghosting bars |
 | `src/SolarSystemModelsConstants.ts` | Named numeric constants (layout px, physics SI units) |
 | `src/SolarSystemModelsNamespace.ts` | Namespace used by `.register()` |
 | `src/common/SolarSystemModelsPanel.ts` | Pre-themed `Panel` wrapper (uses `SolarSystemModelsColors`) |

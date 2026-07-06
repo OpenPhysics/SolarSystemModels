@@ -38,20 +38,30 @@ export class ConfigurationsTimeline extends Node {
 
     const s = StringManager.getInstance().getConfigurationsStrings();
 
-    const bg = new Rectangle(0, 0, W, H, { fill: "#0d1117", stroke: "#334466", lineWidth: 1 });
+    const bg = new Rectangle(0, 0, W, H, {
+      fill: SolarSystemModelsColors.timelineBackgroundColorProperty,
+      stroke: SolarSystemModelsColors.timelineBorderColorProperty,
+      lineWidth: 1,
+    });
     this.addChild(bg);
 
     // Year-axis grid lines
-    const axisLayer = new Path(null, { lineWidth: 1, stroke: "#1a2a44" });
+    const axisLayer = new Path(null, {
+      lineWidth: 1,
+      stroke: SolarSystemModelsColors.timelineAxisColorProperty,
+    });
     this.addChild(axisLayer);
 
     // Event marks
-    const eventLayer = new Path(null, { stroke: "#446688", lineWidth: 1 });
+    const eventLayer = new Path(null, {
+      stroke: SolarSystemModelsColors.timelineEventColorProperty,
+      lineWidth: 1,
+    });
     this.addChild(eventLayer);
 
     // Selected-event highlight bar
     const selectedEventBg = new Rectangle(0, 0, W, 14, {
-      fill: "#335577aa",
+      fill: SolarSystemModelsColors.timelineSelectedHighlightColorProperty,
       visible: false,
       cornerRadius: 2,
     });
@@ -59,7 +69,7 @@ export class ConfigurationsTimeline extends Node {
 
     // Cursor line (center = current time)
     const cursorLine = new Path(new Shape().moveTo(0, H / 2).lineTo(W, H / 2), {
-      stroke: "#aabbcc",
+      stroke: SolarSystemModelsColors.timelineCursorColorProperty,
       lineWidth: 1.5,
     });
     this.addChild(cursorLine);
@@ -67,7 +77,7 @@ export class ConfigurationsTimeline extends Node {
     // Past / Future labels
     const pastLabel = new Text(s.timelinePastStringProperty, {
       font: new PhetFont({ size: 9, weight: "bold" }),
-      fill: "#5577aa",
+      fill: SolarSystemModelsColors.timelineDirectionLabelColorProperty,
     });
     pastLabel.right = W - 4;
     pastLabel.bottom = H / 2 - 3;
@@ -75,7 +85,7 @@ export class ConfigurationsTimeline extends Node {
 
     const futureLabel = new Text(s.timelineFutureStringProperty, {
       font: new PhetFont({ size: 9, weight: "bold" }),
-      fill: "#5577aa",
+      fill: SolarSystemModelsColors.timelineDirectionLabelColorProperty,
     });
     futureLabel.right = W - 4;
     futureLabel.top = H / 2 + 3;
@@ -84,7 +94,11 @@ export class ConfigurationsTimeline extends Node {
     // Event-name label pool
     const labelPool: Text[] = [];
     for (let i = 0; i < 20; i++) {
-      const t = new Text("", { font: new PhetFont(9), fill: "#99aabb", maxWidth: W * 0.4 - 4 });
+      const t = new Text("", {
+        font: new PhetFont(9),
+        fill: SolarSystemModelsColors.timelineEventNameLabelColorProperty,
+        maxWidth: W * 0.4 - 4,
+      });
       t.visible = false;
       labelPool.push(t);
       this.addChild(t);
@@ -93,7 +107,10 @@ export class ConfigurationsTimeline extends Node {
     // Year tick-label pool
     const tickPool: Text[] = [];
     for (let i = 0; i < 16; i++) {
-      const t = new Text("", { font: new PhetFont(8), fill: "#556677" });
+      const t = new Text("", {
+        font: new PhetFont(8),
+        fill: SolarSystemModelsColors.timelineTickLabelColorProperty,
+      });
       t.visible = false;
       tickPool.push(t);
       this.addChild(t);
@@ -165,7 +182,7 @@ export class ConfigurationsTimeline extends Node {
         labelIdx++;
       }
       const hs = new Rectangle(0, y - 6, W * 0.4, 12, {
-        fill: "#ffffff01",
+        fill: "rgba(0,0,0,0)",
         cursor: "pointer",
       });
       hs.addInputListener(
