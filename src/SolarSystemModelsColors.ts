@@ -172,8 +172,8 @@ const SolarSystemModelsColors = {
     SolarSystemModelsNamespace,
     "timelineSelectedHighlight",
     {
-      default: new Color(0x335577, 0xaa / 255),
-      projector: new Color(0x8899bb, 0x88 / 255),
+      default: new Color(51, 85, 119, 170 / 255),
+      projector: new Color(136, 153, 187, 136 / 255),
     },
   ),
   timelineSelectedColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "timelineSelected", {
