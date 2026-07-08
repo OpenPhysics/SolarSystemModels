@@ -76,7 +76,6 @@ export class PtolemaicPathTrail extends Node {
 
     // Split samples across NUM_SEGMENTS, alpha-graduated: oldest faint, newest bright.
     const perSegment = nSamples / NUM_SEGMENTS;
-    const baseAlpha = 100 / NUM_SEGMENTS; // 5
     for (let s = 0; s < NUM_SEGMENTS; s++) {
       const segPath = this.segmentPaths[s];
       if (segPath === undefined) {
@@ -87,7 +86,7 @@ export class PtolemaicPathTrail extends Node {
       // Segment s holds samples [segStart, segEnd]. Alpha increases with s so that
       // the newest segment (s = NUM_SEGMENTS-1) is brightest — matching AS where the
       // current segment reaches alpha 100.
-      segPath.opacity = baseAlpha * (s + 1);
+      segPath.opacity = (s + 1) / NUM_SEGMENTS;
       if (segEnd <= segStart) {
         segPath.shape = null;
         continue;
