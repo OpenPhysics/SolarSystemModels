@@ -8,7 +8,6 @@
 
 import { Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
-import { Checkbox } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
 import { StringManager } from "../i18n/StringManager.js";
 import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
@@ -16,7 +15,7 @@ import SolarSystemModelsNamespace from "../SolarSystemModelsNamespace.js";
 import type { SolarSystemModelsPreferencesModel } from "./SolarSystemModelsPreferencesModel.js";
 
 export class SolarSystemModelsPreferencesNode extends VBox {
-  public constructor(preferencesModel: SolarSystemModelsPreferencesModel, tandem?: Tandem) {
+  public constructor(_preferencesModel: SolarSystemModelsPreferencesModel, _tandem?: Tandem) {
     const prefStrings = StringManager.getInstance().getPreferences();
 
     const header = new Text(prefStrings.titleStringProperty, {
@@ -24,24 +23,10 @@ export class SolarSystemModelsPreferencesNode extends VBox {
       fill: SolarSystemModelsColors.textColorProperty,
     });
 
-    const exampleToggleCheckbox = new Checkbox(
-      preferencesModel.exampleToggleProperty,
-      new Text(prefStrings.exampleToggleStringProperty, {
-        font: new PhetFont(14),
-        fill: SolarSystemModelsColors.textColorProperty,
-      }),
-      {
-        checkboxColor: SolarSystemModelsColors.textColorProperty,
-        checkboxColorBackground: SolarSystemModelsColors.panelBackgroundColorProperty,
-        spacing: 8,
-        ...(tandem && { tandem: tandem.createTandem("exampleToggleCheckbox") }),
-      },
-    );
-
     super({
       align: "left",
       spacing: 12,
-      children: [header, exampleToggleCheckbox],
+      children: [header],
     });
   }
 }

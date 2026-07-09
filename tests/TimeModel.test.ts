@@ -1,10 +1,8 @@
 /**
  * TimeModel.test.ts
  *
- * Sample unit test shipped with the template so new sims are testable by default.
- * Exercises the composable play/pause + elapsed-time model in src/common/TimeModel.ts.
- * Delete or replace these when building a real sim — but keep at least one test so the
- * fleet-wide CI "test" step has something to run.
+ * Unit tests for the composable play/pause + elapsed-time model in
+ * src/common/TimeModel.ts (used by both screens).
  */
 
 import { describe, expect, it } from "vitest";
@@ -46,6 +44,15 @@ describe("TimeModel", () => {
     model.reset();
     expect(model.isPlayingProperty.value).toBe(false);
     expect(model.timeProperty.value).toBe(0);
+    model.dispose();
+  });
+
+  it("animationRateProperty defaults to 1 and resets", () => {
+    const model = new TimeModel();
+    expect(model.animationRateProperty.value).toBe(1);
+    model.animationRateProperty.value = 2.5;
+    model.reset();
+    expect(model.animationRateProperty.value).toBe(1);
     model.dispose();
   });
 });

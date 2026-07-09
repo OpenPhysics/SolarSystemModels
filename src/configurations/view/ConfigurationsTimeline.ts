@@ -7,12 +7,15 @@ import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { CONFIGURATIONS_TIMELINE_HEIGHT, CONFIGURATIONS_TIMELINE_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
+import type { EventNameKey } from "../model/EventNameKey.js";
+import { eventNameLabel } from "./eventNameLabel.js";
 
 const W = CONFIGURATIONS_TIMELINE_WIDTH;
 const H = CONFIGURATIONS_TIMELINE_HEIGHT;
 const CYCLE_HEIGHT_PX = 120;
 const MIN_UNIT_PX = 20;
-const SNAP_ANGLE = Math.PI / 12;
+/** Flash Timeline.as snapDistance (px); timeThreshold = snapDistance / scale. */
+const TIMELINE_SNAP_DISTANCE_PX = 1;
 
 /**
  * Compute a "nice" unit time for the year-axis (1, 2, 5, 10, 20, 50, …).
@@ -34,9 +37,14 @@ function niceUnitTime(unitTimeMin: number): { unitTime: number; decimals: number
 
 export class ConfigurationsTimeline extends Node {
   public constructor(model: ConfigurationsModel) {
-    super();
+    super({
+      tagName: "div",
+      focusable: true,
+      accessibleName: StringManager.getInstance().getConfigurationsA11yStrings().controls.timelineScrollStringProperty,
+    });
 
     const s = StringManager.getInstance().getConfigurationsStrings();
+    const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
 
     const bg = new Rectangle(0, 0, W, H, {
       fill: SolarSystemModelsColors.timelineBackgroundColorProperty,
@@ -168,14 +176,15 @@ export class ConfigurationsTimeline extends Node {
       shape: Shape,
       y: number,
       e: number,
-      eventNames: readonly string[],
+      eventNames: readonly EventNameKey[],
       time: number,
       synodic: number,
     ): void => {
       shape.moveTo(0, y).lineTo(W * 0.4, y);
       const lbl = labelPool[labelIdx];
       if (lbl !== undefined) {
-        lbl.string = eventNames[e] ?? "";
+        const key = eventNames[e];
+        lbl.string = key !== undefined ? eventNameLabel(key) : "";
         lbl.left = W * 0.42;
         lbl.centerY = y;
         lbl.visible = true;
@@ -184,6 +193,8 @@ export class ConfigurationsTimeline extends Node {
       const hs = new Rectangle(0, y - 6, W * 0.4, 12, {
         fill: "rgba(0,0,0,0)",
         cursor: "pointer",
+        tagName: "button",
+        accessibleName: a11y.controls.timelineEventStringProperty,
       });
       hs.addInputListener(
         new PressListener({
@@ -210,7 +221,7 @@ export class ConfigurationsTimeline extends Node {
       currentCycle: number,
       synodic: number,
       eventTimes: readonly number[],
-      eventNames: readonly string[],
+      eventNames: readonly EventNameKey[],
     ): void => {
       const shape = new Shape();
       labelIdx = 0;
@@ -237,9 +248,10 @@ export class ConfigurationsTimeline extends Node {
       eventLayer.shape = shape;
     };
 
-    const updateSelectedEventLabel = (eventNames: readonly string[]): void => {
+    const updateSelectedEventLabel = (eventNames: readonly EventNameKey[]): void => {
       if (model.lockedOnEventProperty.value && model.lockedEventIndexProperty.value >= 0) {
-        selectedEventText.string = eventNames[model.lockedEventIndexProperty.value] ?? "";
+        const key = eventNames[model.lockedEventIndexProperty.value];
+        selectedEventText.string = key !== undefined ? eventNameLabel(key) : "";
         selectedEventText.left = W * 0.42;
         selectedEventText.top = 2;
         selectedEventText.visible = true;
@@ -299,7 +311,8 @@ export class ConfigurationsTimeline extends Node {
           const scale = CYCLE_HEIGHT_PX / synodic;
           const deltaY = initY - listener.parentPoint.y;
           const newTime = initTime + deltaY / scale;
-          model.setTimeFromTimelineDrag(newTime, model.snapToEventsProperty.value, SNAP_ANGLE);
+          // Flash: timeThreshold = snapDistance / scale (years).
+          model.setTimeFromTimelineDrag(newTime, model.snapToEventsProperty.value, TIMELINE_SNAP_DISTANCE_PX / scale);
         },
         release: () => {
           model.thawAnimation(wasPlaying);

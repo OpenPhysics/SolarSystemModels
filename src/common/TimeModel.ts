@@ -1,3 +1,13 @@
+/**
+ * Composable play/pause + wall-clock elapsed-time model.
+ *
+ * Animation-rate semantics differ by screen:
+ * - **Configurations** uses `animationRateProperty` here as a dimensionless
+ *   speed multiplier (0.1–5×) that scales orbital time advance.
+ * - **Ptolemaic** uses only `isPlayingProperty` from this class; its own
+ *   `PtolemaicModel.animationRateProperty` is days-per-second (1–500) and is
+ *   independent of `TimeModel.animationRateProperty` (which stays at default 1).
+ */
 import { BooleanProperty, NumberProperty } from "scenerystack/axon";
 import { Range } from "scenerystack/dot";
 import { ANIMATION_RATE_RANGE } from "../SolarSystemModelsConstants.js";
@@ -7,7 +17,10 @@ export class TimeModel {
 
   public readonly timeProperty: NumberProperty;
 
-  /** Animation speed multiplier — both screens scale by this. */
+  /**
+   * Configurations speed multiplier (0.1–5). Unused by Ptolemaic physics —
+   * see class doc above.
+   */
   public readonly animationRateProperty: NumberProperty;
 
   public constructor(initiallyPlaying = false) {

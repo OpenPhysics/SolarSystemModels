@@ -7,6 +7,8 @@ import { PAUSE_TIME_RANGE, SEMIMAJOR_AXIS_RANGE } from "../../SolarSystemModelsC
 import type { PlanetPresetKey } from "./ConfigurationsPlanet.js";
 import { PLANET_PRESETS, PRESET_KEYS } from "./ConfigurationsPlanet.js";
 import { EventAction } from "./EventAction.js";
+import type { EventNameKey } from "./EventNameKey.js";
+import { INNER_OBSERVER_EVENT_KEYS, OUTER_OBSERVER_EVENT_KEYS } from "./EventNameKey.js";
 
 const TWO_PI = 2 * Math.PI;
 
@@ -21,6 +23,12 @@ export class ConfigurationsModel implements TModel {
   // ── Orbital parameters ─────────────────────────────────────────────────────
   public readonly semimajorAxis1Property: NumberProperty;
   public readonly semimajorAxis2Property: NumberProperty;
+  /**
+   * Kepler period a^1.5 (years). Kept as a NumberProperty (not DerivedProperty)
+   * so setSemimajorAxis can read the *previous* period after NumberControl has
+   * already written the new axis — needed for epoch-preserving angle updates.
+   * Always update via setSemimajorAxis / reset; never write axis alone.
+   */
   public readonly period1Property: NumberProperty;
   public readonly period2Property: NumberProperty;
   public readonly epochAngle1Property: NumberProperty;
@@ -34,7 +42,8 @@ export class ConfigurationsModel implements TModel {
   public readonly cycleOffsetProperty: NumberProperty;
   // [0]: 0, [1]: t_q, [2]: T_syn/2, [3]: T_syn − t_q
   public readonly eventTimesListProperty: Property<readonly [number, number, number, number]>;
-  public readonly eventNamesProperty: Property<readonly string[]>;
+  /** Synodic event name keys (localized in views via StringManager). */
+  public readonly eventNamesProperty: Property<readonly EventNameKey[]>;
   public readonly currentCycleNumberProperty: NumberProperty;
 
   // ── Event navigation ───────────────────────────────────────────────────────
@@ -58,7 +67,8 @@ export class ConfigurationsModel implements TModel {
   public readonly pos2Property: TReadOnlyProperty<Vector2>;
   public readonly elongationDegProperty: TReadOnlyProperty<number>; // signed (−=E, +=W)
   public readonly elongationLabelProperty: TReadOnlyProperty<string>; // "E", "W", or ""
-  public readonly currentConfigurationProperty: TReadOnlyProperty<string>;
+  /** Locked event name key, or "" when not locked on an event. */
+  public readonly currentConfigurationProperty: TReadOnlyProperty<EventNameKey | "">;
 
   // ── Preset index tracking ──────────────────────────────────────────────────
   public readonly preset1IndexProperty: NumberProperty;
@@ -101,7 +111,7 @@ export class ConfigurationsModel implements TModel {
     this.synodicPeriodProperty = new NumberProperty(1);
     this.cycleOffsetProperty = new NumberProperty(0);
     this.eventTimesListProperty = new Property<readonly [number, number, number, number]>([0, 0, 0, 0]);
-    this.eventNamesProperty = new Property<readonly string[]>([]);
+    this.eventNamesProperty = new Property<readonly EventNameKey[]>([]);
     this.currentCycleNumberProperty = new NumberProperty(0, { numberType: "Integer" });
 
     this.lockedOnEventProperty = new BooleanProperty(false);
@@ -164,7 +174,7 @@ export class ConfigurationsModel implements TModel {
       return "";
     });
 
-    // ── Current configuration name ────────────────────────────────────────
+    // ── Current configuration key (localized in views) ────────────────────
     this.currentConfigurationProperty = new DerivedProperty(
       [
         this.elongationDegProperty,
@@ -172,7 +182,7 @@ export class ConfigurationsModel implements TModel {
         this.lockedOnEventProperty,
         this.lockedEventIndexProperty,
       ] as const,
-      (_elong, eventNames, locked, lockedIdx) => {
+      (_elong, eventNames, locked, lockedIdx): EventNameKey | "" => {
         if (locked && lockedIdx >= 0) {
           return eventNames[lockedIdx] ?? "";
         }
@@ -228,14 +238,11 @@ export class ConfigurationsModel implements TModel {
     let outerPeriod: number;
     let innerEpoch: number;
     let outerEpoch: number;
-    let eventNames: readonly string[];
-
     if (a1 < a2) {
       innerPeriod = p1;
       outerPeriod = p2;
       innerEpoch = epoch1;
       outerEpoch = epoch2;
-      eventNames = ["opposition", "quadrature (eastern)", "conjunction", "quadrature (western)"];
       const synodicPeriod = 1 / (1 / innerPeriod - 1 / outerPeriod);
       const omegaSyn = TWO_PI / synodicPeriod;
       const cycleOffset = mod2pi(outerEpoch - innerEpoch) / omegaSyn;
@@ -244,18 +251,12 @@ export class ConfigurationsModel implements TModel {
       this.synodicPeriodProperty.value = synodicPeriod;
       this.cycleOffsetProperty.value = cycleOffset;
       this.eventTimesListProperty.value = eventTimesList;
-      this.eventNamesProperty.value = eventNames;
+      this.eventNamesProperty.value = OUTER_OBSERVER_EVENT_KEYS;
     } else {
       innerPeriod = p2;
       outerPeriod = p1;
       innerEpoch = epoch2;
       outerEpoch = epoch1;
-      eventNames = [
-        "inferior conjunction",
-        "greatest elongation (western)",
-        "superior conjunction",
-        "greatest elongation (eastern)",
-      ];
       const synodicPeriod = 1 / (1 / innerPeriod - 1 / outerPeriod);
       const omegaSyn = TWO_PI / synodicPeriod;
       const cycleOffset = mod2pi(outerEpoch - innerEpoch) / omegaSyn;
@@ -264,7 +265,7 @@ export class ConfigurationsModel implements TModel {
       this.synodicPeriodProperty.value = synodicPeriod;
       this.cycleOffsetProperty.value = cycleOffset;
       this.eventTimesListProperty.value = eventTimesList;
-      this.eventNamesProperty.value = eventNames;
+      this.eventNamesProperty.value = INNER_OBSERVER_EVENT_KEYS;
     }
   }
 
@@ -507,8 +508,12 @@ export class ConfigurationsModel implements TModel {
     const targetTime =
       this.cycleOffsetProperty.value + cycleNumber * this.synodicPeriodProperty.value + (eventTimes[eventNumber] ?? 0);
 
-    // Don't slew if already there
-    if (this.lockedOnEventProperty.value && this.lockedEventIndexProperty.value === eventNumber) {
+    // Don't slew if already locked on this cycle + event (Flash checks both).
+    if (
+      this.lockedOnEventProperty.value &&
+      this.lockedEventIndexProperty.value === eventNumber &&
+      this.currentCycleNumberProperty.value === cycleNumber
+    ) {
       return;
     }
 
@@ -566,19 +571,64 @@ export class ConfigurationsModel implements TModel {
   }
 
   /**
-   * Set time from a timeline drag, optionally snapping to the nearest event
-   * (Flash: setTime with snapToEvents + snapThreshold).
+   * Set time from a timeline drag, optionally snapping to the nearest event.
+   * Flash Timeline.as: timeThreshold = snapDistance / scale (years), not an angle.
    */
-  public setTimeFromTimelineDrag(newTime: number, snap: boolean, angleThreshold: number): void {
+  public setTimeFromTimelineDrag(newTime: number, snap: boolean, timeThresholdYears: number): void {
     if (snap) {
-      const minPeriod = Math.min(this.period1Property.value, this.period2Property.value);
-      const snapped = this.findSnappedEvent(newTime, minPeriod, angleThreshold);
+      const snapped = this.findSnappedEventByTime(newTime, timeThresholdYears);
       if (snapped !== null) {
         this.setTimeByCycleAndEventNumbers(snapped.cycle, snapped.event);
         return;
       }
     }
     this.setTime(newTime);
+  }
+
+  /** Snap by absolute time proximity (Flash timeline scrub). */
+  private findSnappedEventByTime(newTime: number, timeThreshold: number): { cycle: number; event: number } | null {
+    const cycleOffset = this.cycleOffsetProperty.value;
+    const synodic = this.synodicPeriodProperty.value;
+    const eventTimes = this.eventTimesListProperty.value;
+
+    const cycle = Math.floor((newTime - cycleOffset) / synodic);
+    let timeInCycle = newTime - cycleOffset - cycle * synodic;
+    if (timeInCycle < 0) {
+      timeInCycle = 0;
+    }
+
+    let nextEvt = 0;
+    while (nextEvt < 4 && timeInCycle >= (eventTimes[nextEvt] ?? 0)) {
+      nextEvt++;
+    }
+
+    const prevEvt = nextEvt - 1;
+    let nextCycleFinal = cycle;
+    let nextEvtFinal = nextEvt;
+    if (nextEvt >= 4) {
+      nextEvtFinal = 0;
+      nextCycleFinal = cycle + 1;
+    }
+
+    const prevTime =
+      prevEvt >= 0
+        ? cycleOffset + cycle * synodic + (eventTimes[prevEvt] ?? 0)
+        : cycleOffset + (cycle - 1) * synodic + (eventTimes[3] ?? 0);
+    const nextTime = cycleOffset + nextCycleFinal * synodic + (eventTimes[nextEvtFinal] ?? 0);
+
+    const prevDelta = Math.abs(newTime - prevTime);
+    const nextDelta = Math.abs(nextTime - newTime);
+    const minDelta = Math.min(prevDelta, nextDelta);
+
+    if (minDelta >= timeThreshold) {
+      return null;
+    }
+    if (minDelta === nextDelta) {
+      return { cycle: nextCycleFinal, event: nextEvtFinal };
+    }
+    const effectivePrevEvt = prevEvt >= 0 ? prevEvt : 3;
+    const effectivePrevCycle = prevEvt >= 0 ? cycle : cycle - 1;
+    return { cycle: effectivePrevCycle, event: effectivePrevEvt };
   }
 
   private advanceSlew(dt: number): void {

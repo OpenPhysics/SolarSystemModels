@@ -1,6 +1,8 @@
 import { Shape } from "scenerystack/kite";
-import { Circle, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, Node, Path, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
+import { ZodiacStripBackground } from "../../common/ZodiacStripBackground.js";
+import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors, { zodiacGhostBarColor } from "../../SolarSystemModelsColors.js";
 import { ZODIAC_STRIP_HEIGHT, ZODIAC_STRIP_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
@@ -17,21 +19,6 @@ const WRAP_HIGH = W - WRAP_LOW;
 const NUM_SEGMENTS = 20;
 const MIN_ALPHA = 5;
 const ALPHA_SPREAD = 50;
-
-const SIGN_NAMES = [
-  "Pisces",
-  "Aquarius",
-  "Capricorn",
-  "Sagittarius",
-  "Scorpius",
-  "Libra",
-  "Virgo",
-  "Leo",
-  "Cancer",
-  "Gemini",
-  "Taurus",
-  "Aries",
-];
 
 /** Map ecliptic longitude to strip x — AS convention: x = (−λ · width/2π) mod width. */
 function lonToX(lon: number): number {
@@ -66,15 +53,24 @@ export class PtolemaicZodiacStrip extends Node {
   public constructor(model: PtolemaicModel) {
     super();
 
-    // Background band
-    const band = new Rectangle(0, 0, W, H, {
-      fill: SolarSystemModelsColors.zodiacBandColorProperty,
-      stroke: SolarSystemModelsColors.orbitColorProperty,
-      lineWidth: 1,
-    });
-    this.addChild(band);
+    // Flash strip order: Pisces → Aries (rightward), matching lonToX negation.
+    const z = StringManager.getInstance().getZodiacStrings();
+    const signStringProperties = [
+      z.piscesStringProperty,
+      z.aquariusStringProperty,
+      z.capricornStringProperty,
+      z.sagittariusStringProperty,
+      z.scorpiusStringProperty,
+      z.libraStringProperty,
+      z.virgoStringProperty,
+      z.leoStringProperty,
+      z.cancerStringProperty,
+      z.geminiStringProperty,
+      z.taurusStringProperty,
+      z.ariesStringProperty,
+    ] as const;
 
-    // ── Ghosting segment layers (behind everything) ───────────────────────
+    // ── Ghosting segment layers (behind chrome) ───────────────────────────
     for (let i = 0; i < NUM_SEGMENTS; i++) {
       const p = new Path(null, {});
       this.ghostSegments.push(p);
@@ -83,26 +79,7 @@ export class PtolemaicZodiacStrip extends Node {
     this.liveBar = new Path(null, {});
     this.addChild(this.liveBar);
 
-    // ── Dividers and sign labels ──────────────────────────────────────────
-    const segW = W / 12;
-    for (let i = 0; i < 12; i++) {
-      const x = i * segW;
-      const divider = new Rectangle(x, 0, 1, H, {
-        fill: SolarSystemModelsColors.orbitColorProperty,
-        opacity: 0.4,
-      });
-      this.addChild(divider);
-
-      const label = new Text(SIGN_NAMES[i] ?? "", {
-        font: new PhetFont(9),
-        fill: SolarSystemModelsColors.textColorProperty,
-        opacity: 0.5,
-        centerX: (i + 0.5) * segW,
-        centerY: H * 0.5,
-        maxWidth: segW - 4,
-      });
-      this.addChild(label);
-    }
+    this.addChild(new ZodiacStripBackground(W, H, signStringProperties));
 
     // ── Sun marker (yellow circle + "S" label) ────────────────────────────
     const sunMarker = new Circle(7, {
@@ -148,8 +125,11 @@ export class PtolemaicZodiacStrip extends Node {
   /**
    * Rebuild the ghosting trail from the trail's longitude array (oldest→newest).
    * Port of Zodiac Strip.as setPlanetLongitude. Call after the trail updates.
+   *
+   * @param lonArray - sampled trail longitudes (oldest→newest)
+   * @param currentLon - live planet ecliptic longitude (Flash `lon` arg)
    */
-  public updateGhosting(lonArray: number[]): void {
+  public updateGhosting(lonArray: number[], currentLon: number): void {
     const top = H / 2 - BAR_HALF;
     const bottom = H / 2 + BAR_HALF;
     const alphaStep = ALPHA_SPREAD / NUM_SEGMENTS;
@@ -198,12 +178,11 @@ export class PtolemaicZodiacStrip extends Node {
       segPath.shape = shape;
     }
 
-    // Live bar: from the last sampled longitude to the current planet longitude.
+    // Live bar: last sampled trail longitude → current planet longitude (Flash temp segment).
     const lastLon = lonArray[n - 1];
-    const curLon = lonArray[n - 2];
-    if (lastLon !== undefined && curLon !== undefined) {
-      const prevX = lonToX(curLon);
-      const curX = lonToX(lastLon);
+    if (lastLon !== undefined) {
+      const prevX = lonToX(lastLon);
+      const curX = lonToX(currentLon);
       let delta = (((curX - prevX) % W) + W) % W;
       if (delta > W / 2) {
         delta = W - delta;

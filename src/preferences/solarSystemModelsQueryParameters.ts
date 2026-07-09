@@ -10,8 +10,6 @@
  *    `public: true`. Add `isValidValue` to bound numeric ranges.
  * 2. If it should also be user-editable at runtime, surface it as a preference
  *    in SolarSystemModelsPreferencesModel (initialize that Property from this query parameter).
- *
- * Usage: append e.g. `?exampleToggle=true` to the sim URL.
  */
 
 import { logGlobal } from "scenerystack/phet-core";
@@ -19,15 +17,7 @@ import { QueryStringMachine } from "scenerystack/query-string-machine";
 import SolarSystemModelsNamespace from "../SolarSystemModelsNamespace.js";
 
 const solarSystemModelsQueryParameters = QueryStringMachine.getAll({
-  /**
-   * Example public boolean parameter. Replace with real sim-specific parameters,
-   * or remove if the sim has none.
-   */
-  exampleToggle: {
-    type: "boolean",
-    defaultValue: false,
-    public: true,
-  },
+  // No sim-specific query parameters yet. Add public params here when needed.
 });
 
 SolarSystemModelsNamespace.register("solarSystemModelsQueryParameters", solarSystemModelsQueryParameters);

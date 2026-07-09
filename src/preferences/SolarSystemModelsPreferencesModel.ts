@@ -5,28 +5,22 @@
  * Simulation. Each preference Property takes its initial value from the
  * corresponding query parameter in solarSystemModelsQueryParameters.
  *
- * Remove the example preference (and its query parameter / UI control) if the
- * sim has no sim-specific preferences.
+ * Currently empty — add Properties here when the sim gains real preferences.
+ * The constructor keeps an optional tandem so main.ts can pass one without
+ * changing call sites when preferences are added later.
  */
 
-import { BooleanProperty } from "scenerystack/axon";
 import type { Tandem } from "scenerystack/tandem";
 import SolarSystemModelsNamespace from "../SolarSystemModelsNamespace.js";
-import solarSystemModelsQueryParameters from "./solarSystemModelsQueryParameters.js";
 
 export class SolarSystemModelsPreferencesModel {
-  /** Example preference; initial value comes from the `exampleToggle` query parameter. */
-  public readonly exampleToggleProperty: BooleanProperty;
-
-  public constructor(tandem?: Tandem) {
-    this.exampleToggleProperty = new BooleanProperty(
-      solarSystemModelsQueryParameters.exampleToggle,
-      tandem ? { tandem: tandem.createTandem("exampleToggleProperty") } : undefined,
-    );
+  // biome-ignore lint/complexity/noUselessConstructor: tandem reserved for future preference Properties
+  public constructor(_tandem?: Tandem) {
+    // No sim-specific preferences yet.
   }
 
   public reset(): void {
-    this.exampleToggleProperty.reset();
+    // No-op until preferences are added.
   }
 }
 

@@ -87,7 +87,7 @@
         "controlArea": "La zone de contrôle comporte des commandes pour la planète et pour les tailles et vitesses de son déférent et de son épicycle, ainsi qu'un bouton Tout réinitialiser qui ramène l'écran à son état initial.",
         "interactionHint": "Ajustez le déférent et l'épicycle pour voir comment la planète semble se déplacer vue depuis la Terre."
       },
-      "currentDetailsTemplate": "Préréglage de planète : {0}. L'animation est {1}, à une vitesse de {2} fois.",
+      "currentDetailsTemplate": "Préréglage de planète : {0}. L'animation est {1}, à {2} jours par seconde.",
       "playing": "en cours",
       "paused": "en pause",
       "controls": {
@@ -121,24 +121,24 @@
       "currentDetailsTemplate": "Planète de l'observateur : {0}. Planète cible : {1}. Temps actuel : {2} ans. {3}",
       "currentConfigurationTemplate": "Actuellement en {0}.",
       "controls": {
-        "observerPlanet": "Observer's planet selector",
-        "targetPlanet": "Target planet selector",
-        "observerAxis": "Observer orbit radius",
-        "targetAxis": "Target orbit radius",
-        "labelOrbits": "Label orbits",
-        "showElongation": "Show elongation angle",
-        "snapToEvents": "Snap to events",
-        "animationRate": "Animation rate",
-        "resetTime": "Reset time",
-        "eventAction": "Event action",
-        "pauseTime": "Pause time",
-        "observerDrag": "Observer's planet — drag to set time",
-        "targetDrag": "Target planet — drag to set time",
-        "observerShiftDrag": "Observer's planet — Shift-drag to set epoch angle",
-        "targetShiftDrag": "Target planet — Shift-drag to set epoch angle",
-        "timelineScroll": "Timeline — drag to scrub time",
-        "timelineEvent": "Timeline event — activate to slew to this event",
-        "cancelCountdown": "Cancel pause countdown"
+        "observerPlanet": "Sélecteur de planète de l'observateur",
+        "targetPlanet": "Sélecteur de planète cible",
+        "observerAxis": "Rayon d'orbite de l'observateur",
+        "targetAxis": "Rayon d'orbite de la cible",
+        "labelOrbits": "Étiqueter les orbites",
+        "showElongation": "Afficher l'angle d'élongation",
+        "snapToEvents": "Accrocher aux événements",
+        "animationRate": "Vitesse d'animation",
+        "resetTime": "Réinitialiser le temps",
+        "eventAction": "Action à l'événement",
+        "pauseTime": "Durée de pause",
+        "observerDrag": "Planète de l'observateur — glisser pour régler le temps",
+        "targetDrag": "Planète cible — glisser pour régler le temps",
+        "observerShiftDrag": "Planète de l'observateur — Maj+glisser pour régler l'angle d'époque",
+        "targetShiftDrag": "Planète cible — Maj+glisser pour régler l'angle d'époque",
+        "timelineScroll": "Chronologie — glisser pour faire défiler le temps",
+        "timelineEvent": "Événement de chronologie — activer pour aller à cet événement",
+        "cancelCountdown": "Annuler le compte à rebours de pause"
       }
     }
   },
@@ -157,7 +157,6 @@
     "pisces": "Poissons"
   },
   "preferences": {
-    "title": "Simulation",
-    "exampleToggle": "Exemple de bascule"
+    "title": "Simulation"
   }
 }

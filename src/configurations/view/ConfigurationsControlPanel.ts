@@ -88,6 +88,7 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
       accessibleName: a11y.controls.targetPlanetStringProperty,
     });
+    preset2Combo.addLinkedElement(model.preset2IndexProperty);
 
     // When preset index changes, apply preset. Both planets landing on the same
     // orbit has no synodic period, so revert the combo box if that's rejected.
@@ -126,12 +127,37 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       }),
     );
 
-    // Sync slider changes to the model's setSemimajorAxis
-    model.semimajorAxis1Property.lazyLink((v) => {
-      model.setSemimajorAxis(1, v, false);
+    // Sync slider changes through setSemimajorAxis (updates periods/epochs).
+    // When axes would be equal, nudge away like Flash setSemimajorAxisFromSlider.
+    const AXIS_DELTA = 0.01;
+    const nudgeAxis = (id: 1 | 2, attempted: number, previous: number): void => {
+      const other = id === 1 ? model.semimajorAxis2Property.value : model.semimajorAxis1Property.value;
+      const prop = id === 1 ? model.semimajorAxis1Property : model.semimajorAxis2Property;
+      let nudged: number;
+      if (attempted >= SEMIMAJOR_AXIS_RANGE.max - 1e-12) {
+        nudged = SEMIMAJOR_AXIS_RANGE.max - AXIS_DELTA;
+      } else if (attempted <= SEMIMAJOR_AXIS_RANGE.min + 1e-12) {
+        nudged = SEMIMAJOR_AXIS_RANGE.min + AXIS_DELTA;
+      } else if (previous < other) {
+        nudged = other + AXIS_DELTA;
+      } else {
+        nudged = other - AXIS_DELTA;
+      }
+      nudged = Math.min(SEMIMAJOR_AXIS_RANGE.max, Math.max(SEMIMAJOR_AXIS_RANGE.min, nudged));
+      if (Math.abs(nudged - other) < 1e-10 || !model.setSemimajorAxis(id, nudged, false)) {
+        prop.value = previous;
+      }
+    };
+
+    model.semimajorAxis1Property.lazyLink((v, oldV) => {
+      if (!model.setSemimajorAxis(1, v, false)) {
+        nudgeAxis(1, v, oldV);
+      }
     });
-    model.semimajorAxis2Property.lazyLink((v) => {
-      model.setSemimajorAxis(2, v, false);
+    model.semimajorAxis2Property.lazyLink((v, oldV) => {
+      if (!model.setSemimajorAxis(2, v, false)) {
+        nudgeAxis(2, v, oldV);
+      }
     });
 
     // ── TimeControlNode ───────────────────────────────────────────────────

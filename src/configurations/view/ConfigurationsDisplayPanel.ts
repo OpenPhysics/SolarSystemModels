@@ -16,6 +16,8 @@ const LABEL_OPTS = {
 const CHECKBOX_OPTS = {
   boxWidth: 16,
   spacing: 4,
+  checkboxColor: SolarSystemModelsColors.textColorProperty,
+  checkboxColorBackground: SolarSystemModelsColors.panelBackgroundColorProperty,
 } as const;
 
 export class ConfigurationsDisplayPanel extends SolarSystemModelsPanel {

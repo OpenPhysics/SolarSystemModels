@@ -59,17 +59,6 @@ export const CONFIGURATIONS_ELONGATION_ARC_RADIUS = 35; // px — elongation ind
 export const SEMIMAJOR_AXIS_RANGE = { min: 0.25, max: 10 } as const; // AS slider 0.25–10 AU
 export const PAUSE_TIME_RANGE = { min: 1, max: 15 } as const; // AS slider 1–15 s
 
-// ── Configurations preset orbital radii (AU) ───────────────────────────────────
-
-export const PRESET_RADII = {
-  mercury: 0.39,
-  venus: 0.72,
-  earth: 1.0,
-  mars: 1.52,
-  jupiter: 5.2,
-  saturn: 9.54,
-} as const;
-
 SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   SCREEN_VIEW_MARGIN,
   PANEL_CORNER_RADIUS,
@@ -104,5 +93,4 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   APOGEE_ANGLE_RANGE,
   ANIMATION_RATE_RANGE,
   PATH_DURATION_RANGE,
-  PRESET_RADII,
 });

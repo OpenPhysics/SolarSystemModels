@@ -9,6 +9,10 @@ import { ScreenView } from "scenerystack/sim";
 import { RectangularPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import {
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  FLAT_RESET_ALL_BUTTON_OPTIONS,
+} from "../../common/SolarSystemModelsButtonOptions.js";
 import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -59,6 +63,7 @@ export class ConfigurationsScreenView extends ScreenView {
     );
 
     const a11y = StringManager.getInstance().getConfigurationsA11yStrings();
+    const s = StringManager.getInstance().getConfigurationsStrings();
 
     // ── Background ──────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -102,7 +107,7 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(orbitLabel1);
     this.addChild(orbitLabel2);
 
-    // ── Elongation indicator (Phase 7) ──────────────────────────────────────
+    // ── Elongation indicator ────────────────────────────────────────────────
     const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvtProperty);
     this.addChild(elongationIndicator);
 
@@ -138,25 +143,64 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(targetNode);
 
     // ── Planet drag listeners (freeze/thaw animation during drag, matching AS) ─
+    // Flash Orbits Diagram Planet.as: store press angle offset so the planet
+    // does not jump when the cursor is off-center on the disc.
+    const TWO_PI = 2 * Math.PI;
+    /** Flash Orbits Diagram.as snapDistance (px). */
+    const PLANET_SNAP_DISTANCE_PX = 10;
+    const wrapAngleDelta = (delta: number): number => {
+      let d = delta;
+      if (d < -Math.PI) {
+        d += TWO_PI;
+      }
+      if (d > Math.PI) {
+        d -= TWO_PI;
+      }
+      return d;
+    };
+    const mod2pi = (a: number): number => ((a % TWO_PI) + TWO_PI) % TWO_PI;
+
+    /** Flash: angleThreshold = acos(1 − snap²/(2R²)) from screen orbit radius. */
+    const planetSnapAngle = (id: 1 | 2): number => {
+      const a = id === 1 ? model.semimajorAxis1Property.value : model.semimajorAxis2Property.value;
+      const rPx = Math.abs(this.mvtProperty.value.modelToViewDeltaX(a));
+      if (rPx < 1e-6) {
+        return 0;
+      }
+      const cosThreshold = 1 - (PLANET_SNAP_DISTANCE_PX * PLANET_SNAP_DISTANCE_PX) / (2 * rPx * rPx);
+      if (cosThreshold < -1) {
+        return 0;
+      }
+      return Math.acos(Math.min(1, cosThreshold));
+    };
+
     const makePlanetDrag = (id: 1 | 2, node: Node) => {
       let wasPlaying = false;
+      let angleOffset = 0;
+      let angleThreshold = Math.PI / 12;
       node.addInputListener(
         new DragListener({
           tandem: Tandem.OPT_OUT,
-          press: () => {
+          press: (_event, listener) => {
             wasPlaying = model.timer.isPlayingProperty.value;
             model.freezeAnimation();
             model.timer.isPlayingProperty.value = false;
+            const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
+            const clickAngle = Math.atan2(modelPos.y, modelPos.x);
+            const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
+            angleOffset = wrapAngleDelta(clickAngle - planetAngle);
+            angleThreshold = planetSnapAngle(id);
           },
           drag: (event, listener) => {
             const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
             const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
-            const angle = Math.atan2(modelPos.y, modelPos.x);
+            const clickAngle = Math.atan2(modelPos.y, modelPos.x);
+            const angle = mod2pi(clickAngle - angleOffset);
             const snap = model.snapToEventsProperty.value;
             if (shiftKey) {
-              model.setEpochAngleByPlanetAngle(id, angle, snap, Math.PI / 12);
+              model.setEpochAngleByPlanetAngle(id, angle, snap, angleThreshold);
             } else {
-              model.setTimeByPlanetAngle(id, angle, snap, Math.PI / 12);
+              model.setTimeByPlanetAngle(id, angle, snap, angleThreshold);
             }
           },
           release: () => {
@@ -181,12 +225,12 @@ export class ConfigurationsScreenView extends ScreenView {
       const r2 = mvt.modelToViewDeltaX(a2);
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
-      // Labels at top of orbit circles
-      orbitLabel1.string = `${a1.toFixed(2)} AU`;
+      // Flash Orbits Diagram: curved role labels ("observer's / target planet").
+      orbitLabel1.string = s.observerPlanetStringProperty.value;
       orbitLabel1.centerX = center.x;
       orbitLabel1.bottom = center.y - r1 - 4;
 
-      orbitLabel2.string = `${a2.toFixed(2)} AU`;
+      orbitLabel2.string = s.targetPlanetStringProperty.value;
       orbitLabel2.centerX = center.x;
       orbitLabel2.bottom = center.y - r2 - 4;
 
@@ -195,7 +239,13 @@ export class ConfigurationsScreenView extends ScreenView {
     };
 
     Multilink.multilink(
-      [this.mvtProperty, model.semimajorAxis1Property, model.semimajorAxis2Property] as const,
+      [
+        this.mvtProperty,
+        model.semimajorAxis1Property,
+        model.semimajorAxis2Property,
+        s.observerPlanetStringProperty,
+        s.targetPlanetStringProperty,
+      ] as const,
       updateOrbits,
     );
 
@@ -227,9 +277,9 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(timeReadout);
 
     // ── Countdown cancel button (AS: clickToCancelMC) ───────────────────────
-    const s = StringManager.getInstance().getConfigurationsStrings();
     const a11yCancel = StringManager.getInstance().getConfigurationsA11yStrings();
     const cancelButton = new RectangularPushButton({
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       content: new Text(s.cancelCountdownStringProperty, {
         font: new PhetFont(12),
         fill: SolarSystemModelsColors.textColorProperty,
@@ -248,6 +298,7 @@ export class ConfigurationsScreenView extends ScreenView {
 
     // ── Reset All button ────────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
       listener: () => {
         model.reset();
         this.reset();
@@ -260,7 +311,16 @@ export class ConfigurationsScreenView extends ScreenView {
     // ── pdomOrder ────────────────────────────────────────────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [controlPanel, displayPanel, timeReadout, observerNode, targetNode, resetAllButton],
+        pdomOrder: [
+          controlPanel,
+          displayPanel,
+          timeReadout,
+          timeline,
+          observerNode,
+          targetNode,
+          cancelButton,
+          resetAllButton,
+        ],
       }),
     );
 

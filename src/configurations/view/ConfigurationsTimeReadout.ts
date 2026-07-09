@@ -6,6 +6,7 @@ import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { DISPLAY_DAYS_PER_YEAR, PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
+import { eventNameLabel } from "./eventNameLabel.js";
 
 const READOUT_FONT = new PhetFont(12);
 const FONT_OPTS = {
@@ -16,36 +17,60 @@ const FONT_OPTS = {
 
 export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
   public constructor(model: ConfigurationsModel) {
-    StringManager.getInstance().getConfigurationsStrings();
+    const s = StringManager.getInstance().getConfigurationsStrings();
 
     const timeText = new Text("", FONT_OPTS);
     const synodicText = new Text("", FONT_OPTS);
     const configText = new Text("", FONT_OPTS);
     const countdownText = new Text("", FONT_OPTS);
 
-    Multilink.multilink([model.timeProperty, model.synodicPeriodProperty], (time, synodic) => {
-      const absTime = Math.abs(time);
-      const totalDays = absTime * DISPLAY_DAYS_PER_YEAR;
-      const yrs = Math.floor(absTime);
-      const days = totalDays - yrs * DISPLAY_DAYS_PER_YEAR;
-      const sign = time < 0 ? "-" : "";
-      timeText.string = `${sign}${absTime.toFixed(3)} yr (${sign}${yrs} yr, ${sign}${days.toFixed(1)} d)`;
-      synodicText.string = `Synodic: ${synodic.toFixed(3)} yr`;
-    });
+    Multilink.multilink(
+      [model.timeProperty, model.synodicPeriodProperty, s.synodicPeriodStringProperty] as const,
+      (time, synodic, synodicLabel) => {
+        const absTime = Math.abs(time);
+        const totalDays = absTime * DISPLAY_DAYS_PER_YEAR;
+        const yrs = Math.floor(absTime);
+        const days = totalDays - yrs * DISPLAY_DAYS_PER_YEAR;
+        const sign = time < 0 ? "-" : "";
+        timeText.string = `${sign}${absTime.toFixed(3)} yr (${sign}${yrs} yr, ${sign}${days.toFixed(1)} d)`;
+        synodicText.string = `${synodicLabel} ${synodic.toFixed(3)} yr`;
+      },
+    );
 
-    model.currentConfigurationProperty.link((cfg) => {
-      configText.string = cfg.length > 0 ? cfg : "";
-    });
+    Multilink.multilink(
+      [
+        model.currentConfigurationProperty,
+        s.oppositionStringProperty,
+        s.quadratureEasternStringProperty,
+        s.conjunctionStringProperty,
+        s.quadratureWesternStringProperty,
+        s.inferiorConjunctionStringProperty,
+        s.greatestElongationWesternStringProperty,
+        s.superiorConjunctionStringProperty,
+        s.greatestElongationEasternStringProperty,
+      ] as const,
+      (cfg) => {
+        configText.string = eventNameLabel(cfg);
+      },
+    );
 
-    model.countdownRemainingProperty.link((remaining) => {
-      if (remaining > 0) {
-        const secs = Math.ceil(remaining);
-        const unit = secs === 1 ? "second" : "seconds";
-        countdownText.string = `Paused for ${secs} more ${unit}`;
-      } else {
-        countdownText.string = "";
-      }
-    });
+    Multilink.multilink(
+      [
+        model.countdownRemainingProperty,
+        s.pausedForStringProperty,
+        s.secondStringProperty,
+        s.secondsStringProperty,
+      ] as const,
+      (remaining, pausedFor, second, seconds) => {
+        if (remaining > 0) {
+          const secs = Math.ceil(remaining);
+          const unit = secs === 1 ? second : seconds;
+          countdownText.string = pausedFor.replace("{0}", String(secs)).replace("{1}", unit);
+        } else {
+          countdownText.string = "";
+        }
+      },
+    );
 
     const content = new VBox({
       children: [timeText, synodicText, configText, countdownText],

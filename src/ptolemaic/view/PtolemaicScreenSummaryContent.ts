@@ -36,11 +36,12 @@ export class PtolemaicScreenSummaryContent extends ScreenSummaryContent {
       strings.saturnStringProperty,
     ] as const;
 
+    // Use Ptolemaic's days/sec rate (not TimeModel's unused multiplier).
     const currentDetailsProperty = new DerivedProperty(
       [
         model.presetKeyProperty,
         model.timer.isPlayingProperty,
-        model.timer.animationRateProperty,
+        model.animationRateProperty,
         a11y.currentDetailsTemplateStringProperty,
         a11y.playingStringProperty,
         a11y.pausedStringProperty,
@@ -51,7 +52,7 @@ export class PtolemaicScreenSummaryContent extends ScreenSummaryContent {
         return template
           .replace("{0}", presetLabel ?? "")
           .replace("{1}", isPlaying ? playing : paused)
-          .replace("{2}", animationRate.toFixed(1));
+          .replace("{2}", animationRate.toFixed(0));
       },
     );
 

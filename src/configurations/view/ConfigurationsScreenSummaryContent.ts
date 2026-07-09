@@ -22,6 +22,7 @@ import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 import { PRESET_KEYS } from "../model/ConfigurationsPlanet.js";
+import { eventNameLabel } from "./eventNameLabel.js";
 
 export class ConfigurationsScreenSummaryContent extends ScreenSummaryContent {
   public constructor(model: ConfigurationsModel) {
@@ -38,6 +39,8 @@ export class ConfigurationsScreenSummaryContent extends ScreenSummaryContent {
       strings.saturnStringProperty,
     ] as const;
 
+    // Locale-sensitive event labels are resolved via eventNameLabel() inside the
+    // derivation; oppositionStringProperty is included so locale switches refresh.
     const currentDetailsProperty = new DerivedProperty(
       [
         model.preset1IndexProperty,
@@ -46,13 +49,24 @@ export class ConfigurationsScreenSummaryContent extends ScreenSummaryContent {
         model.currentConfigurationProperty,
         a11y.currentDetailsTemplateStringProperty,
         a11y.currentConfigurationTemplateStringProperty,
+        strings.oppositionStringProperty,
         ...planetLabelProperties,
       ] as const,
-      (preset1Index, preset2Index, time, currentConfiguration, template, configTemplate, ...planetLabels) => {
+      (
+        preset1Index,
+        preset2Index,
+        time,
+        currentConfiguration,
+        template,
+        configTemplate,
+        _oppositionLabel,
+        ...planetLabels
+      ) => {
         const earthIndex = PRESET_KEYS.indexOf("earth");
         const observerLabel = planetLabels[preset1Index] ?? planetLabels[earthIndex];
         const targetLabel = planetLabels[preset2Index] ?? planetLabels[earthIndex];
-        const configPart = currentConfiguration === "" ? "" : configTemplate.replace("{0}", currentConfiguration);
+        const configName = eventNameLabel(currentConfiguration);
+        const configPart = configName === "" ? "" : configTemplate.replace("{0}", configName);
 
         return template
           .replace("{0}", observerLabel ?? "")

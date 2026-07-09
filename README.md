@@ -1,14 +1,16 @@
 # Solar System Models
 
-A reusable single-screen simulation template built with [SceneryStack](https://scenerystack.org/),
-Vite 8, TypeScript 6, and Biome 2.
+A two-screen [SceneryStack](https://scenerystack.org/) port of the NAAP **Solar System Models** lab:
+**Ptolemaic System** and **Planetary Configurations**. Built with Vite 8, TypeScript 7, and Biome 2.
 
 ## Features
 
-- Single-screen SceneryStack scaffold with model/view separation
-- English and French localization via `StringManager`
+- Two screens with complete models and wired views (not scaffolding)
+- English, French, and Spanish localization via `StringManager`
 - Default and projector color profiles
 - Progressive Web App (installable, offline-capable)
+- Model-layer Vitest coverage
+- Flash decompile workflow (`npm run decompile`) for NAAP `.swf` reference
 - Git hooks for Biome pre-commit checks
 - Shared GitHub Actions CI via `OpenPhysics/Baton`
 
@@ -26,15 +28,20 @@ npm start        # dev server → http://localhost:5173
 |---|---|
 | `npm start` / `npm run dev` | Start Vite dev server |
 | `npm run build` | Type-check + production build → `dist/` |
+| `npm run build:single` | Single self-contained `dist/index.html` |
 | `npm run preview` | Preview the production build locally |
 | `npm run check` | TypeScript type check |
 | `npm run lint` | Biome lint check |
 | `npm run format` | Auto-format all files |
 | `npm run fix` | Lint + auto-fix |
+| `npm test` | Run Vitest unit tests |
 | `npm run icons` | Regenerate PNG icons from `public/icons/icon.svg` |
+| `npm run decompile` | Extract ActionScript from NAAP Flash `.swf` sources |
 | `npm run clean` | Remove `dist/` |
 
-New sims start at `version: "0.0.0"` in `package.json`. Bump only when cutting a release (for example `npm version patch` and a matching git tag). Keep `name` in kebab-case; it is separate from the SceneryStack sim identifier in `src/init.ts`.
+Quality gate: `npm run check && npm run lint && npm run build && npm test`.
+
+Keep `name` in kebab-case in `package.json`; it is separate from the SceneryStack sim identifier in `src/init.ts`.
 
 ## Tech Stack
 
@@ -42,8 +49,9 @@ New sims start at `version: "0.0.0"` in `package.json`. Bump only when cutting a
 |---|---|---|
 | [SceneryStack](https://scenerystack.org/) | ^3.0.0 | Simulation framework |
 | [Vite](https://vitejs.dev/) | ^8 | Build tool + dev server |
-| [TypeScript](https://www.typescriptlang.org/) | ^6 | Type-safe JavaScript |
+| [TypeScript](https://www.typescriptlang.org/) | ^7 | Type-safe JavaScript |
 | [Biome](https://biomejs.dev/) | ^2.5 | Linting + formatting |
+| [Vitest](https://vitest.dev/) | ^4 | Unit tests |
 | [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) | ^1 | PWA + service worker |
 
 ## License

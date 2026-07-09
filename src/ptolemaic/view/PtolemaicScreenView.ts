@@ -1,4 +1,4 @@
-import { DerivedProperty, Multilink, type TReadOnlyProperty } from "scenerystack/axon";
+import { Multilink, Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -8,6 +8,7 @@ import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SolarSystemModelsButtonOptions.js";
 import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -53,7 +54,8 @@ export class PtolemaicScreenView extends ScreenView {
       new Vector2(ORBIT_VIEW_CENTER_X, ORBIT_VIEW_CENTER_Y),
       ORBIT_VIEW_SCALE,
     );
-    this.mvtProperty = new DerivedProperty([model.animationRateProperty] as const, () => mvt);
+    // Constant MVT for the Ptolemaic orbit diagram (scale does not change).
+    this.mvtProperty = new Property(mvt);
 
     // ── Background ─────────────────────────────────────────────────────────
     const background = new Rectangle(0, 0, this.layoutBounds.width, this.layoutBounds.height, {
@@ -298,10 +300,11 @@ export class PtolemaicScreenView extends ScreenView {
       model.planetTypeProperty,
       model.motionRateProperty,
       model.pathDurationProperty,
+      model.trailClearProperty,
     ] as const;
     Multilink.multilink(trailDeps, () => {
       this.pathTrail.update(model);
-      zodiacStrip.updateGhosting(this.pathTrail.lonArray);
+      zodiacStrip.updateGhosting(this.pathTrail.lonArray, model.eclipticLongitudeProperty.value);
     });
 
     // ── Right-side panels ──────────────────────────────────────────────────
@@ -332,6 +335,7 @@ export class PtolemaicScreenView extends ScreenView {
 
     // ── Reset All button ───────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
+      ...FLAT_RESET_ALL_BUTTON_OPTIONS,
       listener: () => {
         model.reset();
         this.reset();
@@ -344,7 +348,7 @@ export class PtolemaicScreenView extends ScreenView {
     // ── pdomOrder (Tab order) ──────────────────────────────────────────────
     this.addChild(
       new Node({
-        pdomOrder: [controlPanel, displayPanel, timeControls, resetAllButton],
+        pdomOrder: [controlPanel, displayPanel, timeControls, timeReadout, keyPanel, resetAllButton],
       }),
     );
   }

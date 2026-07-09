@@ -193,7 +193,47 @@ describe("ConfigurationsModel", () => {
     model.setSemimajorAxis(2, 0.5, true); // now a2=0.5
     model.setSemimajorAxis(1, 2.4, true); // now a1=2.4 > a2=0.5
     const names = model.eventNamesProperty.value;
-    expect(names[0]).toBe("inferior conjunction");
-    expect(names[2]).toBe("superior conjunction");
+    expect(names[0]).toBe("inferiorConjunction");
+    expect(names[2]).toBe("superiorConjunction");
+  });
+
+  it("rejects equal semimajor axes and leaves periods consistent", () => {
+    model.setSemimajorAxis(1, 1.0, true);
+    model.setSemimajorAxis(2, 2.4, true);
+    const p1Before = model.period1Property.value;
+    const p2Before = model.period2Property.value;
+    expect(model.setSemimajorAxis(1, 2.4, true)).toBe(false);
+    expect(model.semimajorAxis1Property.value).toBeCloseTo(1.0, 8);
+    expect(model.period1Property.value).toBeCloseTo(p1Before, 8);
+    expect(model.period2Property.value).toBeCloseTo(p2Before, 8);
+  });
+
+  it("slewToEvent locks onto the target cycle and event", () => {
+    model.setSemimajorAxis(1, 1.0, true);
+    model.setSemimajorAxis(2, 2.4, true);
+    model.setTime(0);
+    model.slewToEvent(1, 0);
+    // Advance past the slew duration
+    for (let i = 0; i < 40; i++) {
+      model.step(0.05);
+    }
+    expect(model.lockedOnEventProperty.value).toBe(true);
+    expect(model.lockedEventIndexProperty.value).toBe(0);
+    expect(model.currentCycleNumberProperty.value).toBe(1);
+  });
+
+  it("setTimeFromTimelineDrag snaps within time threshold", () => {
+    model.setSemimajorAxis(1, 1.0, true);
+    model.setSemimajorAxis(2, 2.4, true);
+    model.setTime(0);
+    const synodic = model.synodicPeriodProperty.value;
+    const nearOpposition = 0.01; // years from t=0 opposition
+    model.setTimeFromTimelineDrag(nearOpposition, true, 0.05);
+    expect(model.lockedOnEventProperty.value).toBe(true);
+    expect(model.lockedEventIndexProperty.value).toBe(0);
+    expect(model.timeProperty.value).toBeCloseTo(0, 5);
+    // Far from events: no snap
+    model.setTimeFromTimelineDrag(synodic * 0.25, true, 0.001);
+    expect(model.lockedOnEventProperty.value).toBe(false);
   });
 });

@@ -147,4 +147,27 @@ describe("PtolemaicModel", () => {
     expect(model.ptolemaicTimeProperty.value).toBe(0);
     expect(model.sunAngleProperty.value).toBe(0);
   });
+
+  it("storeMemory / recallMemory restores parameters", () => {
+    const model = new PtolemaicModel();
+    model.applyPreset("mars");
+    model.epicycleSizeProperty.value = 0.4;
+    model.eccentricityProperty.value = 0.1;
+    model.storeMemory();
+    expect(model.hasMemoryProperty.value).toBe(true);
+
+    model.applyPreset("venus");
+    model.recallMemory();
+
+    expect(model.epicycleSizeProperty.value).toBeCloseTo(0.4, 8);
+    expect(model.eccentricityProperty.value).toBeCloseTo(0.1, 8);
+  });
+
+  it("setSunAngle wraps to [0, 2π) and bumps trailClearProperty", () => {
+    const model = new PtolemaicModel();
+    const before = model.trailClearProperty.value;
+    model.setSunAngle(-0.5);
+    expect(model.sunAngleProperty.value).toBeCloseTo(2 * Math.PI - 0.5, 8);
+    expect(model.trailClearProperty.value).toBe(before + 1);
+  });
 });
