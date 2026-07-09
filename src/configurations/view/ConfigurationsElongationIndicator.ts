@@ -83,22 +83,22 @@ export class ConfigurationsElongationIndicator extends Node {
       vp1.y + arrowLen * Math.sin(planetDir),
     );
 
-    // Arc — draw from sunDir to planetDir in the elongation direction
+    // Arc — draw the elongation wedge between the Sun and planet rays.
+    // Flash Orbits Diagram.as drawArc always sweeps the CCW math arc; it swaps
+    // start/end by sign so the drawn wedge matches |elongation| (not the reflex).
+    // In view coords (y-down), that is the opposite of the previous sweep flag.
     const arcShape = new Shape();
     if (Math.abs(elongDeg) > 0.5) {
-      // AS: if elongationValue < 0 (East): drawArc from -sunDir to -planetDir
-      // In view coords (y-down), angles are negated vs model
-      // We draw CW or CCW depending on sign
       const startAngle = sunDir;
       const endAngle = planetDir;
-      // Determine sweep direction: elongDeg < 0 (East) means target is east of Sun
-      const anticlockwise = elongDeg > 0; // W = clockwise sweep, E = anticlockwise
+      // elongDeg < 0 (East): increasing-angle sweep; > 0 (West): decreasing-angle
+      const anticlockwise = elongDeg < 0;
       arcShape.arc(vp1.x, vp1.y, CONFIGURATIONS_ELONGATION_ARC_RADIUS, startAngle, endAngle, anticlockwise);
     }
     this.arcPath.shape = arcShape;
 
-    // Label at midpoint angle
-    const midAngle = (sunDir + planetDir) / 2;
+    // Label at the midpoint of the elongation arc (Flash: sunDir + elong/2)
+    const midAngle = sunDir + (elongDeg * Math.PI) / 360;
     const labelR = CONFIGURATIONS_ELONGATION_ARC_RADIUS + 14;
     this.elongLabel.string = `${Math.abs(elongDeg).toFixed(1)}° ${elongLabel_}`;
     this.elongLabel.centerX = vp1.x + labelR * Math.cos(midAngle);
