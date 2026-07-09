@@ -16,6 +16,7 @@ import {
   CONFIGURATIONS_ORBIT_CENTER_X,
   CONFIGURATIONS_ORBIT_CENTER_Y,
   CONFIGURATIONS_ORBIT_MARGIN,
+  PANEL_INTER_GAP,
   SCREEN_VIEW_MARGIN,
 } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
@@ -217,12 +218,12 @@ export class ConfigurationsScreenView extends ScreenView {
 
     const displayPanel = new ConfigurationsDisplayPanel(model);
     displayPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    displayPanel.top = controlPanel.bottom + 8;
+    displayPanel.top = controlPanel.bottom + PANEL_INTER_GAP;
     this.addChild(displayPanel);
 
     const timeReadout = new ConfigurationsTimeReadout(model);
     timeReadout.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    timeReadout.top = displayPanel.bottom + 8;
+    timeReadout.top = displayPanel.bottom + PANEL_INTER_GAP;
     this.addChild(timeReadout);
 
     // ── Countdown cancel button (AS: clickToCancelMC) ───────────────────────
@@ -243,7 +244,7 @@ export class ConfigurationsScreenView extends ScreenView {
 
     // Position timeline below time readout
     timeline.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    timeline.top = timeReadout.bottom + 8;
+    timeline.top = timeReadout.bottom + PANEL_INTER_GAP;
 
     // ── Reset All button ────────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({

@@ -4,10 +4,10 @@ import { PhetFont } from "scenerystack/scenery-phet";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
+import { PANEL_CONTENT_SPACING, PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
 
-const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
-const LABEL_FONT = new PhetFont(12);
+const TITLE_FONT = new PhetFont({ size: 12, weight: "bold" });
+const LABEL_FONT = new PhetFont(11);
 
 /**
  * "Key" / legend panel listing each celestial body and marker with its color.
@@ -17,10 +17,10 @@ export class PtolemaicKeyPanel extends SolarSystemModelsPanel {
   public constructor() {
     const s = StringManager.getInstance().getPtolemaicStrings();
 
-    const swatch = (fill: TPaint) => new Circle(6, { fill, stroke: SolarSystemModelsColors.panelBorderColorProperty });
+    const swatch = (fill: TPaint) => new Circle(5, { fill, stroke: SolarSystemModelsColors.panelBorderColorProperty });
 
     const row = (swatchNode: Circle, label: Text) =>
-      new HBox({ children: [swatchNode, label], spacing: 6, align: "center" });
+      new HBox({ children: [swatchNode, label], spacing: 5, align: "center" });
 
     const content = new VBox({
       children: [
@@ -71,7 +71,7 @@ export class PtolemaicKeyPanel extends SolarSystemModelsPanel {
           }),
         ),
       ],
-      spacing: 6,
+      spacing: PANEL_CONTENT_SPACING - 1,
       align: "left",
     });
 

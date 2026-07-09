@@ -1,20 +1,24 @@
-import { Dimension2, Range } from "scenerystack/dot";
+import { Range } from "scenerystack/dot";
 import { Text, VBox } from "scenerystack/scenery";
 import { PhetFont, TimeControlNode } from "scenerystack/scenery-phet";
-import { HSlider, RectangularPushButton } from "scenerystack/sun";
+import { RectangularPushButton } from "scenerystack/sun";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
 } from "../../common/SolarSystemModelsButtonOptions.js";
+import { createCompactSliderRow } from "../../common/SolarSystemModelsControlOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
-import { PANEL_WIDTH, PATH_DURATION_RANGE, PTOLEMAIC_ANIMATION_RATE_RANGE } from "../../SolarSystemModelsConstants.js";
+import {
+  PANEL_CONTENT_SPACING,
+  PANEL_WIDTH,
+  PATH_DURATION_RANGE,
+  PTOLEMAIC_ANIMATION_RATE_RANGE,
+} from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 
 const LABEL_FONT = new PhetFont(12);
-const MAX_LABEL_WIDTH = PANEL_WIDTH - 40;
-const TRACK_SIZE = new Dimension2(PANEL_WIDTH - 50, 3);
 
 export class PtolemaicTimeControls extends SolarSystemModelsPanel {
   public constructor(model: PtolemaicModel) {
@@ -33,34 +37,21 @@ export class PtolemaicTimeControls extends SolarSystemModelsPanel {
           },
         },
       },
+      scale: 0.85,
     });
 
-    const animRateLabel = new Text(strings.animationRateStringProperty, {
-      font: LABEL_FONT,
-      fill: SolarSystemModelsColors.textColorProperty,
-      maxWidth: MAX_LABEL_WIDTH,
-    });
-    const animRateSlider = new HSlider(
+    // Flash: "animation rate:" and "path duration:" share a row with their slider.
+    const animRateRow = createCompactSliderRow(
+      strings.animationRateStringProperty,
       model.animationRateProperty,
       new Range(PTOLEMAIC_ANIMATION_RATE_RANGE.min, PTOLEMAIC_ANIMATION_RATE_RANGE.max),
-      {
-        trackSize: TRACK_SIZE,
-        accessibleName: a11y.controls.animationRateStringProperty,
-      },
+      { accessibleName: a11y.controls.animationRateStringProperty },
     );
-
-    const pathDurLabel = new Text(strings.pathDurationStringProperty, {
-      font: LABEL_FONT,
-      fill: SolarSystemModelsColors.textColorProperty,
-      maxWidth: MAX_LABEL_WIDTH,
-    });
-    const pathDurSlider = new HSlider(
+    const pathDurRow = createCompactSliderRow(
+      strings.pathDurationStringProperty,
       model.pathDurationProperty,
       new Range(PATH_DURATION_RANGE.min, PATH_DURATION_RANGE.max),
-      {
-        trackSize: TRACK_SIZE,
-        accessibleName: a11y.controls.pathDurationStringProperty,
-      },
+      { accessibleName: a11y.controls.pathDurationStringProperty },
     );
 
     const resetTimeButton = new RectangularPushButton({
@@ -74,8 +65,8 @@ export class PtolemaicTimeControls extends SolarSystemModelsPanel {
     });
 
     const content = new VBox({
-      children: [timeControlNode, animRateLabel, animRateSlider, pathDurLabel, pathDurSlider, resetTimeButton],
-      spacing: 8,
+      children: [timeControlNode, animRateRow, pathDurRow, resetTimeButton],
+      spacing: PANEL_CONTENT_SPACING,
       align: "left",
     });
 

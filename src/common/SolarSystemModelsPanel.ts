@@ -12,7 +12,7 @@
  *
  *   const content = new VBox({
  *     children: [ new Text("label"), slider ],
- *     spacing: 8,
+ *     spacing: 5,
  *   });
  *   const panel = new SolarSystemModelsPanel(content);
  *
@@ -29,7 +29,7 @@ import type { Node } from "scenerystack/scenery";
 import type { PanelOptions } from "scenerystack/sun";
 import { Panel } from "scenerystack/sun";
 import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
-import { PANEL_CORNER_RADIUS } from "../SolarSystemModelsConstants.js";
+import { PANEL_CORNER_RADIUS, PANEL_X_MARGIN, PANEL_Y_MARGIN } from "../SolarSystemModelsConstants.js";
 
 export class SolarSystemModelsPanel extends Panel {
   public constructor(content: Node, providedOptions?: PanelOptions) {
@@ -37,8 +37,8 @@ export class SolarSystemModelsPanel extends Panel {
       fill: SolarSystemModelsColors.panelBackgroundColorProperty,
       stroke: SolarSystemModelsColors.panelBorderColorProperty,
       cornerRadius: PANEL_CORNER_RADIUS,
-      xMargin: 12,
-      yMargin: 10,
+      xMargin: PANEL_X_MARGIN,
+      yMargin: PANEL_Y_MARGIN,
       ...providedOptions,
     });
   }

@@ -7,7 +7,7 @@ import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { DISPLAY_DAYS_PER_YEAR, PANEL_WIDTH } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
-const READOUT_FONT = new PhetFont(13);
+const READOUT_FONT = new PhetFont(12);
 const FONT_OPTS = {
   font: READOUT_FONT,
   fill: SolarSystemModelsColors.textColorProperty,

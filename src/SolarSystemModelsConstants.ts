@@ -5,6 +5,10 @@ import SolarSystemModelsNamespace from "./SolarSystemModelsNamespace.js";
 export const SCREEN_VIEW_MARGIN = 20;
 export const PANEL_CORNER_RADIUS = 6;
 export const PANEL_WIDTH = 310;
+export const PANEL_X_MARGIN = 10;
+export const PANEL_Y_MARGIN = 6;
+export const PANEL_CONTENT_SPACING = 5;
+export const PANEL_INTER_GAP = 4;
 
 // ── Ptolemaic orbital view layout ──────────────────────────────────────────────
 
@@ -47,7 +51,7 @@ export const CONFIGURATIONS_ORBIT_CENTER_X = 285; // px — Sun maps here (x)
 export const CONFIGURATIONS_ORBIT_CENTER_Y = 285; // px — Sun maps here (y)
 export const CONFIGURATIONS_ORBIT_MARGIN = 60; // px — margin around orbit area
 export const CONFIGURATIONS_TIMELINE_WIDTH = 210; // px
-export const CONFIGURATIONS_TIMELINE_HEIGHT = 350; // px
+export const CONFIGURATIONS_TIMELINE_HEIGHT = 220; // px
 export const CONFIGURATIONS_ELONGATION_ARC_RADIUS = 35; // px — elongation indicator arc radius
 
 // ── Configurations parameter bounds (AS slider ranges) ─────────────────────────
@@ -70,6 +74,10 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   SCREEN_VIEW_MARGIN,
   PANEL_CORNER_RADIUS,
   PANEL_WIDTH,
+  PANEL_X_MARGIN,
+  PANEL_Y_MARGIN,
+  PANEL_CONTENT_SPACING,
+  PANEL_INTER_GAP,
   ORBIT_VIEW_SCALE,
   ORBIT_VIEW_CENTER_X,
   ORBIT_VIEW_CENTER_Y,

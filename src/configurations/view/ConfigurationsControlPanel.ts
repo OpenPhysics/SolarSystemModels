@@ -1,19 +1,24 @@
-import { Dimension2, Range } from "scenerystack/dot";
+import { Range } from "scenerystack/dot";
 import type { Node } from "scenerystack/scenery";
 import { HBox, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont, TimeControlNode } from "scenerystack/scenery-phet";
-import { AquaRadioButtonGroup, ComboBox, HSlider, RectangularPushButton } from "scenerystack/sun";
+import { AquaRadioButtonGroup, ComboBox, RectangularPushButton } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
   SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
 } from "../../common/SolarSystemModelsButtonOptions.js";
+import {
+  createCompactNumberControlOptions,
+  createCompactSliderRow,
+} from "../../common/SolarSystemModelsControlOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import {
   ANIMATION_RATE_RANGE,
+  PANEL_CONTENT_SPACING,
   PANEL_WIDTH,
   PAUSE_TIME_RANGE,
   SEMIMAJOR_AXIS_RANGE,
@@ -23,8 +28,7 @@ import { PRESET_KEYS } from "../model/ConfigurationsPlanet.js";
 import { EventAction } from "../model/EventAction.js";
 
 const LABEL_FONT = new PhetFont(12);
-const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
-const TRACK_SIZE = new Dimension2(PANEL_WIDTH - 50, 3);
+const TITLE_FONT = new PhetFont({ size: 12, weight: "bold" });
 const MAX_LABEL_WIDTH = PANEL_WIDTH - 60;
 
 export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
@@ -48,7 +52,6 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       s.saturnStringProperty,
     ];
 
-    // ── Observer planet preset ComboBox ───────────────────────────────────
     // Item value −1 is the `<presets>` placeholder (non-selectable prompt),
     // matching the AS ComboBox that starts at index 0 = "<presets>".
     const makePlaceholder = (tandemName: string) => ({
@@ -101,28 +104,26 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       }
     });
 
-    // ── Axis NumberControls ───────────────────────────────────────────────
+    // ── Axis NumberControls (Flash: label | value | slider on one row) ─────
     const axis1Control = new NumberControl(
       s.semimajorAxisStringProperty,
       model.semimajorAxis1Property,
       new Range(SEMIMAJOR_AXIS_RANGE.min, SEMIMAJOR_AXIS_RANGE.max),
-      {
-        titleNodeOptions: { ...labelOpts },
+      createCompactNumberControlOptions({
         delta: 0.01,
         numberDisplayOptions: { decimalPlaces: 2 },
         accessibleName: a11y.controls.observerAxisStringProperty,
-      },
+      }),
     );
     const axis2Control = new NumberControl(
       s.semimajorAxisStringProperty,
       model.semimajorAxis2Property,
       new Range(SEMIMAJOR_AXIS_RANGE.min, SEMIMAJOR_AXIS_RANGE.max),
-      {
-        titleNodeOptions: { ...labelOpts },
+      createCompactNumberControlOptions({
         delta: 0.01,
         numberDisplayOptions: { decimalPlaces: 2 },
         accessibleName: a11y.controls.targetAxisStringProperty,
-      },
+      }),
     );
 
     // Sync slider changes to the model's setSemimajorAxis
@@ -146,17 +147,15 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
           },
         },
       },
+      scale: 0.85,
     });
 
-    // ── Animation rate slider ─────────────────────────────────────────────
-    const animRateLabel = new Text(s.animationRateStringProperty, labelOpts);
-    const animRateSlider = new HSlider(
+    // Flash: "animation rate:" shares a row with its slider.
+    const animRateRow = createCompactSliderRow(
+      s.animationRateStringProperty,
       model.timer.animationRateProperty,
       new Range(ANIMATION_RATE_RANGE.min, ANIMATION_RATE_RANGE.max),
-      {
-        trackSize: TRACK_SIZE,
-        accessibleName: a11y.controls.animationRateStringProperty,
-      },
+      { accessibleName: a11y.controls.animationRateStringProperty },
     );
 
     // ── Reset time button ─────────────────────────────────────────────────
@@ -188,6 +187,9 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       },
     ];
     const eventActionGroup = new AquaRadioButtonGroup(model.eventActionProperty, eventActionItems, {
+      orientation: "horizontal",
+      spacing: 8,
+      stretch: false,
       accessibleName: a11y.controls.eventActionStringProperty,
     });
 
@@ -196,12 +198,11 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       s.pauseTimeStringProperty,
       model.pauseTimeProperty,
       new Range(PAUSE_TIME_RANGE.min, PAUSE_TIME_RANGE.max),
-      {
-        titleNodeOptions: { ...labelOpts },
+      createCompactNumberControlOptions({
         delta: 1,
         numberDisplayOptions: { decimalPlaces: 0 },
         accessibleName: a11y.controls.pauseTimeStringProperty,
-      },
+      }),
     );
 
     const content = new VBox({
@@ -219,14 +220,13 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
         preset2Combo,
         axis2Control,
         timeControlNode,
-        animRateLabel,
-        animRateSlider,
+        animRateRow,
         new HBox({ children: [resetTimeButton], spacing: 8 }),
         eventActionLabel,
         eventActionGroup,
         pauseTimeControl,
       ],
-      spacing: 8,
+      spacing: PANEL_CONTENT_SPACING,
       align: "left",
     });
 

@@ -15,6 +15,7 @@ import {
   ORBIT_VIEW_CENTER_X,
   ORBIT_VIEW_CENTER_Y,
   ORBIT_VIEW_SCALE,
+  PANEL_INTER_GAP,
   PTOLEMAIC_DEFERENT_RADIUS,
   PTOLEMAIC_SUN_ORBIT_RADIUS,
   SCREEN_VIEW_MARGIN,
@@ -311,22 +312,22 @@ export class PtolemaicScreenView extends ScreenView {
 
     const displayPanel = new PtolemaicDisplayPanel(model);
     displayPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    displayPanel.top = controlPanel.bottom + 8;
+    displayPanel.top = controlPanel.bottom + PANEL_INTER_GAP;
     this.addChild(displayPanel);
 
     const timeControls = new PtolemaicTimeControls(model);
     timeControls.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    timeControls.top = displayPanel.bottom + 8;
+    timeControls.top = displayPanel.bottom + PANEL_INTER_GAP;
     this.addChild(timeControls);
 
     const timeReadout = new PtolemaicTimeReadout(model);
     timeReadout.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    timeReadout.top = timeControls.bottom + 8;
+    timeReadout.top = timeControls.bottom + PANEL_INTER_GAP;
     this.addChild(timeReadout);
 
     const keyPanel = new PtolemaicKeyPanel();
     keyPanel.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
-    keyPanel.top = timeReadout.bottom + 8;
+    keyPanel.top = timeReadout.bottom + PANEL_INTER_GAP;
     this.addChild(keyPanel);
 
     // ── Reset All button ───────────────────────────────────────────────────

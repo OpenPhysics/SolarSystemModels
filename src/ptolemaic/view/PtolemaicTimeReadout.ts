@@ -13,7 +13,7 @@ export class PtolemaicTimeReadout extends Node {
     const strings = StringManager.getInstance().getPtolemaicStrings();
 
     const readout = new Text("", {
-      font: new PhetFont(14),
+      font: new PhetFont(12),
       fill: SolarSystemModelsColors.textColorProperty,
     });
     this.addChild(readout);

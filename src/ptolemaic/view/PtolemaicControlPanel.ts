@@ -3,6 +3,11 @@ import { HBox, type Node, Text, VBox } from "scenerystack/scenery";
 import { NumberControl, PhetFont } from "scenerystack/scenery-phet";
 import { AquaRadioButtonGroup, ComboBox, RectangularPushButton } from "scenerystack/sun";
 import type { Tandem } from "scenerystack/tandem";
+import {
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
+} from "../../common/SolarSystemModelsButtonOptions.js";
+import { createCompactNumberControlOptions } from "../../common/SolarSystemModelsControlOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -11,14 +16,15 @@ import {
   ECCENTRICITY_RANGE,
   EPICYCLE_SIZE_RANGE,
   MOTION_RATE_RANGE,
+  PANEL_CONTENT_SPACING,
   PANEL_WIDTH,
 } from "../../SolarSystemModelsConstants.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
 import type { PlanetPresetKey } from "../model/PtolemaicPlanet.js";
 import { PlanetType, PRESET_KEYS } from "../model/PtolemaicPlanet.js";
 
-const TITLE_FONT = new PhetFont({ size: 13, weight: "bold" });
-const LABEL_FONT = new PhetFont(13);
+const TITLE_FONT = new PhetFont({ size: 12, weight: "bold" });
+const LABEL_FONT = new PhetFont(12);
 const MAX_LABEL_WIDTH = PANEL_WIDTH - 60;
 
 export class PtolemaicControlPanel extends SolarSystemModelsPanel {
@@ -50,59 +56,50 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     });
 
     const presetComboBox = new ComboBox(model.presetKeyProperty, comboItems, listParent, {
+      ...SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
       accessibleName: a11y.controls.planetPresetStringProperty,
     });
 
-    // ── NumberControls ─────────────────────────────────────────────────────
-    const labelOpts = {
-      font: LABEL_FONT,
-      fill: SolarSystemModelsColors.textColorProperty,
-      maxWidth: MAX_LABEL_WIDTH,
-    };
-
+    // ── NumberControls (Flash: label | value | slider on one row) ───────────
     const epicycleSizeControl = new NumberControl(
       strings.epicycleSizeStringProperty,
       model.epicycleSizeProperty,
       new Range(EPICYCLE_SIZE_RANGE.min, EPICYCLE_SIZE_RANGE.max),
-      {
-        titleNodeOptions: labelOpts,
+      createCompactNumberControlOptions({
         delta: 0.01,
         numberDisplayOptions: { decimalPlaces: 3 },
         accessibleName: a11y.controls.epicycleSizeStringProperty,
-      },
+      }),
     );
     const eccentricityControl = new NumberControl(
       strings.eccentricityStringProperty,
       model.eccentricityProperty,
       new Range(ECCENTRICITY_RANGE.min, ECCENTRICITY_RANGE.max),
-      {
-        titleNodeOptions: labelOpts,
+      createCompactNumberControlOptions({
         delta: 0.001,
         numberDisplayOptions: { decimalPlaces: 3 },
         accessibleName: a11y.controls.eccentricityStringProperty,
-      },
+      }),
     );
     const motionRateControl = new NumberControl(
       strings.motionRateStringProperty,
       model.motionRateProperty,
       new Range(MOTION_RATE_RANGE.min, MOTION_RATE_RANGE.max),
-      {
-        titleNodeOptions: labelOpts,
+      createCompactNumberControlOptions({
         delta: 0.01,
         numberDisplayOptions: { decimalPlaces: 3 },
         accessibleName: a11y.controls.motionRateStringProperty,
-      },
+      }),
     );
     const apogeeAngleControl = new NumberControl(
       strings.apogeeAngleStringProperty,
       model.apogeeAngleProperty,
       new Range(APOGEE_ANGLE_RANGE.min, APOGEE_ANGLE_RANGE.max),
-      {
-        titleNodeOptions: labelOpts,
+      createCompactNumberControlOptions({
         delta: 1,
         numberDisplayOptions: { decimalPlaces: 1 },
         accessibleName: a11y.controls.apogeeAngleStringProperty,
-      },
+      }),
     );
 
     // ── Planet type radio group ────────────────────────────────────────────
@@ -126,6 +123,9 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     ];
 
     const planetTypeGroup = new AquaRadioButtonGroup(model.planetTypeProperty, radioItems, {
+      orientation: "horizontal",
+      spacing: 10,
+      stretch: false,
       accessibleName: a11y.controls.planetTypeStringProperty,
     });
 
@@ -137,6 +137,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       }),
       listener: () => model.storeMemory(),
       accessibleName: a11y.controls.memoryStoreStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
     const recallButton = new RectangularPushButton({
       content: new Text(strings.memoryRecallStringProperty, {
@@ -147,6 +148,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
       // Disabled until a snapshot is stored (AS: memoryRecallButton.setEnabled(false)).
       enabledProperty: model.hasMemoryProperty,
       accessibleName: a11y.controls.memoryRecallStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     // ── OK / re-apply selected preset button (AS setPresets "OK") ──────────
@@ -162,6 +164,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
         }
       },
       accessibleName: a11y.controls.setPresetStringProperty,
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });
 
     const content = new VBox({
@@ -170,8 +173,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
           font: TITLE_FONT,
           fill: SolarSystemModelsColors.textColorProperty,
         }),
-        presetComboBox,
-        okButton,
+        new HBox({ children: [presetComboBox, okButton], spacing: 8, align: "center" }),
         epicycleSizeControl,
         eccentricityControl,
         motionRateControl,
@@ -179,7 +181,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
         planetTypeGroup,
         new HBox({ children: [storeButton, recallButton], spacing: 8 }),
       ],
-      spacing: 10,
+      spacing: PANEL_CONTENT_SPACING,
       align: "left",
     });
 
