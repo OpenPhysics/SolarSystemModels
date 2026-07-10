@@ -1,4 +1,5 @@
 import { Multilink } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { DragListener, Node, Path, PressListener, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
@@ -155,7 +156,7 @@ export class ConfigurationsTimeline extends Node {
         axisShape.moveTo(0, y).lineTo(W, y);
         const tickLabel = tickPool[tickIdx];
         if (tickLabel !== undefined) {
-          const lbl = decimals <= 0 ? String(Math.round(tickTime)) : tickTime.toFixed(decimals);
+          const lbl = decimals <= 0 ? String(Math.round(tickTime)) : toFixed(tickTime, decimals);
           tickLabel.string = `${lbl} yr`;
           tickLabel.right = W - 2;
           tickLabel.centerY = y;

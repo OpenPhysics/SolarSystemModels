@@ -1,6 +1,6 @@
 import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Multilink } from "scenerystack/axon";
-import { Vector2 } from "scenerystack/dot";
+import { toFixed, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Node, Path, Text } from "scenerystack/scenery";
@@ -100,7 +100,7 @@ export class ConfigurationsElongationIndicator extends Node {
     // Label at the midpoint of the elongation arc (Flash: sunDir + elong/2)
     const midAngle = sunDir + (elongDeg * Math.PI) / 360;
     const labelR = CONFIGURATIONS_ELONGATION_ARC_RADIUS + 14;
-    this.elongLabel.string = `${Math.abs(elongDeg).toFixed(1)}° ${elongLabel_}`;
+    this.elongLabel.string = `${toFixed(Math.abs(elongDeg), 1)}° ${elongLabel_}`;
     this.elongLabel.centerX = vp1.x + labelR * Math.cos(midAngle);
     this.elongLabel.centerY = vp1.y + labelR * Math.sin(midAngle);
   }

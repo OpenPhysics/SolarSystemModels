@@ -18,6 +18,8 @@
  * sim runs.
  */
 import { DerivedProperty } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
+import { StringUtils } from "scenerystack/phetcommon";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { PtolemaicModel } from "../model/PtolemaicModel.js";
@@ -49,10 +51,11 @@ export class PtolemaicScreenSummaryContent extends ScreenSummaryContent {
       ] as const,
       (presetIndex, isPlaying, animationRate, template, playing, paused, ...presetLabels) => {
         const presetLabel = presetLabels[presetIndex] ?? presetLabels[PRESET_KEYS.indexOf("mars")];
-        return template
-          .replace("{0}", presetLabel ?? "")
-          .replace("{1}", isPlaying ? playing : paused)
-          .replace("{2}", animationRate.toFixed(0));
+        return StringUtils.fillIn(template, {
+          preset: presetLabel ?? "",
+          playState: isPlaying ? playing : paused,
+          rate: toFixed(animationRate, 0),
+        });
       },
     );
 

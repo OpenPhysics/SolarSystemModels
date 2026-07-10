@@ -67,7 +67,7 @@
     "pauseTime": "Pause Time (s)",
     "second": "seconde",
     "seconds": "secondes",
-    "pausedFor": "En pause : {0} {1}",
+    "pausedFor": "En pause : {{seconds}} {{unit}}",
     "cancelCountdown": "Cliquez pour annuler",
     "timelinePast": "Passé",
     "timelineFuture": "Futur",
@@ -87,7 +87,7 @@
         "controlArea": "La zone de contrôle comporte des commandes pour la planète et pour les tailles et vitesses de son déférent et de son épicycle, ainsi qu'un bouton Tout réinitialiser qui ramène l'écran à son état initial.",
         "interactionHint": "Ajustez le déférent et l'épicycle pour voir comment la planète semble se déplacer vue depuis la Terre."
       },
-      "currentDetailsTemplate": "Préréglage de planète : {0}. L'animation est {1}, à {2} jours par seconde.",
+      "currentDetailsTemplate": "Préréglage de planète : {{preset}}. L'animation est {{playState}}, à {{rate}} jours par seconde.",
       "playing": "en cours",
       "paused": "en pause",
       "controls": {
@@ -118,8 +118,8 @@
         "controlArea": "La zone de contrôle comporte des commandes pour choisir une planète et son orbite et pour animer les orbites, ainsi qu'un bouton Tout réinitialiser qui ramène l'écran à son état initial.",
         "interactionHint": "Choisissez une planète et animez les orbites pour voir se former les configurations planétaires."
       },
-      "currentDetailsTemplate": "Planète de l'observateur : {0}. Planète cible : {1}. Temps actuel : {2} ans. {3}",
-      "currentConfigurationTemplate": "Actuellement en {0}.",
+      "currentDetailsTemplate": "Planète de l'observateur : {{observer}}. Planète cible : {{target}}. Temps actuel : {{time}} ans. {{configuration}}",
+      "currentConfigurationTemplate": "Actuellement en {{name}}.",
       "controls": {
         "observerPlanet": "Sélecteur de planète de l'observateur",
         "targetPlanet": "Sélecteur de planète cible",

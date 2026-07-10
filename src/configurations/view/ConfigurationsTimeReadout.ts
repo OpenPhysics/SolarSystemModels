@@ -1,4 +1,6 @@
 import { Multilink } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
+import { StringUtils } from "scenerystack/phetcommon";
 import { Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
@@ -32,8 +34,8 @@ export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
         const yrs = Math.floor(absTime);
         const days = totalDays - yrs * DISPLAY_DAYS_PER_YEAR;
         const sign = time < 0 ? "-" : "";
-        timeText.string = `${sign}${absTime.toFixed(3)} yr (${sign}${yrs} yr, ${sign}${days.toFixed(1)} d)`;
-        synodicText.string = `${synodicLabel} ${synodic.toFixed(3)} yr`;
+        timeText.string = `${sign}${toFixed(absTime, 3)} yr (${sign}${yrs} yr, ${sign}${toFixed(days, 1)} d)`;
+        synodicText.string = `${synodicLabel} ${toFixed(synodic, 3)} yr`;
       },
     );
 
@@ -65,7 +67,7 @@ export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
         if (remaining > 0) {
           const secs = Math.ceil(remaining);
           const unit = secs === 1 ? second : seconds;
-          countdownText.string = pausedFor.replace("{0}", String(secs)).replace("{1}", unit);
+          countdownText.string = StringUtils.fillIn(pausedFor, { seconds: String(secs), unit });
         } else {
           countdownText.string = "";
         }

@@ -67,7 +67,7 @@
     "pauseTime": "Pause Time (s)",
     "second": "segundo",
     "seconds": "segundos",
-    "pausedFor": "En pausa: {0} {1}",
+    "pausedFor": "En pausa: {{seconds}} {{unit}}",
     "cancelCountdown": "Haga clic para cancelar",
     "timelinePast": "Pasado",
     "timelineFuture": "Futuro",
@@ -87,7 +87,7 @@
         "controlArea": "El área de control tiene controles para el planeta y para los tamaños y velocidades de su deferente y su epiciclo, además de un botón Restablecer todo que devuelve la pantalla a su estado inicial.",
         "interactionHint": "Ajusta el deferente y el epiciclo para ver cómo parece moverse el planeta visto desde la Tierra."
       },
-      "currentDetailsTemplate": "Preset de planeta: {0}. La animación está {1}, a {2} días por segundo.",
+      "currentDetailsTemplate": "Preset de planeta: {{preset}}. La animación está {{playState}}, a {{rate}} días por segundo.",
       "playing": "en marcha",
       "paused": "en pausa",
       "controls": {
@@ -118,8 +118,8 @@
         "controlArea": "El área de control tiene controles para elegir un planeta y su órbita y para animar las órbitas, además de un botón Restablecer todo que devuelve la pantalla a su estado inicial.",
         "interactionHint": "Elige un planeta y anima las órbitas para ver cómo se forman las configuraciones planetarias."
       },
-      "currentDetailsTemplate": "Planeta del observador: {0}. Planeta objetivo: {1}. Tiempo actual: {2} años. {3}",
-      "currentConfigurationTemplate": "Actualmente en {0}.",
+      "currentDetailsTemplate": "Planeta del observador: {{observer}}. Planeta objetivo: {{target}}. Tiempo actual: {{time}} años. {{configuration}}",
+      "currentConfigurationTemplate": "Actualmente en {{name}}.",
       "controls": {
         "observerPlanet": "Selector del planeta del observador",
         "targetPlanet": "Selector del planeta objetivo",

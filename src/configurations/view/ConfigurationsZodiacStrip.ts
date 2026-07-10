@@ -1,4 +1,5 @@
 import { Multilink } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
 import { Circle, Node, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -100,7 +101,7 @@ export class ConfigurationsZodiacStrip extends Node {
         arc.rectX = arcX;
         arc.rectWidth = arcW;
 
-        elongText.string = `${Math.abs(elongDeg).toFixed(1)}° ${elongLabel}`;
+        elongText.string = `${toFixed(Math.abs(elongDeg), 1)}° ${elongLabel}`;
       },
     );
   }

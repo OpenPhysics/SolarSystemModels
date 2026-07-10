@@ -18,6 +18,8 @@
  * so the paragraph updates as the sim runs.
  */
 import { DerivedProperty } from "scenerystack/axon";
+import { toFixed } from "scenerystack/dot";
+import { StringUtils } from "scenerystack/phetcommon";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
@@ -66,14 +68,14 @@ export class ConfigurationsScreenSummaryContent extends ScreenSummaryContent {
         const observerLabel = planetLabels[preset1Index] ?? planetLabels[earthIndex];
         const targetLabel = planetLabels[preset2Index] ?? planetLabels[earthIndex];
         const configName = eventNameLabel(currentConfiguration);
-        const configPart = configName === "" ? "" : configTemplate.replace("{0}", configName);
+        const configPart = configName === "" ? "" : StringUtils.fillIn(configTemplate, { name: configName });
 
-        return template
-          .replace("{0}", observerLabel ?? "")
-          .replace("{1}", targetLabel ?? "")
-          .replace("{2}", time.toFixed(2))
-          .replace("{3}", configPart)
-          .trim();
+        return StringUtils.fillIn(template, {
+          observer: observerLabel ?? "",
+          target: targetLabel ?? "",
+          time: toFixed(time, 2),
+          configuration: configPart,
+        }).trim();
       },
     );
 
