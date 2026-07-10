@@ -25,7 +25,7 @@ src/common/
   └─ ZodiacStripBackground.ts    shared "band of sky" backdrop used by both screens' zodiac strips
 
 src/preferences/
-  ├─ SolarSystemModelsPreferencesModel   sim-specific pref state
+  ├─ SolarSystemModelsPreferencesModel   scaffold (empty — no sim-specific Properties yet; tandem reserved)
   ├─ SolarSystemModelsPreferencesNode    pref UI shown in Preferences → Simulation
   └─ solarSystemModelsQueryParameters    query-parameter declarations
 ```
@@ -106,7 +106,17 @@ in. Both screens' control/display panels use it so projector-mode switching is a
 
 `SolarSystemModelsColors.ts` defines `ProfileColorProperty` instances for "default" (dark) and
 "projector" (light) profiles; SceneryStack switches profiles automatically when the user toggles
-Projector Mode in Preferences.
+Projector Mode in Preferences. The exported `zodiacGhostBarColor(deltaPx)` computes speed-based
+ghosting-bar tints for the Ptolemaic zodiac strip (ported from Flash `Zodiac Strip.as`);
+`PtolemaicZodiacStrip.updateGhosting()` rebuilds those bars from the path trail's longitude array.
+
+### Configurations event names (i18n)
+
+Synodic event labels use typed keys (`EventNameKey` in `ConfigurationsModel`) rather than
+hardcoded English strings. `eventNameLabel()` / `eventNameStringProperty()` in
+`src/configurations/view/eventNameLabel.ts` map each key (e.g. `opposition`, `inferiorConjunction`)
+to the corresponding `configurations.*` string in locale JSON (`strings_en.json`, `strings_es.json`,
+`strings_fr.json`). The timeline, time readout, and screen summary all resolve labels through this helper.
 
 ## Multi-screen simulations
 
