@@ -80,6 +80,8 @@
     "zeroCounter": "Mettre à zéro",
     "zodiacSunLabel": "soleil",
     "zodiacPlanetLabel": "planète",
+    "eastDirection": "est",
+    "westDirection": "ouest",
     "opposition": "opposition",
     "quadratureEastern": "quadrature (est)",
     "conjunction": "conjonction",

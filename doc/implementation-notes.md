@@ -22,7 +22,9 @@ src/common/
   │                              ModelViewTransform2 Property; used for Earth/Sun/planet markers
   ├─ SolarSystemModelsPanel.ts   pre-themed Panel wrapper (all screens share SolarSystemModelsColors)
   ├─ ZodiacConstellationNode.ts  and ZodiacConstellationsData.ts — the shared starfield background
-  └─ ZodiacStripBackground.ts    shared "band of sky" backdrop used by both screens' zodiac strips
+  └─ ZodiacStripBackground.ts    shared sign-label strip chrome (Ptolemaic); Configurations
+                                 strip draws Flash-style constellation starfield instead
+                                 (`ConfigurationsZodiacStrip` + `ECLIPTIC_CONSTELLATIONS`)
 
 src/preferences/
   ├─ SolarSystemModelsPreferencesModel   scaffold (empty — no sim-specific Properties yet; tandem reserved)

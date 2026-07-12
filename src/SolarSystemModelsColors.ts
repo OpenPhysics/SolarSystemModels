@@ -78,8 +78,8 @@ const SolarSystemModelsColors = {
     projector: "#1b6f4b",
   }),
   zodiacBandColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacBand", {
-    default: "#1e293b",
-    projector: "#e8eaf6",
+    default: "#1a2233",
+    projector: "#f7f7f7",
   }),
 
   // ── Sky / background ──────────────────────────────────────────────────────
@@ -141,6 +141,22 @@ const SolarSystemModelsColors = {
   constellationStarColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "constellationStar", {
     default: "#aabbdd",
     projector: "#556677",
+  }),
+
+  /** Stick-figure lines on the configurations zodiac strip (Flash normalConstellationColor ≈ 0xB0B0B0). */
+  zodiacStripConstellationLineColorProperty: new ProfileColorProperty(
+    SolarSystemModelsNamespace,
+    "zodiacStripConstellationLine",
+    {
+      default: "#a8b0bc",
+      projector: "#909090",
+    },
+  ),
+
+  /** Star dots on the configurations zodiac strip. */
+  zodiacStripStarColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacStripStar", {
+    default: "#d0d6e0",
+    projector: "#333333",
   }),
 
   // ── Ptolemaic reference geometry ──────────────────────────────────────────
