@@ -13,7 +13,7 @@ import { eventNameLabel } from "./eventNameLabel.js";
 
 const W = CONFIGURATIONS_TIMELINE_WIDTH;
 const H = CONFIGURATIONS_TIMELINE_HEIGHT;
-const CYCLE_HEIGHT_PX = 120;
+const CYCLE_HEIGHT_PX = 150;
 const MIN_UNIT_PX = 20;
 /** Flash Timeline.as snapDistance (px); timeThreshold = snapDistance / scale. */
 const TIMELINE_SNAP_DISTANCE_PX = 1;

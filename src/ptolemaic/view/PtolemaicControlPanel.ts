@@ -152,6 +152,8 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     });
 
     // ── OK / re-apply selected preset button (AS setPresets "OK") ──────────
+    // OK starts disabled and enables when the combo/sliders/radio diverge from
+    // the selected preset (AS: setPresetsButton state machine).
     const okButton = new RectangularPushButton({
       content: new Text(strings.okStringProperty, {
         font: LABEL_FONT,
@@ -163,6 +165,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
           model.applyPreset(key);
         }
       },
+      enabledProperty: model.presetIsDirtyProperty,
       accessibleName: a11y.controls.setPresetStringProperty,
       ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
     });

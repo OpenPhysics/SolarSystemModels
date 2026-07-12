@@ -5,7 +5,6 @@ import type { TModel } from "scenerystack/joist";
 import { TimeModel } from "../../common/TimeModel.js";
 import {
   APOGEE_ANGLE_RANGE,
-  DAYS_PER_YEAR,
   ECCENTRICITY_RANGE,
   EPICYCLE_SIZE_RANGE,
   MOTION_RATE_RANGE,
@@ -14,6 +13,7 @@ import {
   PTOLEMAIC_DEFAULT_ANIMATION_RATE,
   PTOLEMAIC_DEFERENT_RADIUS,
   PTOLEMAIC_SUN_ORBIT_RADIUS,
+  PTOLEMAIC_SUN_RATE,
 } from "../../SolarSystemModelsConstants.js";
 import type { PlanetPresetKey } from "./PtolemaicPlanet.js";
 import { PLANET_PRESETS, PlanetType, PRESET_KEYS } from "./PtolemaicPlanet.js";
@@ -82,7 +82,11 @@ export class PtolemaicModel implements TModel {
   /** True when a stored memory snapshot exists (drives Recall button enabled state). */
   public readonly hasMemoryProperty: BooleanProperty;
 
+  /** True when current parameters diverge from the selected preset (drives OK button enabled state). */
+  public readonly presetIsDirtyProperty: BooleanProperty;
+
   private memory: MemorySnapshot | null = null;
+  private applyingPreset = false;
 
   public constructor() {
     this.timer = new TimeModel(false);
@@ -128,6 +132,7 @@ export class PtolemaicModel implements TModel {
 
     this.trailClearProperty = new NumberProperty(0);
     this.hasMemoryProperty = new BooleanProperty(false);
+    this.presetIsDirtyProperty = new BooleanProperty(false);
 
     // Shared dependencies array for geometry derived properties
     const geomDeps = [
@@ -168,13 +173,30 @@ export class PtolemaicModel implements TModel {
       Math.atan2(pos.y, pos.x),
     );
 
-    // Apply Mars preset to keep presetKeyProperty in sync
-    this.presetKeyProperty.lazyLink((idx) => {
-      const key = PRESET_KEYS[idx];
-      if (key !== undefined) {
-        this.applyPresetData(PLANET_PRESETS[key]);
+    // Combo box selection change marks the preset as dirty (AS: enableButton).
+    // The OK button applies the preset when clicked — it does NOT auto-apply.
+    this.presetKeyProperty.lazyLink(() => {
+      if (!this.applyingPreset) {
+        this.presetIsDirtyProperty.value = true;
       }
     });
+
+    // Any manual parameter change marks the preset as dirty (AS: each slider's
+    // change handler calls setPresetsButton.setEnabled(true)).
+    const dirtyParams = [
+      this.epicycleSizeProperty,
+      this.eccentricityProperty,
+      this.motionRateProperty,
+      this.apogeeAngleProperty,
+      this.planetTypeProperty,
+    ] as const;
+    for (const prop of dirtyParams) {
+      prop.lazyLink(() => {
+        if (!this.applyingPreset) {
+          this.presetIsDirtyProperty.value = true;
+        }
+      });
+    }
 
     // Any change to a trajectory parameter invalidates the trail (AS clearPath).
     const clearTrailParams = [
@@ -239,7 +261,7 @@ export class PtolemaicModel implements TModel {
 
   /** Current per-day angular rates (radians/day). */
   public getSunRate(): number {
-    return TWO_PI / DAYS_PER_YEAR;
+    return PTOLEMAIC_SUN_RATE;
   }
 
   public getAnomalyRate(): number {
@@ -249,9 +271,12 @@ export class PtolemaicModel implements TModel {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   public applyPreset(key: PlanetPresetKey): void {
+    this.applyingPreset = true;
     const idx = PRESET_KEYS.indexOf(key);
     this.presetKeyProperty.value = idx;
     this.applyPresetData(PLANET_PRESETS[key]);
+    this.presetIsDirtyProperty.value = false;
+    this.applyingPreset = false;
   }
 
   private applyPresetData(preset: (typeof PLANET_PRESETS)[keyof typeof PLANET_PRESETS]): void {
@@ -343,7 +368,10 @@ export class PtolemaicModel implements TModel {
     this.memory = null;
     this.hasMemoryProperty.reset();
     // restore Mars defaults (index 1)
+    this.applyingPreset = true;
     this.applyPresetData(PLANET_PRESETS.mars);
+    this.presetIsDirtyProperty.value = false;
+    this.applyingPreset = false;
     this.clearTrail();
   }
 }

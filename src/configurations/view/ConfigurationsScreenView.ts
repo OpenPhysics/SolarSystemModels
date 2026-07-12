@@ -9,6 +9,7 @@ import { ScreenView } from "scenerystack/sim";
 import { RectangularPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
+import { CurvedText } from "../../common/CurvedText.js";
 import {
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
   FLAT_RESET_ALL_BUTTON_OPTIONS,
@@ -93,22 +94,29 @@ export class ConfigurationsScreenView extends ScreenView {
     this.addChild(orbit1Circle);
     this.addChild(orbit2Circle);
 
-    // ── Orbit labels ────────────────────────────────────────────────────────
-    const orbitLabel1 = new Text("", {
-      font: new PhetFont(10),
-      fill: SolarSystemModelsColors.observerPlanetColorProperty,
-      visibleProperty: model.showOrbitLabelsProperty,
-    });
-    const orbitLabel2 = new Text("", {
-      font: new PhetFont(10),
-      fill: SolarSystemModelsColors.targetPlanetColorProperty,
-      visibleProperty: model.showOrbitLabelsProperty,
-    });
+    // ── Orbit labels (curved along the orbit arc, AS: CurvedText) ───────────
+    const orbitLabel1 = new CurvedText(
+      s.observerPlanetStringProperty,
+      new PhetFont(10),
+      SolarSystemModelsColors.observerPlanetColorProperty,
+    );
+    orbitLabel1.visibleProperty = model.showOrbitLabelsProperty;
+    const orbitLabel2 = new CurvedText(
+      s.targetPlanetStringProperty,
+      new PhetFont(10),
+      SolarSystemModelsColors.targetPlanetColorProperty,
+    );
+    orbitLabel2.visibleProperty = model.showOrbitLabelsProperty;
     this.addChild(orbitLabel1);
     this.addChild(orbitLabel2);
 
     // ── Elongation indicator ────────────────────────────────────────────────
-    const elongationIndicator = new ConfigurationsElongationIndicator(model, this.mvtProperty);
+    const elongationIndicator = new ConfigurationsElongationIndicator(
+      model,
+      this.mvtProperty,
+      ORBIT_AREA_SIZE,
+      this.layoutBounds.height,
+    );
     this.addChild(elongationIndicator);
 
     // ── Sun at origin ───────────────────────────────────────────────────────
@@ -226,13 +234,8 @@ export class ConfigurationsScreenView extends ScreenView {
       orbit2Circle.shape = Shape.circle(center.x, center.y, r2);
 
       // Flash Orbits Diagram: curved role labels ("observer's / target planet").
-      orbitLabel1.string = s.observerPlanetStringProperty.value;
-      orbitLabel1.centerX = center.x;
-      orbitLabel1.bottom = center.y - r1 - 4;
-
-      orbitLabel2.string = s.targetPlanetStringProperty.value;
-      orbitLabel2.centerX = center.x;
-      orbitLabel2.bottom = center.y - r2 - 4;
+      orbitLabel1.setCurve(center.x, center.y, r1);
+      orbitLabel2.setCurve(center.x, center.y, r2);
 
       // Update planet node positions to use new MVT
       updateSunPos();
@@ -296,6 +299,20 @@ export class ConfigurationsScreenView extends ScreenView {
     timeline.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
     timeline.top = timeReadout.bottom + PANEL_INTER_GAP;
 
+    // ── Zero Counter button (AS: zeroTimelineTime — display-only offset) ───
+    const zeroCounterButton = new RectangularPushButton({
+      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+      content: new Text(s.zeroCounterStringProperty, {
+        font: new PhetFont(12),
+        fill: SolarSystemModelsColors.textColorProperty,
+      }),
+      listener: () => model.zeroTimelineCounter(),
+      accessibleName: s.zeroCounterStringProperty,
+    });
+    zeroCounterButton.right = this.layoutBounds.maxX - SCREEN_VIEW_MARGIN;
+    zeroCounterButton.top = timeline.bottom + PANEL_INTER_GAP;
+    this.addChild(zeroCounterButton);
+
     // ── Reset All button ────────────────────────────────────────────────────
     const resetAllButton = new ResetAllButton({
       ...FLAT_RESET_ALL_BUTTON_OPTIONS,
@@ -316,6 +333,7 @@ export class ConfigurationsScreenView extends ScreenView {
           displayPanel,
           timeReadout,
           timeline,
+          zeroCounterButton,
           observerNode,
           targetNode,
           cancelButton,

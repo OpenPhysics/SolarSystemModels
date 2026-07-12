@@ -9,14 +9,54 @@ import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import { CONFIGURATIONS_ELONGATION_ARC_RADIUS } from "../../SolarSystemModelsConstants.js";
 import type { ConfigurationsModel } from "../model/ConfigurationsModel.js";
 
+const ANGLE_MARGIN = 15;
+
+/**
+ * Compute the distance from (px,py) along direction (dx,dy) to the boundary of
+ * the rectangle [minX,minY]–[maxX,maxY]. The ray origin is assumed to be inside
+ * the box, so we return the positive exit distance (tmax).
+ */
+function rayBoxExit(
+  px: number,
+  py: number,
+  dx: number,
+  dy: number,
+  minX: number,
+  minY: number,
+  maxX: number,
+  maxY: number,
+): number {
+  let tmax = Infinity;
+  if (dx > 0) {
+    tmax = Math.min(tmax, (maxX - px) / dx);
+  } else if (dx < 0) {
+    tmax = Math.min(tmax, (minX - px) / dx);
+  }
+  if (dy > 0) {
+    tmax = Math.min(tmax, (maxY - py) / dy);
+  } else if (dy < 0) {
+    tmax = Math.min(tmax, (minY - py) / dy);
+  }
+  return tmax > 0 ? tmax : 180;
+}
+
 export class ConfigurationsElongationIndicator extends Node {
   private readonly sunArrow: ArrowNode;
   private readonly planetArrow: ArrowNode;
   private readonly arcPath: Path;
   private readonly elongLabel: Text;
+  private readonly diagramWidth: number;
+  private readonly diagramHeight: number;
 
-  public constructor(model: ConfigurationsModel, mvtProperty: TReadOnlyProperty<ModelViewTransform2>) {
+  public constructor(
+    model: ConfigurationsModel,
+    mvtProperty: TReadOnlyProperty<ModelViewTransform2>,
+    diagramWidth: number,
+    diagramHeight: number,
+  ) {
     super({ visibleProperty: model.showElongationAngleProperty });
+    this.diagramWidth = diagramWidth;
+    this.diagramHeight = diagramHeight;
 
     this.sunArrow = new ArrowNode(0, 0, 1, 0, {
       stroke: null,
@@ -73,14 +113,21 @@ export class ConfigurationsElongationIndicator extends Node {
     // Direction from p1 toward p2 (view)
     const planetDir = Math.atan2(vp2.y - vp1.y, vp2.x - vp1.x);
 
-    // Arrow endpoints — extend to edge of diagram
-    const arrowLen = 180;
-    this.sunArrow.setTailAndTip(vp1.x, vp1.y, vp1.x + arrowLen * Math.cos(sunDir), vp1.y + arrowLen * Math.sin(sunDir));
+    // Extend arrows to the diagram edge (AS: angleMargin = 15 from border)
+    const minX = ANGLE_MARGIN;
+    const minY = ANGLE_MARGIN;
+    const maxX = this.diagramWidth - ANGLE_MARGIN;
+    const maxY = this.diagramHeight - ANGLE_MARGIN;
+
+    const sunLen = rayBoxExit(vp1.x, vp1.y, Math.cos(sunDir), Math.sin(sunDir), minX, minY, maxX, maxY);
+    const planetLen = rayBoxExit(vp1.x, vp1.y, Math.cos(planetDir), Math.sin(planetDir), minX, minY, maxX, maxY);
+
+    this.sunArrow.setTailAndTip(vp1.x, vp1.y, vp1.x + sunLen * Math.cos(sunDir), vp1.y + sunLen * Math.sin(sunDir));
     this.planetArrow.setTailAndTip(
       vp1.x,
       vp1.y,
-      vp1.x + arrowLen * Math.cos(planetDir),
-      vp1.y + arrowLen * Math.sin(planetDir),
+      vp1.x + planetLen * Math.cos(planetDir),
+      vp1.y + planetLen * Math.sin(planetDir),
     );
 
     // Arc — draw the elongation wedge between the Sun and planet rays.

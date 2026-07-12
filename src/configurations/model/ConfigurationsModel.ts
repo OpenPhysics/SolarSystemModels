@@ -36,6 +36,8 @@ export class ConfigurationsModel implements TModel {
 
   // ── Dynamic time ───────────────────────────────────────────────────────────
   public readonly timeProperty: NumberProperty; // years
+  /** Display-only offset for the time readout (AS: timelineTimeOffset). */
+  public readonly timelineTimeOffsetProperty: NumberProperty;
 
   // ── Synodic / event schedule ───────────────────────────────────────────────
   public readonly synodicPeriodProperty: NumberProperty;
@@ -107,6 +109,7 @@ export class ConfigurationsModel implements TModel {
     this.epochAngle2Property = new NumberProperty(0, { range: new Range(0, TWO_PI) });
 
     this.timeProperty = new NumberProperty(0);
+    this.timelineTimeOffsetProperty = new NumberProperty(0);
 
     this.synodicPeriodProperty = new NumberProperty(1);
     this.cycleOffsetProperty = new NumberProperty(0);
@@ -538,6 +541,11 @@ export class ConfigurationsModel implements TModel {
     this.setTime(0);
   }
 
+  /** Zero the timeline display offset (AS: zeroTimelineTime). Display-only. */
+  public zeroTimelineCounter(): void {
+    this.timelineTimeOffsetProperty.value = -this.timeProperty.value;
+  }
+
   private startCountdown(): void {
     this.countdownElapsed = 0;
     this.countdownRemainingProperty.value = this.pauseTimeProperty.value;
@@ -715,5 +723,6 @@ export class ConfigurationsModel implements TModel {
     this.calculateSystemProperties();
     this.syncPresetIndices();
     this.setTime(0);
+    this.zeroTimelineCounter();
   }
 }

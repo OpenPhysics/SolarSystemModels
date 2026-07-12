@@ -15,7 +15,7 @@ export const PANEL_INTER_GAP = 4;
 export const ORBIT_VIEW_SCALE = 95; // px per model unit
 export const ORBIT_VIEW_CENTER_X = 295; // px — model origin maps here (x)
 export const ORBIT_VIEW_CENTER_Y = 300; // px — model origin maps here (y)
-export const ZODIAC_LABEL_RADIUS = 285; // px — zodiac sign label ring
+export const ZODIAC_LABEL_RADIUS = 260; // px — zodiac sign label ring (AS: 260)
 export const ZODIAC_STRIP_HEIGHT = 80; // px — "view from Earth" strip height
 export const ZODIAC_STRIP_WIDTH = 600; // px — width matching AS factor 600/2π
 
@@ -23,7 +23,10 @@ export const ZODIAC_STRIP_WIDTH = 600; // px — width matching AS factor 600/2�
 
 export const PTOLEMAIC_DEFERENT_RADIUS = 1; // deferent radius in model units
 export const PTOLEMAIC_SUN_ORBIT_RADIUS = 2.25; // AS: 225 px / 100 px deferent
-// Physics days-per-year (used for orbital rates); the Flash Ptolemaic uses this value.
+// Sun's mean motion in rad/day — exact AS constant (Ptolemaic System.as:51).
+// This is 2π/365.2563… (sidereal year), the astronomical daily mean longitude rate.
+export const PTOLEMAIC_SUN_RATE = 0.0172025806756283;
+// Days-per-year used for the path-duration conversion (AS setPathTime: 365.24667).
 export const DAYS_PER_YEAR = 365.24667;
 // Display-only days-per-year (Flash Timeline.as:150 uses 365.24 for readouts).
 export const DISPLAY_DAYS_PER_YEAR = 365.24;
@@ -43,15 +46,15 @@ export const PATH_DURATION_RANGE = { min: 0.3, max: 10 } as const; // AS slider 
 
 // Configurations animation: user-facing speed multiplier (both screens share a
 // generic animation-rate concept via TimeModel, but each screen scales it).
-export const ANIMATION_RATE_RANGE = { min: 0.1, max: 5 } as const;
+export const ANIMATION_RATE_RANGE = { min: 0, max: 6 } as const;
 
 // ── Configurations orbital view layout ────────────────────────────────────────
 
 export const CONFIGURATIONS_ORBIT_CENTER_X = 285; // px — Sun maps here (x)
 export const CONFIGURATIONS_ORBIT_CENTER_Y = 285; // px — Sun maps here (y)
 export const CONFIGURATIONS_ORBIT_MARGIN = 60; // px — margin around orbit area
-export const CONFIGURATIONS_TIMELINE_WIDTH = 210; // px
-export const CONFIGURATIONS_TIMELINE_HEIGHT = 220; // px
+export const CONFIGURATIONS_TIMELINE_WIDTH = 260; // px — AS Timeline.as areaWidth
+export const CONFIGURATIONS_TIMELINE_HEIGHT = 200; // px — AS Timeline.as areaHeight
 export const CONFIGURATIONS_ELONGATION_ARC_RADIUS = 35; // px — elongation indicator arc radius
 
 // ── Configurations parameter bounds (AS slider ranges) ─────────────────────────
@@ -75,6 +78,7 @@ SolarSystemModelsNamespace.register("SolarSystemModelsConstants", {
   ZODIAC_STRIP_WIDTH,
   PTOLEMAIC_DEFERENT_RADIUS,
   PTOLEMAIC_SUN_ORBIT_RADIUS,
+  PTOLEMAIC_SUN_RATE,
   DAYS_PER_YEAR,
   DISPLAY_DAYS_PER_YEAR,
   PTOLEMAIC_ANIMATION_RATE_RANGE,

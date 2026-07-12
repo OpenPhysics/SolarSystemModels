@@ -27,13 +27,19 @@ export class ConfigurationsTimeReadout extends SolarSystemModelsPanel {
     const countdownText = new Text("", FONT_OPTS);
 
     Multilink.multilink(
-      [model.timeProperty, model.synodicPeriodProperty, s.synodicPeriodStringProperty] as const,
-      (time, synodic, synodicLabel) => {
-        const absTime = Math.abs(time);
+      [
+        model.timeProperty,
+        model.timelineTimeOffsetProperty,
+        model.synodicPeriodProperty,
+        s.synodicPeriodStringProperty,
+      ] as const,
+      (time, offset, synodic, synodicLabel) => {
+        const displayTime = time + offset;
+        const absTime = Math.abs(displayTime);
         const totalDays = absTime * DISPLAY_DAYS_PER_YEAR;
         const yrs = Math.floor(absTime);
         const days = totalDays - yrs * DISPLAY_DAYS_PER_YEAR;
-        const sign = time < 0 ? "-" : "";
+        const sign = displayTime < 0 ? "-" : "";
         timeText.string = `${sign}${toFixed(absTime, 3)} yr (${sign}${yrs} yr, ${sign}${toFixed(days, 1)} d)`;
         synodicText.string = `${synodicLabel} ${toFixed(synodic, 3)} yr`;
       },

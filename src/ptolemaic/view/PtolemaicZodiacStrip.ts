@@ -151,8 +151,8 @@ export class PtolemaicZodiacStrip extends Node {
       }
       const segStart = Math.floor(s * perSegment);
       const segEnd = Math.max(segStart + 1, Math.floor((s + 1) * perSegment));
-      // Newest segment brightest (AS: current segment reaches minAlpha + alphaSpread).
-      segPath.opacity = (MIN_ALPHA + (s + 1) * alphaStep) / 100;
+      // Newest segment brightest (AS Zodiac Strip.as:177: alpha = minAlpha + i*step).
+      segPath.opacity = (MIN_ALPHA + s * alphaStep) / 100;
 
       const shape = new Shape();
       let deltaSum = 0;
