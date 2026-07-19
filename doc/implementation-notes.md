@@ -1,134 +1,116 @@
 # Implementation Notes - Solar System Models
 
-## Architecture overview
+Developer-facing notes on the architecture. Educator-facing physics are in [model.md](./model.md).
 
-Two independent screens, each a standard `Screen<Model, ScreenView>` pairing (see
-[.github/CLAUDE.md](https://github.com/OpenPhysics/.github/blob/main/CLAUDE.md) for the general
-SceneryStack Model/View pattern this follows). The screens share no model state — each owns its own
-`Model` — but share layout/color/i18n infrastructure at the `src/` root and in `src/common/`.
+## Architecture Overview
+
+Two independent screens; no shared root model.
 
 ```
-main.ts
-  ├─ PtolemaicScreen                     (Screen<PtolemaicModel, PtolemaicScreenView>)
-  │    ├─ PtolemaicModel                  deferent/epicycle/equant geometry, presets, memory store/recall
-  │    └─ PtolemaicScreenView             orbit diagram, "view from Earth" zodiac strip, path trail
-  └─ ConfigurationsScreen                 (Screen<ConfigurationsModel, ConfigurationsScreenView>)
-       ├─ ConfigurationsModel             Kepler orbits, elongation, synodic event schedule, timeline
-       └─ ConfigurationsScreenView        orbit diagram, elongation indicator, zodiac strip, timeline
+src/main.ts
+  ├─ PtolemaicScreen        (Screen<PtolemaicModel, PtolemaicScreenView>)
+  └─ ConfigurationsScreen   (Screen<ConfigurationsModel, ConfigurationsScreenView>)
+
+src/ptolemaic/
+  PtolemaicScreen.ts
+  model/PtolemaicModel.ts, PtolemaicPlanet.ts
+  view/PtolemaicScreenView.ts, PtolemaicOrbitNode.ts, PtolemaicZodiacStrip.ts, …
+
+src/configurations/
+  ConfigurationsScreen.ts
+  model/ConfigurationsModel.ts, ConfigurationsPlanet.ts, EventNameKey.ts, EventAction.ts
+  view/ConfigurationsScreenView.ts, ConfigurationsOrbitNode.ts, ConfigurationsZodiacStrip.ts, …
 
 src/common/
-  ├─ TimeModel.ts               composable play/pause + elapsed-time model; both screen models compose one
-  ├─ CelestialBodyNode.ts        Circle auto-positioned from a model Vector2 Property + a reactive
-  │                              ModelViewTransform2 Property; used for Earth/Sun/planet markers
-  ├─ SolarSystemModelsPanel.ts   pre-themed Panel wrapper (all screens share SolarSystemModelsColors)
-  ├─ ZodiacConstellationNode.ts  and ZodiacConstellationsData.ts — the shared starfield background
-  └─ ZodiacStripBackground.ts    shared sign-label strip chrome (Ptolemaic); Configurations
-                                 strip draws Flash-style constellation starfield instead
-                                 (`ConfigurationsZodiacStrip` + `ECLIPTIC_CONSTELLATIONS`)
+  TimeModel.ts                    play/pause; Configurations also uses animationRateProperty
+  SolarSystemModelsPanel.ts, SolarSystemModelsButtonOptions.ts, SolarSystemModelsControlOptions.ts
+  ZodiacConstellationsData.ts, ZodiacStripBackground.ts
 
-src/preferences/
-  ├─ SolarSystemModelsPreferencesModel   scaffold (empty — no sim-specific Properties yet; tandem reserved)
-  ├─ SolarSystemModelsPreferencesNode    pref UI shown in Preferences → Simulation
-  └─ solarSystemModelsQueryParameters    query-parameter declarations
+src/SolarSystemModelsConstants.ts   ranges, presets, layout
+src/preferences/                    empty scaffold + query params
 ```
 
-Data flows Model → View through AXON `Property` objects; views observe via `.link()`, `.lazyLink()`, or
-`Multilink.multilink()` and update reactively. Neither model imports from its own `view/`.
+Data flows Model → View through AXON `Property` / `DerivedProperty`. Models never import views.
 
-## Model components
+## PtolemaicModel
 
-### PtolemaicModel
+**DerivedProperty chain** for deferent center, epicycle center (equant geometry), geocentric position,
+ecliptic longitude.
 
-Owns the deferent/epicycle/equant geometry (see [model.md](./model.md) for the math) as a chain of
-`DerivedProperty`s keyed on the adjustable parameters (`epicycleSizeProperty`, `eccentricityProperty`,
-`apogeeAngleProperty`, `motionRateProperty`, `planetTypeProperty`) plus the two time-driven angles
-(`sunAngleProperty`, `anomalyProperty`), which `step(dt)` advances (wrapped to `[0, 2π)` so they don't
-lose precision over a long play session). `applyPreset`/`storeMemory`/`recallMemory` implement the
-preset combo box and the memory-recall buttons from the original Flash sim.
+| Property | Role |
+|---|---|
+| Sliders | `epicycleSizeProperty`, `eccentricityProperty`, `motionRateProperty`, `apogeeAngleProperty` |
+| Planet | `planetTypeProperty`, `presetProperty` |
+| Time | `ptolemaicTimeProperty` (days), `anomalyProperty`, `sunAngleProperty` |
+| Animation | `animationRateProperty` (days/sec, 1–500); `timer.isPlayingProperty` only from `TimeModel` |
+| Trail | `pathDurationProperty` (years of longitude history) |
+| Memory | `storeMemory` / `recallMemory` |
 
-### ConfigurationsModel
+**API:** `applyPreset`, `setSunAngle`, `clearTrail`, `resetTime`, `samplePlanetPosition`, `getSunRate` /
+`getAnomalyRate`.
 
-Owns the two Kepler orbits (`semimajorAxis{1,2}Property`, `period{1,2}Property`,
-`epochAngle{1,2}Property`) and the derived synodic/event schedule
-(`synodicPeriodProperty`, `cycleOffsetProperty`, `eventTimesListProperty`, `eventNamesProperty`,
-`currentCycleNumberProperty`). The schedule is **entirely derived** — a single internal `DerivedProperty`
-recomputes it from the orbital parameters, and the five public Properties above are `TReadOnlyProperty`
-views onto that computation, so nothing outside the model can put the schedule out of sync with the
-orbits that produced it.
+`step(dt)`: `dtDays = dt × animationRate`; angles += rate × dtDays.
 
-Time-driven animation (`step(dt)`) has three mutually exclusive modes, tracked by a private
-`"idle" | "slewing" | "countingDown"` union rather than ad-hoc boolean/sentinel fields:
+Static `ModelViewTransform2` wrapped in `Property` for diagram scaling.
 
-- **idle** — normal playback; `eventActionProperty` (`RUN`/`PAUSE`/`LOCK`) decides what happens when the
-  clock crosses the next scheduled event.
-- **slewing** — an eased animation (`slewToEvent`) that jumps the clock to a specific event, used when
-  the user clicks an event on the timeline.
-- **countingDown** — used by the `PAUSE` event action: play stops at an event for `pauseTimeProperty`
-  seconds (tracked by `countdownRemainingProperty`) before automatically resuming.
+## ConfigurationsModel
 
-### TimeModel (common)
+Circular Kepler orbits; **planet 1 = observer**, **planet 2 = target**.
 
-`src/common/TimeModel.ts` is a reusable play/pause + elapsed-time model for animated sims. Compose it
-into a screen model rather than subclassing:
+| Property | Role |
+|---|---|
+| Orbits | `semimajorAxis1Property`, `semimajorAxis2Property`, `epochAngle1Property`, `epochAngle2Property` |
+| Periods | `period1Property`, `period2Property` — **mutable `NumberProperty`**, not derived (epoch-preserving updates) |
+| Time | `timeProperty` (years), `nextEventTimeProperty`, `currentCycleNumberProperty` |
+| Schedule | `synodicPeriodProperty`, `cycleOffsetProperty`, `eventTimesListProperty`, `eventNamesProperty` |
+| Playback | `eventActionProperty` (`RUN` \| `PAUSE` \| `STOP`); private `slewActive`, `countdownElapsed` |
+| Animation | `timer.animationRateProperty` (0–6×); `timer.isPlayingProperty` |
 
-```typescript
-export class YourModel implements TModel {
-  public readonly timer = new TimeModel();
+**Schedule:** `calculateSystemProperties()` imperatively writes synodic schedule Properties (not a single
+`DerivedProperty` bundle). Called from constructor, `setSemimajorAxis`, epoch changes, `reset`.
 
-  public step(dt: number): void {
-    this.timer.step(dt);
-    // physics driven by this.timer.timeProperty.value
-  }
-  public reset(): void { this.timer.reset(); }
-}
-```
+**API highlights:** `setSemimajorAxis(id, newA, keepEpochFixed?)`, `setTime`, `setTimeByCycleAndEventNumbers`,
+`slewToEvent` (0.65 s ease), `setTimeByPlanetAngle`, `applyPreset`, `reset`.
 
-Both `PtolemaicModel` and `ConfigurationsModel` compose a `TimeModel` for `isPlayingProperty` and
-`animationRateProperty`, but drive their own `ptolemaicTimeProperty`/`timeProperty` from `step(dt)`
-directly (in days and years respectively) rather than using `TimeModel`'s own `timeProperty`.
+`step(dt)`: if slewing → cubic ease; if countdown → PAUSE hold; else advance time and snap on events.
 
-## View components
+Reactive `ModelViewTransform2` on `ConfigurationsScreenView.mvtProperty`.
 
-### Reactive `ModelViewTransform2`
+## EventNameKey naming caveat
 
-`ConfigurationsScreenView`'s orbit diagram rescales whenever either semimajor axis changes (so both
-orbits stay fit to the diagram). Its `ModelViewTransform2` is exposed as a `TReadOnlyProperty` (a
-`DerivedProperty` of the two axis Properties) rather than a plain mutable object — `CelestialBodyNode`
-and `ConfigurationsElongationIndicator` each combine that Property with their model-position Property
-via `Multilink.multilink`, so they redraw themselves consistently no matter which dependency changed.
-`PtolemaicScreenView`'s transform never changes (that screen has no adjustable orbit radius), so it
-wraps its static transform in a constant `Property` to satisfy the same interface.
+`OUTER_OBSERVER_EVENT_KEYS` holds opposition/conjunction names but is used when **a₁ &lt; a₂** (planet 1
+inner observer). `INNER_OBSERVER_EVENT_KEYS` holds inferior/superior names when **a₁ &gt; a₂**. Constant
+names are inverted relative to usage — describe behavior by *a*₁ vs *a*₂, not by constant identifiers.
 
-### SolarSystemModelsPanel (common)
+## Key design decisions
 
-`src/common/SolarSystemModelsPanel.ts` wraps SceneryStack's `Panel` with the sim's color scheme baked
-in. Both screens' control/display panels use it so projector-mode switching is automatic.
+1. **Split animation-rate semantics** — Ptolemaic uses model `animationRateProperty` (days/sec);
+   Configurations uses `TimeModel.animationRateProperty` (0–6×). Neither model uses `TimeModel.timeProperty`
+   for physics.
+2. **Imperative synodic schedule** — epoch angles shift event times within each cycle.
+3. **Flash-faithful Ptolemaic equant math** in `computeEpicycleCenter`.
+4. **ConfigurationsZodiacStrip** — Flash-style ecliptic starfield; Ptolemaic uses separate strip node.
 
-### Color scheme
+## Common components
 
-`SolarSystemModelsColors.ts` defines `ProfileColorProperty` instances for "default" (dark) and
-"projector" (light) profiles; SceneryStack switches profiles automatically when the user toggles
-Projector Mode in Preferences. The exported `zodiacGhostBarColor(deltaPx)` computes speed-based
-ghosting-bar tints for the Ptolemaic zodiac strip (ported from Flash `Zodiac Strip.as`);
-`PtolemaicZodiacStrip.updateGhosting()` rebuilds those bars from the path trail's longitude array.
+- `SolarSystemModelsPanel`, `SolarSystemModelsButtonOptions`, `SolarSystemModelsControlOptions`.
+- `ZodiacConstellationsData`, `ZodiacStripBackground`.
 
-### Configurations event names (i18n)
+## Disposal
 
-Synodic event labels use typed keys (`EventNameKey` in `ConfigurationsModel`) rather than
-hardcoded English strings. `eventNameLabel()` / `eventNameStringProperty()` in
-`src/configurations/view/eventNameLabel.ts` map each key (e.g. `opposition`, `inferiorConjunction`)
-to the corresponding `configurations.*` string in locale JSON (`strings_en.json`, `strings_es.json`,
-`strings_fr.json`). The timeline, time readout, and screen summary all resolve labels through this helper.
+Screen-lifetime architecture.
 
-## Multi-screen simulations
+## Testing
 
-See [doc/multi-screen.md](./multi-screen.md) for the general guide this sim's two-screen structure
-follows (independent vs. shared-model architectures, per-screen accessibility strings, home-screen icon
-requirements). This sim uses the **independent-state** pattern — the two screens share no model — since
-the Ptolemaic and Configurations labs are conceptually separate simulators in the original NAAP suite.
+| File | Covers |
+|---|---|
+| `PtolemaicModel.test.ts` | Geometry, retrograde, superior/inferior swap, memory, trail |
+| `ConfigurationsModel.test.ts` | Kepler, elongation, synodic, event times/names, slew, timeline |
+| `TimeModel.test.ts` | Play/pause, animation rate default |
+| `memory-leak.test.ts` | Dispose regression |
 
-## Decompiling the Flash sources
+## Multi-screen
 
-See the root [CLAUDE.md](../CLAUDE.md) for `npm run decompile`, which extracts the original Flash
-simulators' ActionScript into `NAAP/decompiled/` (git-ignored) as a read-only reference for diffing the
-port's math against the originals.
+Independent state — see [multi-screen.md](./multi-screen.md).
+
+Flash decompile: `ptolemaic023-C`, `configurationsSimulator044-C` via `npm run decompile`.

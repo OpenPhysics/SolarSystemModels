@@ -4,77 +4,47 @@ Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhys
 
 ## Project
 
-A two-screen SceneryStack simulation porting the NAAP **Solar System Models** lab,
-scaffolded from `TemplateSingleSim`. Both screens now have complete models and
-fully wired views (not scaffolding).
+SceneryStack port of the NAAP **Solar System Models** lab. Two screens compare geocentric (Ptolemaic deferent + epicycle) and heliocentric (planetary configurations) explanations for retrograde motion. Architecture and formulas: [doc/model.md](doc/model.md), [doc/implementation-notes.md](doc/implementation-notes.md).
 
-- **Ptolemaic System** (`src/ptolemaic/`) — port of the NAAP *Ptolemaic System Simulator* (`ptolemaic.swf`): the Earth-centered (geocentric) model with deferent + epicycle and the resulting view from Earth.
-- **Planetary Configurations** (`src/configurations/`) — port of the NAAP *Planetary Configurations Simulator* (`configurationsSimulator.swf`): the Sun-centered system and the configurations (opposition, conjunction, elongation) that Earth and another planet form.
+- **Ptolemaic System** (`src/ptolemaic/`) — Earth-centered deferent, epicycle, and equant; zodiac longitude trail.
+- **Planetary Configurations** (`src/configurations/`) — Sun-centered circular orbits; opposition, conjunction, elongation; synodic event timeline.
 
-Shared code keeps the `SolarSystemModels` prefix; per-screen code uses the
-`Ptolemaic` / `Configurations` prefixes. Concept-named folders, no `-screen` suffix.
+Shared code uses the `SolarSystemModels` prefix; per-screen code uses `Ptolemaic` / `Configurations`. Concept-named folders, no `-screen` suffix.
 
 ## Key files
 
-| File | Purpose |
+| Area | Location |
 |---|---|
-| `src/SolarSystemModelsColors.ts` | All `ProfileColorProperty` instances (default + projector profiles); includes timeline/zodiac orbit-area keys and exported `zodiacGhostBarColor()` for speed-based Ptolemaic ghosting bars |
-| `src/SolarSystemModelsConstants.ts` | Named numeric constants (layout px, physics SI units) |
-| `src/SolarSystemModelsNamespace.ts` | Namespace used by `.register()` |
-| `src/common/SolarSystemModelsPanel.ts` | Pre-themed `Panel` wrapper (uses `SolarSystemModelsColors`) |
-| `src/common/TimeModel.ts` | Composable play/pause + elapsed-time model for animated sims |
-| `src/i18n/StringManager.ts` | Singleton localized string accessor; per-screen name + a11y getters |
-| `src/main.ts` | Entry point; registers both screens with the Sim |
-| `src/ptolemaic/PtolemaicScreen.ts` | `Screen<PtolemaicModel, PtolemaicScreenView>` wrapper |
-| `src/ptolemaic/model/PtolemaicModel.ts` | Ptolemaic screen state: deferent/epicycle geometry, presets, memory |
-| `src/ptolemaic/view/PtolemaicScreenView.ts` | Ptolemaic visuals, `screenSummaryContent` + `pdomOrder` |
-| `src/configurations/ConfigurationsScreen.ts` | `Screen<ConfigurationsModel, ConfigurationsScreenView>` wrapper |
-| `src/configurations/model/ConfigurationsModel.ts` | Configurations screen state: orbits, synodic events, timeline |
-| `src/configurations/view/ConfigurationsScreenView.ts` | Configurations visuals, `screenSummaryContent` + `pdomOrder` |
-| `src/preferences/solarSystemModelsQueryParameters.ts` | `QueryStringMachine` parameters |
-| `scripts/decompile-flash.ts` | Extract ActionScript from the NAAP Flash `.swf` sources via JPEXS FFDec (→ `NAAP/decompiled/`) |
+| Screens | `src/ptolemaic/PtolemaicScreen.ts`, `src/configurations/ConfigurationsScreen.ts` |
+| Models | `ptolemaic/model/PtolemaicModel.ts`, `PtolemaicPlanet.ts`, `configurations/model/ConfigurationsModel.ts`, `ConfigurationsPlanet.ts` |
+| Shared zodiac data | `src/common/ZodiacConstellationsData.ts`, `ZodiacStripBackground.ts` |
+| Shared UI | `src/common/SolarSystemModelsPanel.ts`, `SolarSystemModelsButtonOptions.ts`, `SolarSystemModelsControlOptions.ts` |
+| Animation | `src/common/TimeModel.ts` (Configurations uses `animationRateProperty`; Ptolemaic uses model-local rate) |
+| Colors / constants | `src/SolarSystemModelsColors.ts`, `src/SolarSystemModelsConstants.ts` |
+| Strings | `src/i18n/StringManager.ts` |
+| Preferences | `src/preferences/` (empty scaffold + query params) |
+| Entry | `src/main.ts` |
 
-## Screens
+## Model
 
-Two screens registered in `src/main.ts`, in this order:
+Two **independent** screen models — no shared root state.
 
-1. **Ptolemaic System** (`src/ptolemaic/`) — Ptolemaic System Simulator
-2. **Planetary Configurations** (`src/configurations/`) — Planetary Configurations Simulator
+| Screen | Model | Notes |
+|---|---|---|
+| **Ptolemaic** | `PtolemaicModel` | Deferent + epicycle + **equant** (uniform motion as seen from equant, not Earth); superior vs inferior planet drives which angle follows the Sun; ecliptic longitude trail; store/recall memory; presets for Venus, Mars, Jupiter, Saturn |
+| **Configurations** | `ConfigurationsModel` | Planet 1 = observer, planet 2 = target on circular orbits (`period = a^1.5` AU/years); signed elongation; synodic period `T_syn = 1/(1/P_inner − 1/P_outer)`; imperative timeline with RUN/PAUSE/STOP at alignments |
 
-When implementing: put shared physics in `src/common/`, per-screen state in each
-`*Model.ts`. Per-screen a11y lives under `a11y.<screenKey>` in each locale JSON,
-exposed via `StringManager.getPtolemaicA11yStrings()` /
-`getConfigurationsA11yStrings()`. Make each `currentDetailsContent` a live
-`DerivedProperty` over model state and add `accessibleName`s to every interactive node.
+**Shared gotchas**
 
-## Decompiling the Flash sources
+- Ptolemaic **superior** planets: deferent driven by planet anomaly, epicycle locked to Sun angle; **inferior** planets swap roles.
+- Sun moves at fixed rate ≈ 2π/365.25 rad/day on a circle of radius **2.25** deferent units.
+- **Split animation-rate semantics**: Ptolemaic uses `animationRateProperty` in **days/sec** (1–500); Configurations uses `TimeModel.animationRateProperty` as a **0–6×** multiplier. Neither model uses `TimeModel.timeProperty` for physics.
+- Flash-faithful equant math lives in `computeEpicycleCenter` — preserve unless porting fidelity changes.
 
-`npm run decompile` (script: `scripts/decompile-flash.ts`) extracts readable
-ActionScript from the NAAP Flash movies so the port can be diffed against the
-originals. The `.fla` files are old binary projects no tool reads directly, so the
-script decompiles their sibling compiled `.swf` via **JPEXS FFDec** (needs Java).
+## Accessibility
 
-```sh
-npm run decompile                 # the two SSM simulators → NAAP/decompiled/<name>/scripts/*.as
-npm run decompile -- --all        # the two simulators + supporting concept demos
-npm run decompile -- --list       # dry run: print what would be decompiled
-npm run decompile -- --setup      # one-time: download FFDec into tools/ffdec/
-```
-
-By default the two primary simulators decompile (one per screen):
-`ptolemaic023-C` (Ptolemaic System) and `configurationsSimulator044-C` (Planetary
-Configurations). Output goes to `NAAP/decompiled/` (git-ignored, along with
-`tools/ffdec/`). The decompiled AS is a **read-only reference** — transcribe the
-maths into typed TS in `src/`; don't vendor it.
-
-## npm scripts
-
-`start`/`dev` (vite) · `build` · `build:single` · `check` (tsc) · `lint`/`fix` (biome) ·
-`test` (vitest) · `icons` · `decompile` · `rename`. Gate: `npm run check && npm run lint && npm run build && npm test`.
-
-## PWA
-
-After `npm run build`, the sim is installable offline via Workbox (`dist/manifest.webmanifest`).
+Follows the shared [OpenPhysics accessibility convention](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
+Each screen registers `*ScreenSummaryContent` and explicit `pdomOrder` on its `*ScreenView`. A11y strings live under `a11y.ptolemaic` and `a11y.configurations` in each locale JSON, via `StringManager.getPtolemaicA11yStrings()` / `getConfigurationsA11yStrings()`. Keep `currentDetailsContent` live over model state; every interactive node needs an `accessibleName`.
 
 ## Testing
 
@@ -82,11 +52,29 @@ Fleet-standard Vitest layout:
 
 | Path | Purpose |
 |---|---|
-| `vitest.config.ts` | Test environment + `setupFiles` when present; `execArgv: ["--expose-gc"]` with memory-leak suite |
-| `tests/setup.ts` | Canvas / AudioContext mocks + `init({ name: "…" })` before SceneryStack imports (when required) |
-| `tests/**/*.test.ts` | Model/physics unit tests — mirror `src/` under `tests/` |
+| `vitest.config.ts` | Test environment + `setupFiles`; `execArgv: ["--expose-gc"]` with memory-leak suite |
+| `tests/setup.ts` | Canvas / AudioContext mocks + `init({ name: "…" })` before SceneryStack imports |
+| `tests/**/*.test.ts` | Model/physics unit tests |
 | `tests/memory-leak.test.ts` | WeakRef + `forceGC` dispose regression (fleet pattern) |
+
+| File | Covers |
+|---|---|
+| `PtolemaicModel.test.ts` | Geometry, retrograde, superior/inferior swap, memory, trail |
+| `ConfigurationsModel.test.ts` | Kepler, elongation, synodic, event times/names, slew, timeline |
+| `TimeModel.test.ts` | Play/pause, animation rate default |
+| `memory-leak.test.ts` | Dispose regression |
 
 - Put unit tests only under root `tests/` (never co-locate or use `__tests__/`).
 - Run `npm test`. CI runs the suite when a `test` script is present.
-- Expand `memory-leak.test.ts` for components that add/remove nodes or link Properties at runtime (see OpticsLab).
+
+## Commands
+
+```bash
+npm run lint && npm run check && npm run build && npm test
+```
+
+## Development notes
+
+- `ConfigurationsZodiacStrip` and `PtolemaicZodiacStrip` are separate view nodes; `MotionsOfTheSun/` cherry-picks constellation data and strip mapping from here.
+- **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec into gitignored `NAAP/decompiled/` — read-only reference.
+- After `npm run build`, the sim is installable offline via Workbox (`dist/manifest.webmanifest`).
