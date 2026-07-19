@@ -14,13 +14,16 @@ import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
 import SolarSystemModelsNamespace from "../SolarSystemModelsNamespace.js";
 import type { SolarSystemModelsPreferencesModel } from "./SolarSystemModelsPreferencesModel.js";
 
+/** Preferences dialog content sits on a light background regardless of color profile. */
+const PREFERENCES_TEXT_FILL = SolarSystemModelsColors.controlSurfaceTextColorProperty;
+
 export class SolarSystemModelsPreferencesNode extends VBox {
   public constructor(_preferencesModel: SolarSystemModelsPreferencesModel, _tandem?: Tandem) {
     const prefStrings = StringManager.getInstance().getPreferences();
 
     const header = new Text(prefStrings.titleStringProperty, {
       font: new PhetFont({ size: 18, weight: "bold" }),
-      fill: SolarSystemModelsColors.textColorProperty,
+      fill: PREFERENCES_TEXT_FILL,
     });
 
     super({

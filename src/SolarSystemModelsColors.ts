@@ -73,9 +73,10 @@ const SolarSystemModelsColors = {
     default: "#ffcc02",
     projector: "#cc9900",
   }),
+  /** Highlight fill for the selected zodiac constellation sector. */
   activeConstellationColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "activeConstellation", {
     default: "#1b6f4b",
-    projector: "#1b6f4b",
+    projector: "#0d5c38",
   }),
   zodiacBandColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "zodiacBand", {
     default: "#1a2233",
@@ -222,6 +223,16 @@ const SolarSystemModelsColors = {
   pathTrailLiveSegmentColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "pathTrailLiveSegment", {
     default: "#ff0000",
     projector: "#cc0000",
+  }),
+
+  // ── Light control surfaces ───────────────────────────────────────────────────
+  // White chrome (combo boxes, editable fields, Preferences dialog) stays light in
+  // both profiles; its text stays dark.
+
+  /** Text on light control surfaces and Preferences dialog (always dark). */
+  controlSurfaceTextColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "controlSurfaceText", {
+    default: "#1a1a1a",
+    projector: "#1a1a1a",
   }),
 };
 
