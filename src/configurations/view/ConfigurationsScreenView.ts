@@ -2,7 +2,7 @@ import { DerivedProperty, Multilink, type TReadOnlyProperty } from "scenerystack
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
-import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, DragListener, KeyboardDragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
@@ -186,18 +186,21 @@ export class ConfigurationsScreenView extends ScreenView {
       let wasPlaying = false;
       let angleOffset = 0;
       let angleThreshold = Math.PI / 12;
+      const beginDrag = (): void => {
+        wasPlaying = model.timer.isPlayingProperty.value;
+        model.freezeAnimation();
+        model.timer.isPlayingProperty.value = false;
+        angleThreshold = planetSnapAngle(id);
+      };
       node.addInputListener(
         new DragListener({
           tandem: Tandem.OPT_OUT,
           press: (_event, listener) => {
-            wasPlaying = model.timer.isPlayingProperty.value;
-            model.freezeAnimation();
-            model.timer.isPlayingProperty.value = false;
+            beginDrag();
             const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
             const clickAngle = Math.atan2(modelPos.y, modelPos.x);
             const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
             angleOffset = wrapAngleDelta(clickAngle - planetAngle);
-            angleThreshold = planetSnapAngle(id);
           },
           drag: (event, listener) => {
             const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
@@ -212,6 +215,24 @@ export class ConfigurationsScreenView extends ScreenView {
             }
           },
           release: () => {
+            model.thawAnimation(wasPlaying);
+          },
+        }),
+      );
+      // Keyboard: left/right arrows advance the planet angle along its orbit.
+      node.addInputListener(
+        new KeyboardDragListener({
+          keyboardDragDirection: "leftRight",
+          dragDelta: 0.05,
+          shiftDragDelta: 0.01,
+          start: beginDrag,
+          drag: (_event, listener) => {
+            const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
+            const angle = mod2pi(planetAngle + listener.modelDelta.x);
+            const snap = model.snapToEventsProperty.value;
+            model.setTimeByPlanetAngle(id, angle, snap, angleThreshold);
+          },
+          end: () => {
             model.thawAnimation(wasPlaying);
           },
         }),
