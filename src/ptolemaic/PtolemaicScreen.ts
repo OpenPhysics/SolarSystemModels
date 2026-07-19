@@ -12,6 +12,7 @@ import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
+import { createPtolemaicIcon } from "../common/SolarSystemModelsScreenIcons.js";
 import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
 import { PtolemaicModel } from "./model/PtolemaicModel.js";
 import { PtolemaicKeyboardHelpContent } from "./view/PtolemaicKeyboardHelpContent.js";
@@ -34,6 +35,8 @@ export class PtolemaicScreen extends Screen<PtolemaicModel, PtolemaicScreenView>
         {
           backgroundColorProperty: SolarSystemModelsColors.backgroundColorProperty,
           createKeyboardHelpNode: () => new PtolemaicKeyboardHelpContent(),
+          homeScreenIcon: createPtolemaicIcon(),
+          navigationBarIcon: createPtolemaicIcon(),
         },
         options,
       ),

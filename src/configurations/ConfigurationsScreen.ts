@@ -12,6 +12,7 @@ import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { ScreenOptions } from "scenerystack/sim";
 import { Screen } from "scenerystack/sim";
 import type { Tandem } from "scenerystack/tandem";
+import { createConfigurationsIcon } from "../common/SolarSystemModelsScreenIcons.js";
 import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
 import { ConfigurationsModel } from "./model/ConfigurationsModel.js";
 import { ConfigurationsKeyboardHelpContent } from "./view/ConfigurationsKeyboardHelpContent.js";
@@ -34,6 +35,8 @@ export class ConfigurationsScreen extends Screen<ConfigurationsModel, Configurat
         {
           backgroundColorProperty: SolarSystemModelsColors.backgroundColorProperty,
           createKeyboardHelpNode: () => new ConfigurationsKeyboardHelpContent(),
+          homeScreenIcon: createConfigurationsIcon(),
+          navigationBarIcon: createConfigurationsIcon(),
         },
         options,
       ),
