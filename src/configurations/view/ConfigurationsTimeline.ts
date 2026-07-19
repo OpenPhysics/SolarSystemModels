@@ -1,7 +1,7 @@
 import { Multilink } from "scenerystack/axon";
 import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
-import { DragListener, Node, Path, PressListener, Rectangle, Text } from "scenerystack/scenery";
+import { DragListener, KeyboardDragListener, Node, Path, PressListener, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { Tandem } from "scenerystack/tandem";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -297,25 +297,47 @@ export class ConfigurationsTimeline extends Node {
     let initTime = 0;
     let wasPlaying = false;
 
+    const beginTimelineDrag = (): void => {
+      initTime = model.timeProperty.value;
+      wasPlaying = model.timer.isPlayingProperty.value;
+      model.freezeAnimation();
+      model.timer.isPlayingProperty.value = false;
+    };
+    const applyTimelineDeltaY = (deltaY: number): void => {
+      const synodic = model.synodicPeriodProperty.value;
+      const scale = CYCLE_HEIGHT_PX / synodic;
+      const newTime = initTime + deltaY / scale;
+      model.setTimeFromTimelineDrag(newTime, model.snapToEventsProperty.value, TIMELINE_SNAP_DISTANCE_PX / scale);
+    };
     bg.addInputListener(
       new DragListener({
         tandem: Tandem.OPT_OUT,
         press: (_event, listener) => {
           initY = listener.parentPoint.y;
-          initTime = model.timeProperty.value;
-          wasPlaying = model.timer.isPlayingProperty.value;
-          model.freezeAnimation();
-          model.timer.isPlayingProperty.value = false;
+          beginTimelineDrag();
         },
         drag: (_event, listener) => {
-          const synodic = model.synodicPeriodProperty.value;
-          const scale = CYCLE_HEIGHT_PX / synodic;
-          const deltaY = initY - listener.parentPoint.y;
-          const newTime = initTime + deltaY / scale;
-          // Flash: timeThreshold = snapDistance / scale (years).
-          model.setTimeFromTimelineDrag(newTime, model.snapToEventsProperty.value, TIMELINE_SNAP_DISTANCE_PX / scale);
+          applyTimelineDeltaY(initY - listener.parentPoint.y);
         },
         release: () => {
+          model.thawAnimation(wasPlaying);
+        },
+      }),
+    );
+    bg.focusable = true;
+    bg.tagName = "div";
+    bg.addInputListener(
+      new KeyboardDragListener({
+        keyboardDragDirection: "upDown",
+        dragDelta: 12,
+        shiftDragDelta: 3,
+        start: beginTimelineDrag,
+        drag: (_event, listener) => {
+          // Invert so Up advances time (matching drag-up on the strip).
+          applyTimelineDeltaY(-listener.modelDelta.y);
+          initTime = model.timeProperty.value;
+        },
+        end: () => {
           model.thawAnimation(wasPlaying);
         },
       }),
