@@ -15,7 +15,7 @@
 import { Multilink, NumberProperty } from "scenerystack/axon";
 import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
-import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, Node, Path, Rectangle, RichDragListener, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { Tandem } from "scenerystack/tandem";
 import { ECLIPTIC_CONSTELLATIONS } from "../../common/ZodiacConstellationsData.js";
@@ -157,14 +157,24 @@ export class ConfigurationsZodiacStrip extends Node {
     let initX = 0;
     let initOffset = 0;
     band.addInputListener(
-      new DragListener({
+      new RichDragListener({
         tandem: Tandem.OPT_OUT,
-        press: (_event, listener) => {
-          initX = listener.parentPoint.x;
-          initOffset = offsetProperty.value;
+        dragListenerOptions: {
+          press: (_event, listener) => {
+            initX = listener.parentPoint.x;
+            initOffset = offsetProperty.value;
+          },
+          drag: (_event, listener) => {
+            offsetProperty.value = initOffset + (listener.parentPoint.x - initX);
+          },
         },
-        drag: (_event, listener) => {
-          offsetProperty.value = initOffset + (listener.parentPoint.x - initX);
+        keyboardDragListenerOptions: {
+          keyboardDragDirection: "leftRight",
+          dragDelta: 12,
+          shiftDragDelta: 3,
+          drag: (_event, listener) => {
+            offsetProperty.value += listener.modelDelta.x;
+          },
         },
       }),
     );

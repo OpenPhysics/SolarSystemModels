@@ -3,7 +3,7 @@ import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
-import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, Node, Path, Rectangle, RichDragListener, Text } from "scenerystack/scenery";
 import { ArrowNode, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
@@ -272,11 +272,21 @@ export class PtolemaicScreenView extends ScreenView {
     this.addChild(sunNode);
 
     sunNode.addInputListener(
-      new DragListener({
+      new RichDragListener({
         tandem: Tandem.OPT_OUT,
-        drag: (_event, listener) => {
-          const modelPos = mvt.viewToModelPosition(listener.modelPoint);
-          model.setSunAngle(Math.atan2(modelPos.y, modelPos.x));
+        dragListenerOptions: {
+          drag: (_event, listener) => {
+            const modelPos = mvt.viewToModelPosition(listener.modelPoint);
+            model.setSunAngle(Math.atan2(modelPos.y, modelPos.x));
+          },
+        },
+        keyboardDragListenerOptions: {
+          keyboardDragDirection: "leftRight",
+          dragDelta: 0.05,
+          shiftDragDelta: 0.01,
+          drag: (_event, listener) => {
+            model.setSunAngle(model.sunAngleProperty.value + listener.modelDelta.x);
+          },
         },
       }),
     );

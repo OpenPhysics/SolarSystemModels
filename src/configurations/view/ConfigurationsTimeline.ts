@@ -1,7 +1,7 @@
 import { Multilink } from "scenerystack/axon";
 import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
-import { DragListener, KeyboardDragListener, Node, Path, PressListener, Rectangle, Text } from "scenerystack/scenery";
+import { Node, Path, PressListener, Rectangle, RichDragListener, Text } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { Tandem } from "scenerystack/tandem";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -310,37 +310,36 @@ export class ConfigurationsTimeline extends Node {
       model.setTimeFromTimelineDrag(newTime, model.snapToEventsProperty.value, TIMELINE_SNAP_DISTANCE_PX / scale);
     };
     bg.addInputListener(
-      new DragListener({
+      new RichDragListener({
         tandem: Tandem.OPT_OUT,
-        press: (_event, listener) => {
-          initY = listener.parentPoint.y;
-          beginTimelineDrag();
+        dragListenerOptions: {
+          press: (_event, listener) => {
+            initY = listener.parentPoint.y;
+            beginTimelineDrag();
+          },
+          drag: (_event, listener) => {
+            applyTimelineDeltaY(initY - listener.parentPoint.y);
+          },
+          release: () => {
+            model.thawAnimation(wasPlaying);
+          },
         },
-        drag: (_event, listener) => {
-          applyTimelineDeltaY(initY - listener.parentPoint.y);
-        },
-        release: () => {
-          model.thawAnimation(wasPlaying);
+        keyboardDragListenerOptions: {
+          keyboardDragDirection: "upDown",
+          dragDelta: 12,
+          shiftDragDelta: 3,
+          start: beginTimelineDrag,
+          drag: (_event, listener) => {
+            applyTimelineDeltaY(-listener.modelDelta.y);
+            initTime = model.timeProperty.value;
+          },
+          end: () => {
+            model.thawAnimation(wasPlaying);
+          },
         },
       }),
     );
     bg.focusable = true;
     bg.tagName = "div";
-    bg.addInputListener(
-      new KeyboardDragListener({
-        keyboardDragDirection: "upDown",
-        dragDelta: 12,
-        shiftDragDelta: 3,
-        start: beginTimelineDrag,
-        drag: (_event, listener) => {
-          // Invert so Up advances time (matching drag-up on the strip).
-          applyTimelineDeltaY(-listener.modelDelta.y);
-          initTime = model.timeProperty.value;
-        },
-        end: () => {
-          model.thawAnimation(wasPlaying);
-        },
-      }),
-    );
   }
 }

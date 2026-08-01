@@ -3,7 +3,7 @@ import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
-import { Circle, DragListener, KeyboardDragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, Node, Path, Rectangle, RichDragListener, Text } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
 import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { RectangularPushButton } from "scenerystack/sun";
@@ -198,47 +198,46 @@ export class ConfigurationsScreenView extends ScreenView {
         angleThreshold = planetSnapAngle(id);
       };
       node.addInputListener(
-        new DragListener({
+        new RichDragListener({
           tandem: Tandem.OPT_OUT,
-          press: (_event, listener) => {
-            beginDrag();
-            const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
-            const clickAngle = Math.atan2(modelPos.y, modelPos.x);
-            const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
-            angleOffset = wrapAngleDelta(clickAngle - planetAngle);
+          dragListenerOptions: {
+            press: (_event, listener) => {
+              beginDrag();
+              const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
+              const clickAngle = Math.atan2(modelPos.y, modelPos.x);
+              const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
+              angleOffset = wrapAngleDelta(clickAngle - planetAngle);
+            },
+            drag: (event, listener) => {
+              const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
+              const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
+              const clickAngle = Math.atan2(modelPos.y, modelPos.x);
+              const angle = mod2pi(clickAngle - angleOffset);
+              const snap = model.snapToEventsProperty.value;
+              if (shiftKey) {
+                model.setEpochAngleByPlanetAngle(id, angle, snap, angleThreshold);
+              } else {
+                model.setTimeByPlanetAngle(id, angle, snap, angleThreshold);
+              }
+            },
+            release: () => {
+              model.thawAnimation(wasPlaying);
+            },
           },
-          drag: (event, listener) => {
-            const shiftKey = (event.domEvent as MouseEvent | null)?.shiftKey ?? false;
-            const modelPos = this.mvtProperty.value.viewToModelPosition(listener.modelPoint);
-            const clickAngle = Math.atan2(modelPos.y, modelPos.x);
-            const angle = mod2pi(clickAngle - angleOffset);
-            const snap = model.snapToEventsProperty.value;
-            if (shiftKey) {
-              model.setEpochAngleByPlanetAngle(id, angle, snap, angleThreshold);
-            } else {
+          keyboardDragListenerOptions: {
+            keyboardDragDirection: "leftRight",
+            dragDelta: 0.05,
+            shiftDragDelta: 0.01,
+            start: beginDrag,
+            drag: (_event, listener) => {
+              const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
+              const angle = mod2pi(planetAngle + listener.modelDelta.x);
+              const snap = model.snapToEventsProperty.value;
               model.setTimeByPlanetAngle(id, angle, snap, angleThreshold);
-            }
-          },
-          release: () => {
-            model.thawAnimation(wasPlaying);
-          },
-        }),
-      );
-      // Keyboard: left/right arrows advance the planet angle along its orbit.
-      node.addInputListener(
-        new KeyboardDragListener({
-          keyboardDragDirection: "leftRight",
-          dragDelta: 0.05,
-          shiftDragDelta: 0.01,
-          start: beginDrag,
-          drag: (_event, listener) => {
-            const planetAngle = id === 1 ? model.angle1Property.value : model.angle2Property.value;
-            const angle = mod2pi(planetAngle + listener.modelDelta.x);
-            const snap = model.snapToEventsProperty.value;
-            model.setTimeByPlanetAngle(id, angle, snap, angleThreshold);
-          },
-          end: () => {
-            model.thawAnimation(wasPlaying);
+            },
+            end: () => {
+              model.thawAnimation(wasPlaying);
+            },
           },
         }),
       );
