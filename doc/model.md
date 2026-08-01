@@ -100,7 +100,7 @@ Defaults: *a*₁ = 1 AU, *a*₂ = 2.4 AU.
 
 ## References
 
-- NAAP *Solar System Models* lab: `NAAP/astroUNL/naap/ssm/modeling.html`,
-  `NAAP/astroUNL/naap/ssm/naap_ssm_sg.pdf` (student guide).
+- NAAP *Solar System Models* lab: `../Baseline/Astronomy/astroUNL/naap/ssm/modeling.html`,
+  `../Baseline/Astronomy/astroUNL/naap/ssm/naap_ssm_sg.pdf` (student guide).
 - Original Flash simulators: *Ptolemaic System Simulator* (`ptolemaic023`) and
   *Planetary Configurations Simulator* (`configurationsSimulator044`).
