@@ -1,11 +1,11 @@
 import { DerivedProperty, Multilink, type TReadOnlyProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Circle, DragListener, KeyboardDragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { RectangularPushButton } from "scenerystack/sun";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
@@ -46,16 +46,21 @@ function buildMvt(a1: number, a2: number): ModelViewTransform2 {
   );
 }
 
+export type ConfigurationsScreenViewOptions = ScreenViewOptions;
+
 export class ConfigurationsScreenView extends ScreenView {
   private readonly model: ConfigurationsModel;
   // Rebuilt whenever the orbital radii change, so its scale always fits both orbits.
   private readonly mvtProperty: TReadOnlyProperty<ModelViewTransform2>;
 
-  public constructor(model: ConfigurationsModel, options?: ScreenViewOptions) {
-    super({
-      screenSummaryContent: new ConfigurationsScreenSummaryContent(model),
-      ...options,
-    });
+  public constructor(model: ConfigurationsModel, providedOptions?: ConfigurationsScreenViewOptions) {
+    const options = optionize<ConfigurationsScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new ConfigurationsScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     this.model = model;
     this.mvtProperty = new DerivedProperty(

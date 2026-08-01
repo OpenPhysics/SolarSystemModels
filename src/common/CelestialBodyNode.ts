@@ -1,7 +1,7 @@
 import type { TReadOnlyProperty } from "scenerystack/axon";
 import { Multilink } from "scenerystack/axon";
 import type { Vector2 } from "scenerystack/dot";
-import { optionize } from "scenerystack/phet-core";
+import { combineOptions, optionize } from "scenerystack/phet-core";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { NodeOptions, TPaint } from "scenerystack/scenery";
 import { Circle, Node } from "scenerystack/scenery";
@@ -33,7 +33,7 @@ export class CelestialBodyNode extends Node {
 
     const body = new Circle(radius, { fill });
 
-    super({ ...nodeOptions, children: [body] });
+    super(combineOptions<NodeOptions>(nodeOptions, { children: [body] }));
 
     Multilink.multilink([positionProperty, mvtProperty], (pos, mvt) => {
       this.translation = mvt.modelToViewPosition(pos);

@@ -25,21 +25,26 @@
  *   const panel = new SolarSystemModelsPanel(content, { fill: "transparent" });
  */
 
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import type { Node } from "scenerystack/scenery";
-import type { PanelOptions } from "scenerystack/sun";
-import { Panel } from "scenerystack/sun";
+import { Panel, type PanelOptions } from "scenerystack/sun";
 import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
 import { PANEL_CORNER_RADIUS, PANEL_X_MARGIN, PANEL_Y_MARGIN } from "../SolarSystemModelsConstants.js";
 
+export type SolarSystemModelsPanelOptions = PanelOptions;
+
 export class SolarSystemModelsPanel extends Panel {
-  public constructor(content: Node, providedOptions?: PanelOptions) {
-    super(content, {
-      fill: SolarSystemModelsColors.panelBackgroundColorProperty,
-      stroke: SolarSystemModelsColors.panelBorderColorProperty,
-      cornerRadius: PANEL_CORNER_RADIUS,
-      xMargin: PANEL_X_MARGIN,
-      yMargin: PANEL_Y_MARGIN,
-      ...providedOptions,
-    });
+  public constructor(content: Node, providedOptions?: SolarSystemModelsPanelOptions) {
+    const options = optionize<SolarSystemModelsPanelOptions, EmptySelfOptions, PanelOptions>()(
+      {
+        fill: SolarSystemModelsColors.panelBackgroundColorProperty,
+        stroke: SolarSystemModelsColors.panelBorderColorProperty,
+        cornerRadius: PANEL_CORNER_RADIUS,
+        xMargin: PANEL_X_MARGIN,
+        yMargin: PANEL_Y_MARGIN,
+      },
+      providedOptions,
+    );
+    super(content, options);
   }
 }

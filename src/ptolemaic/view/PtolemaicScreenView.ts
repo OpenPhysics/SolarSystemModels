@@ -1,11 +1,11 @@
 import { Multilink, Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Circle, DragListener, Node, Path, Rectangle, Text } from "scenerystack/scenery";
 import { ArrowNode, PhetFont, ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CelestialBodyNode } from "../../common/CelestialBodyNode.js";
 import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SolarSystemModelsButtonOptions.js";
@@ -35,16 +35,21 @@ import { PtolemaicZodiacStrip } from "./PtolemaicZodiacStrip.js";
 // Zodiac glyphs (Unicode), Aries→Pisces — matches the Flash symbol-font ring.
 const ZODIAC_SIGNS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
 
+export type PtolemaicScreenViewOptions = ScreenViewOptions;
+
 export class PtolemaicScreenView extends ScreenView {
   private readonly pathTrail: PtolemaicPathTrail;
   private readonly model: PtolemaicModel;
   private readonly mvtProperty: TReadOnlyProperty<ModelViewTransform2>;
 
-  public constructor(model: PtolemaicModel, options?: ScreenViewOptions) {
-    super({
-      screenSummaryContent: new PtolemaicScreenSummaryContent(model),
-      ...options,
-    });
+  public constructor(model: PtolemaicModel, providedOptions?: PtolemaicScreenViewOptions) {
+    const options = optionize<PtolemaicScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new PtolemaicScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     this.model = model;
 
