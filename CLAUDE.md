@@ -76,5 +76,5 @@ npm run lint && npm run check && npm run build && npm test
 ## Development notes
 
 - `ConfigurationsZodiacStrip` and `PtolemaicZodiacStrip` are separate view nodes; `MotionsOfTheSun/` cherry-picks constellation data and strip mapping from here.
-- **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec into gitignored `NAAP/decompiled/` — read-only reference.
+- **`npm run decompile`** extracts NAAP Flash ActionScript via JPEXS FFDec from `../Baseline/Astronomy/flash-animations` into gitignored `NAAP/decompiled/`.
 - After `npm run build`, the sim is installable offline via Workbox (`dist/manifest.webmanifest`).
