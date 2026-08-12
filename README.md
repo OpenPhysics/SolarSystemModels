@@ -1,5 +1,7 @@
 # Solar System Models
 
+[![CI](https://github.com/OpenPhysics/SolarSystemModels/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenPhysics/SolarSystemModels/actions/workflows/ci.yml)
+
 A two-screen [SceneryStack](https://scenerystack.org/) port of the NAAP **Solar System Models** lab:
 **Ptolemaic System** and **Planetary Configurations**. Built with Vite 8, TypeScript 7, and Biome 2.
 
