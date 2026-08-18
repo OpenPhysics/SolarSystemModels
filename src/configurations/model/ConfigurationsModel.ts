@@ -290,11 +290,17 @@ export class ConfigurationsModel implements TModel {
       epochProp.value = newEpoch;
     }
 
+    // NumberControl may already have written newA; skip so a listener that called
+    // us does not reenter the same Property.
     if (id === 1) {
-      this.semimajorAxis1Property.value = newA;
+      if (this.semimajorAxis1Property.value !== newA) {
+        this.semimajorAxis1Property.value = newA;
+      }
       this.period1Property.value = newPeriod;
     } else {
-      this.semimajorAxis2Property.value = newA;
+      if (this.semimajorAxis2Property.value !== newA) {
+        this.semimajorAxis2Property.value = newA;
+      }
       this.period2Property.value = newPeriod;
     }
 

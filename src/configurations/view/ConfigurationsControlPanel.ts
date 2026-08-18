@@ -93,16 +93,25 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
 
     // When preset index changes, apply preset. Both planets landing on the same
     // orbit has no synodic period, so revert the combo box if that's rejected.
+    // Defer the revert: writing the Property from its own listener is Axon reentry.
     model.preset1IndexProperty.lazyLink((idx, oldIdx) => {
       const key = PRESET_KEYS[idx];
       if (key !== undefined && !model.applyPreset(1, key)) {
-        model.preset1IndexProperty.value = oldIdx;
+        queueMicrotask(() => {
+          if (model.preset1IndexProperty.value === idx) {
+            model.preset1IndexProperty.value = oldIdx;
+          }
+        });
       }
     });
     model.preset2IndexProperty.lazyLink((idx, oldIdx) => {
       const key = PRESET_KEYS[idx];
       if (key !== undefined && !model.applyPreset(2, key)) {
-        model.preset2IndexProperty.value = oldIdx;
+        queueMicrotask(() => {
+          if (model.preset2IndexProperty.value === idx) {
+            model.preset2IndexProperty.value = oldIdx;
+          }
+        });
       }
     });
 
@@ -146,18 +155,31 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
       }
       nudged = Math.min(SEMIMAJOR_AXIS_RANGE.max, Math.max(SEMIMAJOR_AXIS_RANGE.min, nudged));
       if (Math.abs(nudged - other) < 1e-10 || !model.setSemimajorAxis(id, nudged, false)) {
-        prop.value = previous;
+        if (prop.value !== previous) {
+          prop.value = previous;
+        }
       }
     };
 
+    // NumberControl already wrote `v`. setSemimajorAxis is a no-op write on success
+    // (same value). On collision it must nudge to a *different* value — defer that
+    // so we are not inside this Property's notification (Axon reentry: 0.25→0.26).
     model.semimajorAxis1Property.lazyLink((v, oldV) => {
       if (!model.setSemimajorAxis(1, v, false)) {
-        nudgeAxis(1, v, oldV);
+        queueMicrotask(() => {
+          if (model.semimajorAxis1Property.value === v) {
+            nudgeAxis(1, v, oldV);
+          }
+        });
       }
     });
     model.semimajorAxis2Property.lazyLink((v, oldV) => {
       if (!model.setSemimajorAxis(2, v, false)) {
-        nudgeAxis(2, v, oldV);
+        queueMicrotask(() => {
+          if (model.semimajorAxis2Property.value === v) {
+            nudgeAxis(2, v, oldV);
+          }
+        });
       }
     });
 
