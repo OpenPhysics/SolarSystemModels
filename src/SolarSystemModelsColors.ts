@@ -226,10 +226,23 @@ const SolarSystemModelsColors = {
   }),
 
   // ── Light control surfaces ───────────────────────────────────────────────────
-  // White chrome (combo boxes, editable fields, Preferences dialog) stays light in
-  // both profiles; its text stays dark.
+  // White chrome (flat push buttons, editable fields, Preferences dialog) stays light
+  // in both profiles; its text stays dark. Same values in default and projector mode,
+  // but defined here so every color lives in one themeable place.
 
-  /** Text on light control surfaces and Preferences dialog (always dark). */
+  /** Fill of light control surfaces: flat push buttons, editable input fields. */
+  controlSurfaceColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "controlSurface", {
+    default: "#ffffff",
+    projector: "#ffffff",
+  }),
+
+  /** Fill of a disabled control surface (grayed-out editable input field). */
+  controlSurfaceDisabledColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "controlSurfaceDisabled", {
+    default: "#cccccc",
+    projector: "#cccccc",
+  }),
+
+  /** Text on light control surfaces: flat-button labels, field values, preferences. */
   controlSurfaceTextColorProperty: new ProfileColorProperty(SolarSystemModelsNamespace, "controlSurfaceText", {
     default: "#1a1a1a",
     projector: "#1a1a1a",

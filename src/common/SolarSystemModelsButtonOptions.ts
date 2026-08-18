@@ -13,9 +13,13 @@
  * must be given matching dark buttonFill/listFill — otherwise it silently falls
  * back to SceneryStack's default white chrome, producing near-invisible
  * near-white-on-white text in the default profile.
+ *
+ * Flat push buttons use the light control-surface pattern (RotatingSky): white
+ * chrome with dark labels via {@link LIGHT_SURFACE_TEXT_FILL}, not
+ * {@link SolarSystemModelsColors.textColorProperty}.
  */
 
-import type { PlayPauseStepButtonGroupOptions } from "scenerystack/scenery-phet";
+import type { PlayPauseStepButtonGroupOptions, TimeControlNodeOptions } from "scenerystack/scenery-phet";
 import { ButtonNode, type ComboBoxOptions } from "scenerystack/sun";
 import SolarSystemModelsColors from "../SolarSystemModelsColors.js";
 
@@ -23,7 +27,10 @@ export const FLAT_BUTTON_APPEARANCE_OPTIONS = {
   buttonAppearanceStrategy: ButtonNode.FlatAppearanceStrategy,
 } as const;
 
-/** Options for RectangularPushButton and similar rectangular buttons. */
+/** Text on flat push buttons (always on a light control surface). */
+export const LIGHT_SURFACE_TEXT_FILL = SolarSystemModelsColors.controlSurfaceTextColorProperty;
+
+/** Options for RectangularPushButton and NumberControl arrow buttons. */
 export const FLAT_RECTANGULAR_BUTTON_OPTIONS = FLAT_BUTTON_APPEARANCE_OPTIONS;
 
 /** Options for ResetAllButton (extends RoundPushButton). */
@@ -49,3 +56,13 @@ export const SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS = {
   listStroke: SolarSystemModelsColors.panelBorderColorProperty,
   highlightFill: SolarSystemModelsColors.panelBorderColorProperty,
 } satisfies Pick<ComboBoxOptions, "buttonFill" | "listFill" | "buttonStroke" | "listStroke" | "highlightFill">;
+
+/**
+ * Speed radio labels for TimeControlNode. SceneryStack Text defaults to black, which
+ * is low-contrast on the sim's dark Default-mode panels.
+ */
+export const TIME_CONTROL_SPEED_RADIO_OPTIONS = {
+  speedRadioButtonGroupOptions: {
+    labelOptions: { fill: SolarSystemModelsColors.textColorProperty },
+  },
+} satisfies Pick<TimeControlNodeOptions, "speedRadioButtonGroupOptions">;

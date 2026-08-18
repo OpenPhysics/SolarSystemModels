@@ -7,6 +7,7 @@ import type { Tandem } from "scenerystack/tandem";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  LIGHT_SURFACE_TEXT_FILL,
   SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
 } from "../../common/SolarSystemModelsButtonOptions.js";
 import {
@@ -186,7 +187,7 @@ export class ConfigurationsControlPanel extends SolarSystemModelsPanel {
 
     // ── Reset time button ─────────────────────────────────────────────────
     const resetTimeButton = new RectangularPushButton({
-      content: new Text(s.resetTimeStringProperty, labelOpts),
+      content: new Text(s.resetTimeStringProperty, { ...labelOpts, fill: LIGHT_SURFACE_TEXT_FILL }),
       listener: () => model.resetTime(),
       accessibleName: a11y.controls.resetTimeStringProperty,
       ...FLAT_RECTANGULAR_BUTTON_OPTIONS,

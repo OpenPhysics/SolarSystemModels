@@ -13,6 +13,7 @@ import { CurvedText } from "../../common/CurvedText.js";
 import {
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
   FLAT_RESET_ALL_BUTTON_OPTIONS,
+  LIGHT_SURFACE_TEXT_FILL,
 } from "../../common/SolarSystemModelsButtonOptions.js";
 import { ZodiacConstellationNode } from "../../common/ZodiacConstellationNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -310,7 +311,7 @@ export class ConfigurationsScreenView extends ScreenView {
       ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       content: new Text(s.cancelCountdownStringProperty, {
         font: new PhetFont(12),
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       }),
       listener: () => model.cancelCountdown(),
       visibleProperty: new DerivedProperty([model.countdownRemainingProperty], (r) => r > 0),
@@ -329,7 +330,7 @@ export class ConfigurationsScreenView extends ScreenView {
       ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
       content: new Text(s.zeroCounterStringProperty, {
         font: new PhetFont(12),
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       }),
       listener: () => model.zeroTimelineCounter(),
       accessibleName: s.zeroCounterStringProperty,

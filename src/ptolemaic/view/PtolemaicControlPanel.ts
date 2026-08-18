@@ -5,6 +5,7 @@ import { AquaRadioButtonGroup, ComboBox, RectangularPushButton } from "sceneryst
 import type { Tandem } from "scenerystack/tandem";
 import {
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  LIGHT_SURFACE_TEXT_FILL,
   SOLAR_SYSTEM_MODELS_COMBO_BOX_OPTIONS,
 } from "../../common/SolarSystemModelsButtonOptions.js";
 import { createCompactNumberControlOptions } from "../../common/SolarSystemModelsControlOptions.js";
@@ -133,7 +134,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     const storeButton = new RectangularPushButton({
       content: new Text(strings.memoryStoreStringProperty, {
         font: LABEL_FONT,
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       }),
       listener: () => model.storeMemory(),
       accessibleName: a11y.controls.memoryStoreStringProperty,
@@ -142,7 +143,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     const recallButton = new RectangularPushButton({
       content: new Text(strings.memoryRecallStringProperty, {
         font: LABEL_FONT,
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       }),
       listener: () => model.recallMemory(),
       // Disabled until a snapshot is stored (AS: memoryRecallButton.setEnabled(false)).
@@ -157,7 +158,7 @@ export class PtolemaicControlPanel extends SolarSystemModelsPanel {
     const okButton = new RectangularPushButton({
       content: new Text(strings.okStringProperty, {
         font: LABEL_FONT,
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       }),
       listener: () => {
         const key = PRESET_KEYS[model.presetKeyProperty.value];

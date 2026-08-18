@@ -5,11 +5,11 @@ import { RectangularPushButton } from "scenerystack/sun";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
   FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  LIGHT_SURFACE_TEXT_FILL,
 } from "../../common/SolarSystemModelsButtonOptions.js";
 import { createCompactSliderRow } from "../../common/SolarSystemModelsControlOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
-import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
 import {
   PANEL_CONTENT_SPACING,
   PANEL_WIDTH,
@@ -57,7 +57,7 @@ export class PtolemaicTimeControls extends SolarSystemModelsPanel {
     const resetTimeButton = new RectangularPushButton({
       content: new Text(strings.resetTimeStringProperty, {
         font: LABEL_FONT,
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       }),
       listener: () => model.resetTime(),
       accessibleName: a11y.controls.resetTimeStringProperty,

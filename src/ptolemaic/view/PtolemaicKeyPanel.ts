@@ -5,7 +5,10 @@ import type { TPaint } from "scenerystack/scenery";
 import { Circle, HBox, type Node, Text, VBox } from "scenerystack/scenery";
 import { PhetFont } from "scenerystack/scenery-phet";
 import { RectangularPushButton } from "scenerystack/sun";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../../common/SolarSystemModelsButtonOptions.js";
+import {
+  FLAT_RECTANGULAR_BUTTON_OPTIONS,
+  LIGHT_SURFACE_TEXT_FILL,
+} from "../../common/SolarSystemModelsButtonOptions.js";
 import { SolarSystemModelsPanel } from "../../common/SolarSystemModelsPanel.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import SolarSystemModelsColors from "../../SolarSystemModelsColors.js";
@@ -77,7 +80,7 @@ export class PtolemaicKeyPanel extends SolarSystemModelsPanel {
       const swatch = new Circle(5, { fill: tab.swatchFill, stroke: SolarSystemModelsColors.panelBorderColorProperty });
       const label = new Text(tab.labelProperty, {
         font: TAB_FONT,
-        fill: SolarSystemModelsColors.textColorProperty,
+        fill: LIGHT_SURFACE_TEXT_FILL,
       });
 
       const tabIndex = i;
