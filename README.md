@@ -1,6 +1,6 @@
 # Solar System Models
 
-[![CI](https://github.com/OpenPhysics/SolarSystemModels/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenPhysics/SolarSystemModels/actions/workflows/ci.yml)
+[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
 A two-screen [SceneryStack](https://scenerystack.org/) port of the NAAP **Solar System Models** lab:
 **Ptolemaic System** and **Planetary Configurations**. Built with Vite 8, TypeScript 7, and Biome 2.
@@ -14,12 +14,12 @@ A two-screen [SceneryStack](https://scenerystack.org/) port of the NAAP **Solar 
 - Model-layer Vitest coverage
 - Flash decompile workflow (`npm run decompile`) for NAAP `.swf` reference
 - Git hooks for Biome pre-commit checks
-- Shared GitHub Actions CI via `OpenPhysics/Baton`
+- Shared GitHub Actions CI via `OpenLyceum/Baton`
 
 ### NAAP reference sources
 
 Upstream Flash / AIR / React NAAP sources live in the sibling
-[`Baseline`](https://github.com/OpenPhysics/Baseline) repo under `Astronomy/`
+[`Baseline`](https://github.com/OpenLyceum/Baseline) repo under `Astronomy/`
 (see `baselines.json`). Clone Baseline with the fleet bootstrap, then:
 
 ```bash
@@ -73,9 +73,9 @@ Keep `name` in kebab-case in `package.json`; it is separate from the SceneryStac
 
 ## License
 
-GNU Affero General Public License v3.0 — see [OpenPhysics org license](https://github.com/OpenPhysics/.github/blob/main/LICENSE).
+GNU Affero General Public License v3.0 — see [OpenLyceum org license](https://github.com/OpenLyceum/.github/blob/main/LICENSE).
 
 ## Contributing
 
-See [OpenPhysics contributing guidelines](https://github.com/OpenPhysics/.github/blob/main/CONTRIBUTING.md).
+See [OpenLyceum contributing guidelines](https://github.com/OpenLyceum/.github/blob/main/CONTRIBUTING.md).
 Report bugs via GitHub Issues; use org issue templates.

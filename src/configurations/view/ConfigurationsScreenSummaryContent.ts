@@ -7,7 +7,7 @@
  * current state at any time.
  *
  * A summary has four regions (all optional, but provide at least the first
- * three in every sim for consistency across OpenPhysics):
+ * three in every sim for consistency across OpenLyceum):
  *   - playAreaContent       — what the play area contains
  *   - controlAreaContent    — what the controls do
  *   - currentDetailsContent — a LIVE paragraph describing current state

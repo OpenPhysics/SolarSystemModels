@@ -71,10 +71,10 @@ onReadyToLaunch(() => {
     }),
 
     credits: {
-      leadDesign: "NAAP / OpenPhysics",
-      softwareDevelopment: "OpenPhysics",
-      team: "OpenPhysics",
-      qualityAssurance: "OpenPhysics",
+      leadDesign: "NAAP / OpenLyceum",
+      softwareDevelopment: "OpenLyceum",
+      team: "OpenLyceum",
+      qualityAssurance: "OpenLyceum",
     },
   });
 
